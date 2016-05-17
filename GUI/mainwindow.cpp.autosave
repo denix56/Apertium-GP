@@ -1,0 +1,502 @@
+#include "ApertiumGUI.h"
+#include "ui_ApertiumGUI.h"
+
+#include <QUrlQuery>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QtNetwork/QNetworkRequest>
+#include <QByteArray>
+#include <QTimer>
+#include <QTextBlock>
+#include <QPixmap>
+#include <QMenu>
+#include <QSpinBox>
+#include <QDialogButtonBox>
+#include <QMessageBox>
+#include <set>
+#include <QLocale>
+#include <QTextCodec>
+#include <QTextDecoder>
+
+ApertiumGUI::ApertiumGUI(QWidget *parent) :
+    QApertiumGUI(parent),
+    ui(new Ui::ApertiumGUI)
+{
+    ui->setupUi(this);
+    setWindowTitle("Apertium-GP");
+    //open file with settings
+    loadSettings();
+    //initialize language selection buttons
+    SourceLangBtns.resize(3);
+    TargetLangBtns.resize(3);
+    SourceLangBtns[0]=ui->SourceLang1;
+    SourceLangBtns[1]=ui->SourceLang2;
+    SourceLangBtns[2]=ui->SourceLang3;
+
+    TargetLangBtns[0]=ui->TargetLang1;
+    TargetLangBtns[1]=ui->TargetLang2;
+    TargetLangBtns[2]=ui->TargetLang3;
+
+
+    for(int i=0;i<SourceLangBtns.size();++i)
+    {
+        connect(SourceLangBtns[i],SIGNAL(clicked(bool)),this,SLOT(clearAnotherSButtons()));
+        connect(SourceLangBtns[i],SIGNAL(toggled(bool)),SourceLangBtns[i],SLOT(changeButtonColor(bool)));
+    }
+    for(int i=0;i<TargetLangBtns.size();++i)
+    {
+        connect(TargetLangBtns[i],SIGNAL(clicked(bool)),this,SLOT(clearAnotherEButtons()));
+        connect(TargetLangBtns[i],SIGNAL(toggled(bool)),TargetLangBtns[i],SLOT(changeButtonColor(bool)));
+    }
+    SourceLangBtns[0]->setChecked(true);
+    TargetLangBtns[0]->setChecked(true);
+
+    //start server and get available language pairs
+    requestSender = new QNetworkAccessManager(this);
+    url = "http://localhost:2737";
+    QNetworkRequest* request = new QNetworkRequest;
+    apy = new QProcess;
+    //TODO check if directory correct
+    apy->setWorkingDirectory(serverPath);
+    apy->start("./servlet.py "+langPairsPath);
+    //TODO analog of timer - ready
+    QEventLoop loop;
+
+    QTimer::singleShot(2000, &loop, SLOT(quit()));
+    loop.exec();
+    QString mode = "/listLanguageNames?";
+    QUrlQuery query;
+    query.addQueryItem("locale", QLocale::system().name().left(QLocale::system().name().indexOf('_')));
+    //qDebug(QLocale::system().name().left(QLocale::system().name().indexOf('_')).toLatin1());
+    request->setUrl(QUrl(url.toString()+mode+query.toString()));
+
+    connect(requestSender,SIGNAL(finished(QNetworkReply*)),this,SLOT(getLangFullNames(QNetworkReply*)));
+    connect(requestSender->get(*request),SIGNAL(finished()), &loop, SLOT(quit()));
+    loop.exec();
+    mode = "/listPairs?";
+    query.clear();
+    query.addQueryItem("include_deprecated_codes","yes");
+    request->setUrl(QUrl(url.toString()+mode+query.toString()));
+    connect(requestSender,SIGNAL(finished(QNetworkReply*)),this,SLOT(createListOfLangs(QNetworkReply*)));
+    requestSender->get(*request);
+    connect(ui->SourceLangComboBox,SIGNAL(activated(int)),this,SLOT(updateComboBox(int)));
+    connect(ui->TargetLangComboBox,SIGNAL(activated(int)),this,SLOT(updateEndComboBox(int)));
+    connect(ui->boxInput,SIGNAL(printEnded()),this,SLOT(createRequests()));
+    connect(requestSender,SIGNAL(finished(QNetworkReply*)),this,SLOT(getReplyFromAPY(QNetworkReply*)));
+    connect(ui->actionExit,&QAction::triggered,this,&ApertiumGUI::close);
+    connect(ui->actionFont_preferences,&QAction::triggered,this,&ApertiumGUI::fontSizeBox);
+}
+
+struct ApertiumGUI::langpairUsed
+{
+    QString name;
+    unsigned long long n;
+    langpairUsed(QString _name, long long _n)
+    {
+        name = _name;
+        n = _n;
+    }
+    bool operator <(const langpairUsed &op) const
+    {
+        //reverse
+        return n > op.n;
+    }
+};
+
+//get available language pairs
+void ApertiumGUI::createListOfLangs(QNetworkReply * reply)
+{    
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        disconnect(requestSender,SIGNAL(finished(QNetworkReply*)),this,SLOT(createListOfLangs(QNetworkReply*)));
+        // read server response
+        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+        //qDebug(doc.toJson());
+        QJsonArray array = doc.object().value("responseData").toArray();
+        //parse json response
+        std::multiset <langpairUsed> langs;
+        QFontMetrics metr(ui->mru->font());
+        QRect rect = QRect(0, 0, 0, 0);
+        int wrappedlines = 0;
+       for(QJsonArray::iterator it = array.begin(); it != array.end();)
+        {
+            QString inputSourceLanguage = it->toObject().value("sourceLanguage").toString();
+            if(inputSourceLanguage.length() > 2)
+                it = array.erase(it);
+            else
+                it++;
+       }
+        for (int i = 0; i < array.count(); ++i)
+        {
+            bool unique = true;
+            QString sourceLanguage = langNamesMap[array.at(i).toObject().value("sourceLanguage").toString()];
+            QString targetLanguage = langNamesMap[array.at(i).toObject().value("targetLanguage").toString()];
+            if (settings->value(sourceLanguage + "-" + targetLanguage).toULongLong()>0ULL)
+            {
+                langs.insert(langpairUsed(sourceLanguage + "-" + targetLanguage,
+                                          settings->value(sourceLanguage + "-" + targetLanguage).toULongLong()));
+                if (rect.width()<metr.boundingRect(sourceLanguage + "-" + targetLanguage).width())
+                    rect = metr.boundingRect(sourceLanguage + "-" + targetLanguage);
+                if (metr.boundingRect(sourceLanguage + "-" + targetLanguage).width()>=ui->mru->width()-10)
+                    wrappedlines++;
+            }
+            for(int j=0;j<ui->SourceLangComboBox->count();++j)
+                if(ui->SourceLangComboBox->itemText(j)==sourceLanguage)
+                    unique=false;
+            if(unique)
+                ui->SourceLangComboBox->addItem(sourceLanguage);
+        }
+        int i=0;
+        for(std::multiset<langpairUsed>::iterator it = langs.begin(); i < 3 && it != langs.end();it++, i++)
+        {
+            QListWidgetItem* item = new QListWidgetItem(it->name);
+            item->setTextAlignment(Qt::AlignCenter);
+            ui->mru->addItem(item);
+        }
+
+        for (int i = 0; i < array.count(); ++i)
+            if(langNamesMap[array.at(i).toObject().value("sourceLanguage").toString()]==ui->SourceLangComboBox->itemText(0))
+                ui->TargetLangComboBox->addItem(langNamesMap[array.at(i).toObject().value("targetLanguage").toString()]);
+
+        //fill buttons with first languages
+        for(int i=0;i<SourceLangBtns.size();++i)
+            SourceLangBtns[i]->setText(ui->SourceLangComboBox->itemText(i));
+
+        for(int i=0;i<TargetLangBtns.size();++i)
+            TargetLangBtns[i]->setText(ui->TargetLangComboBox->itemText(i));
+
+        for(int i=0;i<SourceLangBtns.size();++i)
+            ui->SourceLangComboBox->removeItem(0);
+
+        for(int i=0;i<TargetLangBtns.size();++i)
+            ui->TargetLangComboBox->removeItem(0);
+        currentSLang=langNamesMap.key(SourceLangBtns[0]->text());
+        currentTargetLang = langNamesMap.key(TargetLangBtns[0]->text());
+        if(rect.width()<70)
+            ui->mru->setFixedWidth(rect.width()+40);
+        ui->mru->setFixedSize(ui->mru->width(),
+                              (ui->mru->sizeHintForRow(0) +
+                               ui->mru->spacing()) * (ui->mru->count()+wrappedlines) + 2 * ui->mru->frameWidth());
+        emit listOfLangsSet();
+    }
+    // Error occured
+    else
+        qDebug() << reply->errorString();
+    reply->deleteLater();
+}
+
+void ApertiumGUI::getLangFullNames(QNetworkReply *reply)
+{
+    disconnect(requestSender,SIGNAL(finished(QNetworkReply*)),this,SLOT(getLangFullNames(QNetworkReply*)));
+    QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+    QJsonObject obj = doc.object();
+    foreach (QString let2, obj.keys()) {
+        langNamesMap[let2] = obj.value(let2).toString().toLocal8Bit();
+    }
+}
+
+//update ComboBoxes when new source language, that is choosed
+void ApertiumGUI::updateComboBox(int index)
+{
+    QString curr = ui->SourceLangComboBox->itemText(index);
+    ui->SourceLangComboBox->removeItem(index);
+    ui->SourceLangComboBox->addItem(SourceLangBtns[2]->text());
+    SourceLangBtns[2]->setText(SourceLangBtns[1]->text());
+    SourceLangBtns[1]->setText(SourceLangBtns[0]->text());
+    SourceLangBtns[0]->setText(curr);
+    QUrlQuery query;
+    query.addQueryItem("include_deprecated_codes","yes");
+    QNetworkRequest request(url.toString()+"/listPairs?"+query.toString());
+
+    QNetworkReply* reply = requestSender->get(request);
+    QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+    QJsonArray array = doc.object().value("responseData").toArray();
+    for(QJsonArray::iterator it = array.begin(); it != array.end(); it++)
+     {
+         QString sourceLanguage = (*it).toObject().value("sourceLanguage").toString();
+         if (sourceLanguage.length() % 3 == 0)
+             it = array.erase(it);
+     }
+    ui->TargetLangComboBox->clear();
+    for (int i = 0; i < array.count(); ++i)
+    {
+        if(langNamesMap[array.at(i).toObject().value("sourceLanguage").toString()]==SourceLangBtns[0]->text())
+            ui->TargetLangComboBox->addItem(langNamesMap[array.at(i).toObject().value("targetLanguage").toString()]);
+    }
+    emit SourceLangBtns[0]->clicked(true);
+    reply->deleteLater();
+}
+
+//update ComboBox with Tatget Languages when the new one is choosed
+void ApertiumGUI::updateEndComboBox(int index)
+{
+    QString curr = ui->TargetLangComboBox->itemText(index);
+    ui->TargetLangComboBox->removeItem(index);
+    ui->TargetLangComboBox->addItem(TargetLangBtns[2]->text());
+    TargetLangBtns[2]->setText(TargetLangBtns[1]->text());
+    TargetLangBtns[1]->setText(TargetLangBtns[0]->text());
+    TargetLangBtns[0]->setText(curr);
+}
+
+//Uncheck another Source language buttons when the new one is checked
+void ApertiumGUI::clearAnotherSButtons()
+{
+    ui->boxOutput->clear();
+    currentSButton = qobject_cast<HeadButton*>(sender());
+    for (int i=0;i<SourceLangBtns.size();++i) {
+        if(SourceLangBtns[i]!=currentSButton)
+            SourceLangBtns[i]->setChecked(false);
+        else
+            currentSLang=langNamesMap.key(SourceLangBtns[i]->text());
+    }
+    QNetworkAccessManager* requestSenderTmp = new QNetworkAccessManager;
+    QUrlQuery query;
+    query.addQueryItem("include_deprecated_codes","yes");
+    QNetworkRequest request(url.toString()+"/listPairs?"+query.toString());
+
+    connect(requestSenderTmp,SIGNAL(finished(QNetworkReply*)),this,SLOT(getResponseOfAvailLang(QNetworkReply*)));
+    requestSenderTmp->get(request);
+
+}
+
+
+
+//update available Target languages
+void ApertiumGUI::getResponseOfAvailLang(QNetworkReply* reply)
+{
+    QJsonDocument docAvailLang = QJsonDocument::fromJson(reply->readAll());
+    QJsonArray array = docAvailLang.object().value("responseData").toArray();
+    for(QJsonArray::iterator it = array.begin(); it != array.end(); it++)
+     {
+         QString sourceLanguage = (*it).toObject().value("sourceLanguage").toString();
+         if (sourceLanguage.length() % 3 == 0)
+             it = array.erase(it);
+     }
+    ui->TargetLangComboBox->clear();
+    for (int i = 0; i < array.count(); ++i)
+    {
+        if(langNamesMap[array.at(i).toObject().value("sourceLanguage").toString()]==currentSButton->text())
+            ui->TargetLangComboBox->addItem(langNamesMap[array.at(i).toObject().value("targetLanguage").toString()]);
+    }
+
+    for(int i=0;i<TargetLangBtns.size();++i)
+        TargetLangBtns[i]->setText(ui->TargetLangComboBox->itemText(i));
+    for(int i=0;i<TargetLangBtns.size();++i)
+        ui->TargetLangComboBox->removeItem(0);
+    TargetLangBtns[0]->click();
+    emit listOfLangsSet();
+    reply->deleteLater();
+}
+
+//Uncheck another Target language buttons when the new one is checked
+void ApertiumGUI::clearAnotherEButtons()
+{
+    HeadButton* currentButton = qobject_cast<HeadButton*>(sender());
+    for (int i=0;i<TargetLangBtns.size();++i) {
+        if(TargetLangBtns[i]!=currentButton)
+            TargetLangBtns[i]->setChecked(false);
+        else
+            currentTargetLang=langNamesMap.key(TargetLangBtns[i]->text());
+    }
+}
+
+void ApertiumGUI::resizeEvent(QResizeEvent* e)
+{
+    ui->boxInput->resize(this->width()/2-100,300);
+    ui->boxOutput->resize(this->width()/2-100,300);
+    ui->label->setPixmap(ui->label->pixmap()->scaled(ui->label->pixmap()->width(),ui->label->pixmap()->height(),Qt::KeepAspectRatio));
+    ui->label->repaint();
+}
+
+
+//send translation request for paragraph
+void ApertiumGUI::createRequests(int blockNum, bool addLine)
+{
+    if (blockNum==-1)
+        blockNum = ui->boxInput->textCursor().blockNumber();
+    QString paragraph;
+    //for pasted text
+    //TODO do not translate the whole text when something is pasted
+    if (ui->boxInput->isPasted())
+    {
+        ui->boxOutput->clear();
+        QString all = ui->boxInput->toPlainText();
+        foreach(paragraph,all.split("\n"))
+        {
+            QNetworkRequest* request = new QNetworkRequest;
+            QString mode = "/translate?";
+            QUrlQuery urlQ;
+            urlQ.addQueryItem("langpair", currentSLang+"|"+currentTargetLang);
+            urlQ.addQueryItem("q",paragraph);
+            request->setUrl(QUrl(url.toString()+mode+urlQ.query()));
+            request->setRawHeader("blockNumber",QByteArray::number(blockNum));
+            request->setRawHeader("addLine",QByteArray(addLine ? "yes" :"no"));
+            request->setRawHeader("blockCount",QByteArray::number(ui->boxInput->document()->blockCount()));
+            sendRequestToAPY(request);
+        }
+    }
+    else
+    {
+        if ((ui->boxInput->getKey()==Qt::Key_Enter || ui->boxInput->getKey()==Qt::Key_Return) && !addLine)
+            createRequests(blockNum-1, true);
+        paragraph = QUrl::toPercentEncoding(ui->boxInput->document()->findBlockByNumber(blockNum).text());
+        QNetworkRequest* request = new QNetworkRequest;
+        QString mode = "/translate?";
+        QUrlQuery urlQ;
+        urlQ.addQueryItem("langpair", currentSLang+"|"+currentTargetLang);
+        urlQ.addQueryItem("q",paragraph);
+        request->setUrl(QUrl(url.toString()+mode+urlQ.query()));
+        request->setRawHeader("blockNumber",QByteArray::number(blockNum));
+        request->setRawHeader("addLine",QByteArray(addLine ? "yes" :"no"));
+        request->setRawHeader("blockCount",QByteArray::number(ui->boxInput->document()->blockCount()));
+        requestSender->get(*request);
+        //sendRequestToAPY(request);
+    }
+    QString langpair = currentSLang+"-"+currentTargetLang;
+    settings->setValue(langpair, QVariant(settings->value(langpair,QVariant(0ULL)).toULongLong() + 1ULL));
+}
+
+//make requests synchronuous
+void ApertiumGUI::sendRequestToAPY(QNetworkRequest* request)
+{
+    QEventLoop loop;
+    //connect(, SIGNAL(finished()), &loop, SLOT(quit()));
+    loop.exec();
+}
+
+
+
+//parse json response
+void ApertiumGUI::getReplyFromAPY(QNetworkReply* reply)
+{
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+
+        int blockC = reply->request().rawHeader("blockCount").toInt();
+        QString paragraph = doc.object().value("responseData").toObject().value("translatedText").toString();
+        QTextBlock block = ui->boxOutput->document()->findBlockByNumber(reply->request().rawHeader("blockNumber").toInt());
+        //creating text to insert
+        QString text = ui->boxOutput->toPlainText().left(block.position())+ paragraph+"\n"
+                + ui->boxOutput->toPlainText().mid(lastBlockCount>blockC
+                                                   ? block.next().next().position()
+                                                   : block.next().position(),
+                                                   block.next().position() > 0 ? -1 : 0);
+        ui->boxOutput->setText(text);
+        //creating new paragraph
+        if (reply->request().rawHeader("addLine")=="yes")
+        {
+            QTextCursor cursor = ui->boxOutput->textCursor();
+            cursor.setPosition(block.position());
+            cursor.movePosition(QTextCursor::EndOfBlock);
+            cursor.insertBlock();
+            ui->boxOutput->setTextCursor(cursor);
+        }
+        lastBlockCount = blockC;
+    }
+    else
+        qDebug() << reply->errorString();
+
+    reply->deleteLater();
+}
+
+
+void ApertiumGUI::closeEvent(QCloseEvent* e)
+{
+    apy->close();
+    //apy->kill();
+}
+
+ApertiumGUI::~ApertiumGUI()
+{
+    delete ui;
+}
+
+void ApertiumGUI::fontSizeBox()
+{
+    fSizeBox = new QDialog;
+    fSizeBox->setWindowTitle("Set fontsize of translation boxes");
+    QVBoxLayout* layout = new QVBoxLayout;
+    QSpinBox* fontSize = new QSpinBox;
+    currentFontSize=ui->boxInput->fontInfo().pointSize();
+    fontSize->setValue(currentFontSize);
+    connect(fontSize,SIGNAL(valueChanged(int)),this,SLOT(changeFontSize(int)));
+    layout->addWidget(fontSize);
+    QDialogButtonBox* button = new QDialogButtonBox;
+    button->addButton(QDialogButtonBox::Ok);
+    button->addButton(QDialogButtonBox::Cancel);
+    connect(button->button(QDialogButtonBox::Ok),SIGNAL(clicked(bool)),this,SLOT(fontSizeOk()));
+    connect(button->button(QDialogButtonBox::Cancel),SIGNAL(clicked(bool)),this,SLOT(fontSizeCancel()));
+    layout->addWidget(button);
+    fSizeBox->setLayout(layout);
+    fSizeBox->setModal(true);
+    fSizeBox->show();
+}
+void ApertiumGUI::changeFontSize(int size)
+{
+    QFont font(ui->boxInput->font());
+    font.setPointSize(size);
+    ui->boxInput->setFont(font);
+    ui->boxOutput->setFont(font);
+    settings->setValue(FONTSIZE,QVariant(font.pointSize()));
+}
+
+void ApertiumGUI::fontSizeOk()
+{
+    fSizeBox->close();
+}
+
+void ApertiumGUI::fontSizeCancel()
+{
+    QFont font(ui->boxInput->font());
+    font.setPointSize(currentFontSize);
+    ui->boxInput->setFont(font);
+    ui->boxOutput->setFont(font);
+    settings->setValue(FONTSIZE,QVariant(font.pointSize()));
+    fSizeBox->close();
+}
+
+void ApertiumGUI::on_mru_currentTextChanged(const QString &currentText)
+{
+    int sBtnIndex = -1;
+    int tBtnIndex = -1;
+    for (int i = 0; i<SourceLangBtns.size();++i)
+        if (SourceLangBtns[i]->text()==currentText.left(currentText.indexOf('-')))
+        {
+            sBtnIndex = i;
+            break;
+        }
+    if (sBtnIndex!=-1)
+        SourceLangBtns[sBtnIndex]->click();
+    else
+        emit ui->SourceLangComboBox->activated(ui->SourceLangComboBox->findText(currentText.left(currentText.indexOf('-'))));
+    QEventLoop loop;
+    connect(this, SIGNAL(listOfLangsSet()),&loop, SLOT(quit()));
+    loop.exec();
+    for (int i = 0; i<TargetLangBtns.size();++i)
+    {
+        if (TargetLangBtns[i]->text()==currentText.mid(currentText.indexOf('-')+1))
+        {
+            tBtnIndex = i;
+            break;
+        }
+    }
+    if (tBtnIndex!=-1)
+        TargetLangBtns[tBtnIndex]->click();
+    else
+        emit ui->TargetLangComboBox->activated(ui->TargetLangComboBox->findText(currentText.mid(currentText.indexOf('-')+1)));
+
+}
+
+void ApertiumGUI::loadSettings()
+{
+    settings = new QSettings(QSettings::NativeFormat,QSettings::UserScope,"Apertium","Apertium-GP");
+    //Save entered pathes to Server and langpairs
+    serverPath = settings->value(SERVERPATH).toString();
+    langPairsPath = settings->value(LANGPATH).toString();
+    QFont font(ui->boxInput->font());
+    font.setPointSize(settings->value(FONTSIZE,QVariant(11)).toInt());
+    ui->boxInput->setFont(font);
+    ui->boxOutput->setFont(font);
+}
