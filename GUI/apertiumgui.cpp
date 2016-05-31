@@ -4,7 +4,6 @@
 #include "tablecombobox.h"
 #include "downloadwindow.h"
 #include "initializer.h"
-#include <KF5/KAuth/kauth.h>
 #include <QUrlQuery>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -26,6 +25,7 @@
 #include <QFileInfoList>
 #include <QFileInfo>
 #include <QStyle>
+#include <QNetworkConfiguration>
 #include <QDebug>
 
 //TODO: choose language of app
@@ -81,8 +81,6 @@ bool ApertiumGui::initialize()
     ui->boxOutput->setTextColor(QColor(0,0,0));
     translator = new Translator(this);
     translator->moveToThread(&thread);
-
-    bool initRes = true;
 #ifdef Q_OS_LINUX
 
     //start server and get available language pairs
@@ -98,6 +96,7 @@ bool ApertiumGui::initialize()
         QMessageBox box;
         box.critical(this,"Path error","Incorrect server directory");
         close();
+        return false;
     }
     apy->setArguments(QStringList() << langPairsPath);
     apy->setProgram("./servlet.py");
@@ -119,28 +118,20 @@ bool ApertiumGui::initialize()
     }
 
 
-    QAction *dlAction =  new QAction(style()->standardIcon(QStyle::SP_ArrowDown),tr("Install packages"),ui->toolBar);
+    QAction *dlAction =  new QAction(style()->standardIcon(QStyle::SP_ArrowDown),
+                                     tr("Install packages"),ui->toolBar);
     ui->toolBar->addAction(dlAction);
-    connect(dlAction,&QAction::triggered,[&]()
-    {auto dlWindow = new DownloadWindow;
-        dlWindow->exec();
-        QNetworkReply *reply;
-        QNetworkRequest request;
-        const QString mode = "/listPairs?";
-        request.setUrl(QUrl(url.toString()+mode));
-        QEventLoop loop;
-        connect(reply,&QNetworkReply::finished,&loop,&QEventLoop::quit);
-        reply = requestSender->get(request);
-        loop.exec();
-    initRes = createListOfLangs(reply);});
-
+    ui->toolBar->setMovable(false);
+    //Installing new packages
+    connect(dlAction, &QAction::triggered,this,&ApertiumGui::dlAction_triggered);
     const QString mode = "/listPairs";
     request->setUrl(QUrl(url.toString()+mode));
     QEventLoop loop;
-    auto reply= requestSender->get(*request);;
+    auto reply= requestSender->get(*request);
     connect(reply,&QNetworkReply::finished,&loop,&QEventLoop::quit);
     loop.exec();
-    if (!createListOfLangs(reply))
+    createListOfLangs(reply);
+    if (!initRes)
         dlAction->trigger();
 
     connect(requestSender,&QNetworkAccessManager::finished,this,&ApertiumGui::getReplyFromAPY);
@@ -148,12 +139,13 @@ bool ApertiumGui::initialize()
     reply->deleteLater();
     dlg->close();
     dlg->deleteLater();
-#else
 
+#else
     ui->toolBar->addAction(style()->standardIcon(QStyle::SP_ArrowDown),tr("Install packages"),[&]()
-    {auto dlWindow = new DownloadWindow;
-        dlWindow->exec();
-    initRes = createListOfLangs();});
+    {DownloadWindow dlWindow;
+        if(dlWindow.getData(false))
+            dlWindow->exec();
+        createListOfLangs();});
 
     connect(ui->boxInput,&InputTextEdit::printEnded,translator,&Translator::nonLinuxTranslate);
     connect(ui->boxInput,&InputTextEdit::printEnded,this,&ApertiumGui::saveMru);
@@ -161,7 +153,7 @@ bool ApertiumGui::initialize()
     if (!appdata->exists("usr/share/apertium/modes") || !QDir(DATALOCATION+"/apertium-all-dev").exists())
         dlAction->trigger();
     else
-        return createListOfLangs();
+        return initRes;
 #endif  
     thread.start();
     connect(ui->SourceLangComboBox->view(), &QTableView::activated, this, &ApertiumGui::updateComboBox);
@@ -173,6 +165,37 @@ bool ApertiumGui::initialize()
     connect(ui->actionExit, &QAction::triggered, this, &ApertiumGui::close);
     connect(ui->actionFont_preferences,&QAction::triggered,this,&ApertiumGui::fontSizeBox);
     return initRes;
+}
+
+void ApertiumGui::dlAction_triggered()
+{
+
+    DownloadWindow dlWindow(this);
+    if (dlWindow.getData(checked)) {
+        qDebug() << dlWindow.exec();
+        checked = true;
+        apy->terminate();
+        apy->waitForFinished();
+        apy->start();
+        while(true) {
+            QEventLoop loop;
+            auto reply = requestSender->get(QNetworkRequest(QUrl(url.toString()+"/listPairs")));
+            connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
+            loop.exec();
+            if (reply->error()== QNetworkReply::NoError) {
+                reply->deleteLater();
+                break;
+            }
+            reply->deleteLater();
+        }
+        const QString mode = "/listPairs";
+        QNetworkAccessManager tmp(this);
+        auto reply = tmp.get(QNetworkRequest(QUrl(url.toString()+mode)));
+        QEventLoop loop;
+        connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
+        loop.exec();
+        createListOfLangs(reply);
+    }
 }
 
 struct ApertiumGui::langpairUsed
@@ -192,17 +215,17 @@ struct ApertiumGui::langpairUsed
 };
 
 //get available language pairs
-bool ApertiumGui::createListOfLangs(QNetworkReply *reply)
+void ApertiumGui::createListOfLangs(QNetworkReply *reply)
 {
-std::multiset <langpairUsed> langs;
-ui->SourceLangComboBox->model()->clear();
-ui->TargetLangComboBox->model()->clear();
-ui->mru->clear();
-for (auto b : SourceLangBtns)
-    b->setText("");
+    std::multiset <langpairUsed> langs;
+    ui->SourceLangComboBox->model()->clear();
+    ui->TargetLangComboBox->model()->clear();
+    ui->mru->clear();
+    for (auto b : SourceLangBtns)
+        b->setText("");
 
-for (auto b : TargetLangBtns)
-    b->setText("");
+    for (auto b : TargetLangBtns)
+        b->setText("");
 
 #ifdef Q_OS_LINUX
     if (reply->error() == QNetworkReply::NoError)
@@ -210,12 +233,19 @@ for (auto b : TargetLangBtns)
         // read server response
         QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
         QJsonArray array = doc.object().value("responseData").toArray();
-        if (array.isEmpty())
-            return false;
+        if (array.isEmpty()) {
+            QMessageBox box;
+            box.setModal(true);
+            box.critical(this,tr("No langpairs found."),tr("It seems, that no language pairs have been found."),
+                         QMessageBox::Ok);
+            initRes = false;
+            qDebug() << initRes;
+            return;
+        }
         //parse json response
 
         //delete non 2-letter names
-       for(auto it = array.begin(); it != array.end();)
+        for(auto it = array.begin(); it != array.end();)
         {
             QString sourceLanguage = it->toObject().value("sourceLanguage").toString();
             QString targetLanguage = it->toObject().value("targetLanguage").toString();
@@ -223,7 +253,7 @@ for (auto b : TargetLangBtns)
                 it = array.erase(it);
             else
                 ++it;
-       }
+        }
         for (auto it : array)
         {
             bool unique = true;
@@ -262,7 +292,8 @@ for (auto b : TargetLangBtns)
         {
             QMessageBox box;
             box.critical(this,"Server error",reply->errorString());
-            return false;
+            initRes = false;
+            return;
         }
 #else
         if (!appdata->exists("usr/share/apertium/modes") || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
@@ -354,7 +385,8 @@ for (auto b : TargetLangBtns)
         };
 #endif        
         emit listOfLangsSet();
-        return true;
+        initRes = true;
+        return;
 }
 
 //update ComboBoxes when new source language, that is choosed
@@ -658,11 +690,6 @@ void ApertiumGui::getReplyFromAPY(QNetworkReply* reply)
     reply->deleteLater();
 }
 
-void ApertiumGui::closeEvent(QCloseEvent* e)
-{
-
-}
-
 void ApertiumGui::resizeEvent(QResizeEvent* e)
 {
     ui->boxInput->resize(this->width()/2-100,300);
@@ -673,7 +700,8 @@ void ApertiumGui::resizeEvent(QResizeEvent* e)
 ApertiumGui::~ApertiumGui()
 {
 #ifdef Q_OS_LINUX
-    apy->close();
+    apy->terminate();
+    apy->waitForFinished();
     if (apy->state()!=QProcess::NotRunning)
         apy->kill();
 #endif

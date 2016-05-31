@@ -34,8 +34,6 @@ public:
 
 protected:
     void resizeEvent(QResizeEvent*);
-    void closeEvent(QCloseEvent*);
-
 signals:
     void listOfLangsSet();
     void failedToStart();
@@ -60,7 +58,7 @@ private slots:
      //send translation request for each paragraph
     void createRequests();
 
-    bool createListOfLangs(QNetworkReply *reply = nullptr);
+    void createListOfLangs(QNetworkReply *reply = nullptr);
     //Uncheck Other Target language buttons when the new one is checked
     void clearOtherEButtons();
 
@@ -77,7 +75,7 @@ private slots:
     void translateReceived(const QString &result);
 
     void on_boxInput_currentCharFormatChanged(const QTextCharFormat &format);
-
+    void dlAction_triggered();
 
 
 private:
@@ -100,12 +98,13 @@ private:
 
     //not for Linux
     QDir *appdata;
-
     int lastBlockCount = 1;
     int currentFontSize;
 
     struct langpairUsed;
-
+    //apt-get update completed
+    bool checked = false;
+    bool initRes = true;
     const QString FONTSIZE = "interface/fontsize";
     const QString SERVERPATH = "path/serverPath";
     const QString LANGPATH = "path/langPath";

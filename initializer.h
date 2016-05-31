@@ -20,6 +20,7 @@ inline QString nameToFull(const QString &s)
     auto pair = s.mid(s.indexOf(QRegExp("(-[a-z]{2,3}){2}"))).mid(1);
     auto sourceLang = Initializer::langNamesMap[pair.left(pair.indexOf('-'))];
     auto targetLang = Initializer::langNamesMap[pair.mid(pair.indexOf('-')+1)];
+    //qDebug() << sourceLang << targetLang;
     if (sourceLang.isEmpty())
         sourceLang = pair.left(pair.indexOf('-'));
     if (targetLang.isEmpty())

@@ -5,7 +5,8 @@
 #include <QVariant>
 #include <QLocale>
 #include <QDir>
-
+#include <QProcess>
+#include <QDebug>
 Initializer::Initializer()
 {
 
@@ -17,7 +18,7 @@ void Initializer::getLangFullNames()
 {
     conf = new QSettings(QSettings::NativeFormat,QSettings::UserScope,"Apertium","Apertium-GP");
     auto db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName(QDir::currentPath()+"/langNames.db");
+    db.setDatabaseName(DATALOCATION+"/langNames.db");
     if (!db.open())
     {
         QMessageBox box;
@@ -34,9 +35,7 @@ void Initializer::getLangFullNames()
    }
     do
     {
-#ifndef Q_OS_LINUX
         langNamesMap[query.value("inLg").toString()] = query.value("name").toString();
-#endif
         langNamesMap[query.value("iso3").toString()] = query.value("name").toString();
     } while(query.next());
     db.close();

@@ -20,14 +20,15 @@ public:
     explicit DownloadWindow(QWidget *parent = 0);
     ~DownloadWindow();
 
-
+public slots:
+    bool getData(bool checked);
+    void accept();
 private slots:
     void chooseAction(int row);
-    void getData();
+    bool applyChanges();
 
 protected:
     void closeEvent(QCloseEvent *);
-
 private:
     Ui::DownloadWindow *ui;
     QNetworkAccessManager *manager;
@@ -37,6 +38,8 @@ private:
 
     void installpkg(int row);
     void removepkg(int row);
+    void revert();
+    QVector <QString> toInstall, toUninstall;
 
 
 };

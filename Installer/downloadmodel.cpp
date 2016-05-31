@@ -76,6 +76,13 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+void DownloadModel::reset()
+{
+    beginResetModel();
+    downList.clear();
+    endResetModel();
+}
+
 bool DownloadModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (data(index, role) != value) {
@@ -151,6 +158,26 @@ void DownloadModel::sort(int column, Qt::SortOrder order)
         qSort(downList.begin(),downList.end(),[&order](const file &a,const file &b)
         {return order == Qt::AscendingOrder ? a.type < b.type
                                             : a.type > b.type;});
+        types lastType;
+        //TODO: maybe replace lasttype
+        for(int i = 0,first=0;i < downList.size();i++)
+        {
+            if (!i)
+                lastType = downList[0].type;
+            else
+            {
+                if(lastType!=downList[i].type || i==downList.size()-1){
+                    qSort(downList.begin()+first,downList.begin()+i-1,[](const file &a,const file &b)
+                    {
+                        auto an = nameToFull(a.name);
+                        auto bn = nameToFull(b.name);
+                        return an.localeAwareCompare(bn) < 0;});
+                    first=i;
+                }
+                lastType = downList[i].type;
+            }
+        }
+
         break;
 
         //sort by size
@@ -171,3 +198,24 @@ void DownloadModel::sort(int column, Qt::SortOrder order)
                      QVector<int>() << Qt::EditRole);
 }
 
+int DownloadModel::find(const QString &name)
+{
+    for(int i=0;i<downList.size();i++)
+        if(downList[i].name==name)
+            return i;
+    return -1;
+}
+
+int DownloadModel::count() const
+{
+    return downList.size();
+}
+
+int DownloadModel::countLangPairsInstalled() const
+{
+    int cnt = 0;
+    for(int i=0;i<downList.size();++i)
+        if(downList[i].type==LANGPAIRS && downList[i].state==UNINSTALL)
+            cnt++;
+    return cnt;
+}

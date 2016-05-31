@@ -3,9 +3,7 @@
 # Project created by QtCreator 2016-03-02T18:01:36
 #
 #-------------------------------------------------
-include(/usr/local/mkspecs/modules/qt_KCoreAddons.pri)
-include(/usr/local/mkspecs/modules/qt_KAuth.pri)
-QT       += core gui network widgets sql KAuth KCoreAddons
+QT       += core gui network widgets sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -50,6 +48,8 @@ FORMS    += \
 INCLUDEPATH += $$PWD/GUI \
     $$PWD/Installer \
     $$PWD/ChooseDialog \
+
+INCLUDEPATH +=
 
 QMAKE_CXXFLAGS += -std=gnu++11
 DEFINES  += QT_NO_SSL

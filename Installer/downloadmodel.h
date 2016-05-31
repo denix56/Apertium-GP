@@ -49,8 +49,10 @@ class DownloadModel : public QAbstractTableModel
     Q_OBJECT
 public:
     explicit DownloadModel(QObject *parent = 0);
-
-
+    void reset();
+    int find(const QString &name);
+    int count() const;
+    int countLangPairsInstalled() const;
     // Header:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 

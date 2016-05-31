@@ -11,29 +11,30 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 {
     painter->save();
     auto model = qobject_cast<const DownloadModel *>(index.model());
+#ifndef Q_OS_LINUX
     if (index.column() == 2 && model->item(index.row())->state>=DOWNLOADING){
         if (model->item(index.row())->state==DOWNLOADING)
         {
-        int progress = model->item(index.row())->progress;
-        QStyleOptionProgressBar progressBarOption;
-        progressBarOption.rect = option.rect;
-        progressBarOption.rect.setHeight(29);
-        progressBarOption.rect.setY(option.rect.y()+(option.rect.height()-progressBarOption.rect.height())/2);
-        progressBarOption.minimum = 0;
-        progressBarOption.maximum = model->item(index.row())->size+1;
-        progressBarOption.progress = progress;
-        progressBarOption.textAlignment = Qt::AlignCenter;
+            int progress = model->item(index.row())->progress;
+            QStyleOptionProgressBar progressBarOption;
+            progressBarOption.rect = option.rect;
+            progressBarOption.rect.setHeight(29);
+            progressBarOption.rect.setY(option.rect.y()+(option.rect.height()-progressBarOption.rect.height())/2);
+            progressBarOption.minimum = 0;
+            progressBarOption.maximum = model->item(index.row())->size+1;
+            progressBarOption.progress = progress;
+            progressBarOption.textAlignment = Qt::AlignCenter;
 
-        auto fsize = formatBytes(progress);
-        fsize = fsize.left(fsize.lastIndexOf(' '));
-        auto a = fsize.toDouble();
-        auto b = index.data().toString().left(index.data().toString().lastIndexOf(' ')).toDouble();
-        if (a > b)
-            a /= 1024;
-        progressBarOption.text = QString::number(a,'f',2) + " / " + index.data().toString();
-        progressBarOption.textVisible = true;
-        QApplication::style()->drawControl(QStyle::CE_ProgressBar,
-                                           &progressBarOption, painter);
+            auto fsize = formatBytes(progress);
+            fsize = fsize.left(fsize.lastIndexOf(' '));
+            auto a = fsize.toDouble();
+            auto b = index.data().toString().left(index.data().toString().lastIndexOf(' ')).toDouble();
+            if (a > b)
+                a /= 1024;
+            progressBarOption.text = QString::number(a,'f',2) + " / " + index.data().toString();
+            progressBarOption.textVisible = true;
+            QApplication::style()->drawControl(QStyle::CE_ProgressBar,
+                                               &progressBarOption, painter);
         }
         else
             if (model->item(index.row())->state==UNPACKING)
@@ -44,8 +45,10 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
             }
     }
     else
+#endif
         if (index.column()==3)
         {
+#ifndef Q_OS_LINUX
             QStyleOptionButton button;
             button.rect=option.rect;
             button.rect.setHeight(30);
@@ -58,6 +61,19 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
                 else
                     button.state = option.state | QStyle::State_Enabled;
             QApplication::style()->drawControl( QStyle::CE_PushButton, &button, painter);
+#else
+            QStyleOptionButton checkBox;
+            checkBox.rect = option.rect;
+            //TODO: update from program
+            checkBox.rect.setY(option.rect.y()+(option.rect.height()-checkBox.rect.height())/2);
+            checkBox.rect.setX(option.rect.x()+option.rect.width()/2);
+            if (model->item(index.row())->state == UNINSTALL)
+                checkBox.state = QStyle::State_Enabled | QStyle::State_On;
+            else
+                checkBox.state = QStyle::State_Enabled | QStyle::State_Off;
+            QApplication::style()->drawControl( QStyle::CE_CheckBox, &checkBox, painter);
+#endif
+
         }
         else
         {
@@ -68,29 +84,29 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
                 painter->setPen(Qt::red);
             painter->drawText(option.rect,index.data().toString(),text);
         }
-painter->restore();
+    painter->restore();
 }
 
 bool InstallerDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index)
- {
+{
     auto mod = qobject_cast<const DownloadModel *>(model);
-     if( event->type() == QEvent::MouseButtonRelease )
-     {
-         if (index.column()==3 && mod->item(index.row())->state != UNPACKING)
-         {
-             emit stateChanged(index.row());
-             return true;
-         }
-     }
-     return false;
- }
+    if( event->type() == QEvent::MouseButtonRelease )
+    {
+        if (index.column()==3 && mod->item(index.row())->state != UNPACKING)
+        {
+            emit stateChanged(index.row());
+            return true;
+        }
+    }
+    return false;
+}
 
 QSize InstallerDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     switch(index.column())
     {
     case 0:
-        return QSize(125,option.rect.height());
+        return QSize(160,option.rect.height());
     case 1:
         return QSize(70,option.rect.height());
     case 2:
