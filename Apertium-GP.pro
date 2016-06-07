@@ -62,3 +62,5 @@ DISTFILES += \
 
 RC_FILE = GUI/apertium.rc
 
+policy.files = org.apertium.apertiumgp.policy
+policy.path = /usr/share/polkit-1/actions

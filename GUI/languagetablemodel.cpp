@@ -118,13 +118,15 @@ bool languageTableModel::setNumberOfRows(int &n)
 
 void languageTableModel::clear()
 {
+    beginResetModel();
     list.clear();
     for(int i=0;i<rowN;i++)
         list << "";
-    emit dataChanged(createIndex(0,0),createIndex(rowCount()-1, columnCount()-1), QVector<int>() << Qt::EditRole);
+    endResetModel();
+    //emit dataChanged(createIndex(0,0),createIndex(rowCount()-1, columnCount()-1), QVector<int>() << Qt::EditRole);
 }
 
-QModelIndex languageTableModel::findText(QString value)
+QModelIndex languageTableModel::findText(QString value) const
 {
     int pos = list.indexOf(value);
     if (pos != -1)

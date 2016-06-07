@@ -25,7 +25,6 @@
 #include <QFileInfoList>
 #include <QFileInfo>
 #include <QStyle>
-#include <QNetworkConfiguration>
 #include <QDebug>
 
 //TODO: choose language of app
@@ -46,8 +45,6 @@ bool ApertiumGui::initialize()
     dlg->show();
 #endif
     appdata  = new QDir(DATALOCATION);
-    //TODO: delete this line
-    qDebug(DATALOCATION.toLatin1());
     setWindowTitle("Apertium-GP");
     //open file with Initializer::conf
     loadConf();
@@ -81,6 +78,7 @@ bool ApertiumGui::initialize()
     ui->boxOutput->setTextColor(QColor(0,0,0));
     translator = new Translator(this);
     translator->moveToThread(&thread);
+    ui->toolBar->setMovable(false);
 #ifdef Q_OS_LINUX
 
     //start server and get available language pairs
@@ -121,7 +119,6 @@ bool ApertiumGui::initialize()
     QAction *dlAction =  new QAction(style()->standardIcon(QStyle::SP_ArrowDown),
                                      tr("Install packages"),ui->toolBar);
     ui->toolBar->addAction(dlAction);
-    ui->toolBar->setMovable(false);
     //Installing new packages
     connect(dlAction, &QAction::triggered,this,&ApertiumGui::dlAction_triggered);
     const QString mode = "/listPairs";
@@ -141,19 +138,25 @@ bool ApertiumGui::initialize()
     dlg->deleteLater();
 
 #else
-    ui->toolBar->addAction(style()->standardIcon(QStyle::SP_ArrowDown),tr("Install packages"),[&]()
-    {DownloadWindow dlWindow;
-        if(dlWindow.getData(false))
-            dlWindow->exec();
-        createListOfLangs();});
-
+    checked = true;
+    auto dlAction= new QAction(style()->standardIcon(QStyle::SP_ArrowDown),tr("Install packages"),ui->toolBar);
+    ui->toolBar->addAction(dlAction);
+    connect(dlAction, &QAction::triggered,this, &ApertiumGui::dlAction_triggered);
     connect(ui->boxInput,&InputTextEdit::printEnded,translator,&Translator::nonLinuxTranslate);
     connect(ui->boxInput,&InputTextEdit::printEnded,this,&ApertiumGui::saveMru);
     connect(translator,&Translator::resultReady,this,&ApertiumGui::translateReceived);
-    if (!appdata->exists("usr/share/apertium/modes") || !QDir(DATALOCATION+"/apertium-all-dev").exists())
-        dlAction->trigger();
-    else
-        return initRes;
+    if (!appdata->exists("usr/share/apertium/modes") || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
+        QMessageBox box;
+        if(box.critical(this, "Required packages are not installed.",
+                        "The program cannot find required core tools and/or even one language pair installed. "
+                        "Please, install them.",QMessageBox::Ok, QMessageBox::Cancel)==QMessageBox::Ok)
+            dlAction->trigger();
+        else
+            return false;
+    } else {
+        initRes = true;
+        createListOfLangs();
+    }
 #endif  
     thread.start();
     connect(ui->SourceLangComboBox->view(), &QTableView::activated, this, &ApertiumGui::updateComboBox);
@@ -169,11 +172,12 @@ bool ApertiumGui::initialize()
 
 void ApertiumGui::dlAction_triggered()
 {
-
     DownloadWindow dlWindow(this);
-    if (dlWindow.getData(checked)) {
-        qDebug() << dlWindow.exec();
+    if (dlWindow.getData(checked))
+#ifdef Q_OS_LINUX
+    {   
         checked = true;
+        dlWindow.exec();
         apy->terminate();
         apy->waitForFinished();
         apy->start();
@@ -196,6 +200,10 @@ void ApertiumGui::dlAction_triggered()
         loop.exec();
         createListOfLangs(reply);
     }
+#else
+        dlWindow.exec();
+    createListOfLangs();
+#endif
 }
 
 struct ApertiumGui::langpairUsed
@@ -296,10 +304,11 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
             return;
         }
 #else
-        if (!appdata->exists("usr/share/apertium/modes") || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
+        if (!QDir(DATALOCATION+"/usr/share/apertium/modes").exists() || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
             QMessageBox box;
             box.critical(this,tr("No installed langpairs."), tr("You have not installed any langpairs. The application will be closed."));
-            return false;
+            initRes = false;
+            return;
         }
         //get list of availiable languages
         QDir moded(appdata->absoluteFilePath("usr/share/apertium/modes"));

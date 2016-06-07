@@ -62,7 +62,7 @@ private slots:
     //Uncheck Other Target language buttons when the new one is checked
     void clearOtherEButtons();
 
-
+    //box for changing font size
     void fontSizeBox();
     void changeFontSize(int size);
 

@@ -18,7 +18,7 @@ TableComboBox::TableComboBox(QWidget *parent)
     view()->verticalHeader()->hide();
     view()->setItemDelegate(new LangDelegate(view()));
     view()->setMouseTracking(true);
-setMaxVisibleItems(model()->rowCount());
+    setMaxVisibleItems(model()->rowCount());
     connect(model(),&languageTableModel::dataChanged,
             this,&TableComboBox::resizeT);
 }

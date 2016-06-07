@@ -18,7 +18,8 @@ void Initializer::getLangFullNames()
 {
     conf = new QSettings(QSettings::NativeFormat,QSettings::UserScope,"Apertium","Apertium-GP");
     auto db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName(DATALOCATION+"/langNames.db");
+    QDir path(DATALOCATION);
+    db.setDatabaseName(path.absoluteFilePath("langNames.db"));
     if (!db.open())
     {
         QMessageBox box;

@@ -7,8 +7,8 @@
 #include <QProcess>
 #include <QObject>
 #include <QFile>
-#include <QDebug>
 #include <QMessageBox>
+#include <QDebug>
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

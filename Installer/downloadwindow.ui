@@ -24,8 +24,8 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="0">
       <widget class="QTableView" name="view">
        <property name="styleSheet">
         <string notr="true"/>
@@ -60,6 +60,13 @@
        <attribute name="verticalHeaderVisible">
         <bool>false</bool>
        </attribute>
+      </widget>
+     </item>
+     <item row="1" column="0" alignment="Qt::AlignLeft">
+      <widget class="QPushButton" name="refreshButton">
+       <property name="text">
+        <string>Refresh</string>
+       </property>
       </widget>
      </item>
     </layout>

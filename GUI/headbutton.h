@@ -14,7 +14,6 @@ public slots:
 
 private slots:
     void denySameButtonClick();
-
     void denySameButtonClick2();
 
 

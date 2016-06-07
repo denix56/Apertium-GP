@@ -21,11 +21,13 @@ public:
     ~DownloadWindow();
 
 public slots:
-    bool getData(bool checked);
+    bool getData(bool checked = true);
     void accept();
 private slots:
     void chooseAction(int row);
     bool applyChanges();
+
+    void on_refreshButton_clicked();
 
 protected:
     void closeEvent(QCloseEvent *);
@@ -39,6 +41,7 @@ private:
     void installpkg(int row);
     void removepkg(int row);
     void revert();
+    int actionCnt;
     QVector <QString> toInstall, toUninstall;
 
 

@@ -18,22 +18,29 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     bool addItem(const QVariant &value);
     bool removeItem(const int &row, const int &column);
-    int currentColumnRowCount(const QModelIndex &index);
+
+
     // Editable:
     bool setData(const QModelIndex &index, const QVariant &value,
                  int role = Qt::EditRole) override;
 
     Qt::ItemFlags flags(const QModelIndex& index) const override;
-
+    //set maximum number
     bool setNumberOfRows(int &n);
 
+    //clear the model
     void clear();
 
+    //count number of languages
     int itemCount() const;
+    //return maximum number of elements that can be shown in a column
     int maxRowCount() const;
-    QModelIndex findText(QString value);
+    //find position of language by its name
+    QModelIndex findText(QString value) const;
 
 private:
+    //count number of languages in the current column
+    int currentColumnRowCount(const QModelIndex &index);
     int rowN = 8;
     QStringList list;
 };
