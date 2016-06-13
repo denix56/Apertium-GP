@@ -16,6 +16,8 @@ languageTableModel::languageTableModel(QStringList &list, QObject *parent)
 
 int languageTableModel::rowCount(const QModelIndex &parent) const
 {
+    if (itemCount()<rowN)
+        return itemCount();
     return rowN;
 }
 
@@ -48,11 +50,14 @@ bool languageTableModel::setData(const QModelIndex &index, const QVariant &value
     {
         if (index.row()==0)
             beginInsertColumns(QModelIndex(),columnCount(),columnCount());
+        if(list.size()!=index.column()*rowN)
+
         list << value.toString();
         for (int i = index.row()+1; i<rowCount();i++)
             list << "";
         if (index.row()==0)
             endInsertColumns();
+
     }
     //Alphabethic sorting
     qSort(list.begin(),list.begin()+itemCount());

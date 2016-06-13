@@ -11,8 +11,10 @@
 #include <QDebug>
 int main(int argc, char *argv[])
 {
+
     QApplication a(argc, argv);
-    Initializer::getLangFullNames();
+    if (!Initializer::initialize())
+        return 4;
 #ifdef Q_OS_LINUX
     if(!Initializer::conf->contains("path/langPath") ||
             Initializer::conf->value("path/langPath").toString().isEmpty())

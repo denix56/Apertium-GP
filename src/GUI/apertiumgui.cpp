@@ -588,7 +588,7 @@ void ApertiumGui::getResponseOfAvailLang(QNetworkReply *reply)
 //send translation request for paragraph
 void ApertiumGui::createRequests()
 {
-    auto request = new QNetworkRequest;
+    QNetworkRequest request;
     QString mode = "/translate?";
     QUrlQuery urlQ;
     urlQ.addQueryItem("langpair", currentSourceLang+"|"+currentTargetLang);
@@ -600,9 +600,9 @@ void ApertiumGui::createRequests()
         for(auto paragraph : ui->boxInput->toPlainText().split("\n"))
         {
             urlQ.addQueryItem("q",QUrl::toPercentEncoding(paragraph));
-            request->setUrl(QUrl(url.toString()+mode+urlQ.query()));
-            request->setRawHeader("whole","yes");
-            translator->linuxTranslate(*request);
+            request.setUrl(QUrl(url.toString()+mode+urlQ.query()));
+            request.setRawHeader("whole","yes");
+            translator->linuxTranslate(request);
         }
 
         //TODO: rewrite this part
@@ -634,11 +634,11 @@ void ApertiumGui::createRequests()
     {
         auto cursor = ui->boxInput->textCursor();
         urlQ.addQueryItem("q",QUrl::toPercentEncoding(cursor.block().text()));
-        request->setUrl(QUrl(url.toString()+mode+urlQ.query()));
-        request->setRawHeader("blockNumber",
+        request.setUrl(QUrl(url.toString()+mode+urlQ.query()));
+        request.setRawHeader("blockNumber",
                               QByteArray::number(cursor.block().blockNumber()));
-        request->setRawHeader("whole","no");
-        translator->linuxTranslate(*request);
+        request.setRawHeader("whole","no");
+        translator->linuxTranslate(request);
 
     }
     lastBlockCount = ui->boxInput->document()->blockCount();
@@ -706,22 +706,10 @@ void ApertiumGui::resizeEvent(QResizeEvent* e)
     ui->label->setPixmap(ui->label->pixmap()->scaled(ui->label->pixmap()->width(),ui->label->pixmap()->height(),Qt::KeepAspectRatio));
     ui->label->repaint();
 }
-ApertiumGui::~ApertiumGui()
-{
-#ifdef Q_OS_LINUX
-    apy->terminate();
-    apy->waitForFinished();
-    if (apy->state()!=QProcess::NotRunning)
-        apy->kill();
-#endif
-    thread.quit();
-    thread.wait();
-    delete ui;
-}
 
 void ApertiumGui::fontSizeBox()
 {
-    fSizeBox = new QDialog;
+    fSizeBox = new QDialog(this);
     fSizeBox->setWindowTitle("Set fontsize of translation boxes");
     auto layout = new QVBoxLayout(fSizeBox);
     auto fontSize = new QSpinBox(fSizeBox);
@@ -843,4 +831,18 @@ void ApertiumGui::translateReceived(const QString &result)
 void ApertiumGui::on_boxInput_currentCharFormatChanged(const QTextCharFormat &format)
 {
     ui->boxInput->setTextColor(Qt::black);
+}
+
+ApertiumGui::~ApertiumGui()
+{
+#ifdef Q_OS_LINUX
+    apy->terminate();
+    apy->waitForFinished();
+    if (apy->state()!=QProcess::NotRunning)
+        apy->kill();
+#endif
+    thread.quit();
+    thread.wait();
+    delete Initializer::conf;
+    delete ui;
 }

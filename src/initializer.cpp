@@ -7,14 +7,11 @@
 #include <QDir>
 #include <QProcess>
 #include <QDebug>
-Initializer::Initializer()
-{
-
-}
+#include <QApplication>
 
 QMap<QString, QString> Initializer::langNamesMap;
 QSettings *Initializer::conf;
-void Initializer::getLangFullNames()
+bool Initializer::initialize()
 {
     conf = new QSettings(QSettings::NativeFormat,QSettings::UserScope,"Apertium","Apertium-GP");
     auto db = QSqlDatabase::addDatabase("QSQLITE");
@@ -24,7 +21,7 @@ void Initializer::getLangFullNames()
     {
         QMessageBox box;
         box.critical(0,"Database Error", "Database is not open.");
-        return;
+        return false;
     }
     QSqlQuery query;
     query.exec("SELECT * FROM languageNames WHERE lg = '"
@@ -40,4 +37,5 @@ void Initializer::getLangFullNames()
         langNamesMap[query.value("iso3").toString()] = query.value("name").toString();
     } while(query.next());
     db.close();
+    return true;
 }

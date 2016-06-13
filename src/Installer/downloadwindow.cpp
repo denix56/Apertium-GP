@@ -33,6 +33,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) :
     auto applyButton = new QPushButton(tr("Apply"),this);
     connect(applyButton, &QPushButton::clicked,this, &DownloadWindow::applyChanges);
     ui->gridLayout_2->addWidget(applyButton,1,0,1,1,Qt::AlignRight);
+    mngr = new ManagerHelper(this);
 #else
     manager = new QNetworkAccessManager(this);
 #endif
@@ -112,7 +113,6 @@ actionCnt = 0;
         auto m = it.next();
 
         auto name = m.captured(1);
-        qDebug() << name;
         auto state = INSTALL;
         if (QDir(DATALOCATION+"/usr/share/apertium/"+name).exists()) {
             state = UNINSTALL;
@@ -130,33 +130,40 @@ actionCnt = 0;
     if (state == INSTALL)
     {
         QMessageBox box;
-        box.warning(this,tr("Required Core tools are not installed"),tr("Please, install Required Core tools (they are highlighted red) to make translation work"));
+        box.warning(this,tr("Required Core tools are not installed"),
+                    tr("Please, install Required Core tools (they are highlighted red) to make translation work"));
     }
 #else
+    mngr->chooseManager();
     QProcess cmd(this);
     QDir path(DATALOCATION);
     if(!checked){
         QFile refreshScript(DATALOCATION+"/refresh.sh");
         refreshScript.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
         refreshScript.write("#!/bin/bash\n"
-                            "apt-get update");
+                            +mngr->update().toLatin1());
+        qDebug() << "#!/bin/bash\n"
+                    +mngr->update().toLatin1();
         refreshScript.close();
+        refreshScript.setPermissions(QFileDevice::ReadOwner | QFileDevice::ExeOwner);
         cmd.start("pkexec", QStringList() << path.absoluteFilePath("refresh.sh"));
         cmd.waitForStarted();
         while(cmd.state()==QProcess::Running)
             qApp->processEvents();
         refreshScript.remove();
     }
+    qDebug() << cmd.exitCode();
     if(cmd.exitCode()) {
         wait.close();
         return false;
     }
-    cmd.start("apt-cache search apertium");
+    cmd.start(mngr->search("apertium"));
     cmd.waitForStarted();
     while(cmd.state()==QProcess::Running)
         qApp->processEvents();
     if(cmd.exitCode())
         return false;
+    cmd.waitForReadyRead();
     auto output = cmd.readAllStandardOutput();
     QRegularExpression reg("apertium(-[a-z]{2,3}){2} ");
     auto it = reg.globalMatch(output);
@@ -165,39 +172,40 @@ actionCnt = 0;
         auto m = it.next();
         auto name = m.captured();
         name = name.left(name.length()-1);
-        if(name=="apertium-all-dev")
+        if(name.contains("apertium-all-dev"))
             continue;
-        cmd.start("apt-cache show "+ name);
-        cmd.waitForStarted();
-        while(cmd.state()==QProcess::Running)
-            qApp->processEvents();
-        if(cmd.exitCode())
-            return false;
-        QString outpk = cmd.readAllStandardOutput();
-        QRegularExpression sizeReg("\nSize: [0-9]+");
-         unsigned long long size = 0;
-         auto jt = sizeReg.globalMatch(outpk);
-         while(jt.hasNext())
-         {
-             qApp->processEvents();
-             auto curSize = jt.next().captured();
-             size = qMax(size, curSize.mid(curSize.lastIndexOf(' ')).toULongLong());
-         }
+//        cmd.start(mngr->info(name));
+//        cmd.waitForStarted();
+//        while(cmd.state()==QProcess::Running)
+//            qApp->processEvents();
+//        if(cmd.exitCode())
+//            return false;
+//        QString outpk = cmd.readAllStandardOutput();
+//        QRegularExpression sizeReg("\nSize: [0-9]+");
+//         unsigned long long size = 0;
+//         auto jt = sizeReg.globalMatch(outpk);
+//         while(jt.hasNext())
+//         {
+//             qApp->processEvents();
+//             auto curSize = jt.next().captured();
+//             size = qMax(size, curSize.mid(curSize.lastIndexOf(' ')).toULongLong());
+//         }
          auto state = INSTALL;
          if (QFile("/usr/share/apertium/"+name).exists())
              state = UNINSTALL;
-         model->addItem(file(name,LANGPAIRS, size, QUrl(),state, ""));
+         model->addItem(file(name,LANGPAIRS, mngr->getSize(name), QUrl(),state, ""));
      }
     auto state = INSTALL;
     if(QFile(DATALOCATION +"/apertium-apy/apertium-apy/servlet.py").exists())
         state = UNINSTALL;
-    model->addItem(file("Apertium-APY",TOOLS,2202010,QUrl("https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/apertium-apy"),
+    model->addItem(file("Apertium-APY",TOOLS, 2202010,
+                        QUrl("https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/apertium-apy"),
                         state,"",true));
     ui->view->resizeColumnsToContents();
     ui->view->setSortingEnabled(true);
     ui->view->sortByColumn(TYPE,Qt::AscendingOrder);
     wait.close();
-    #endif
+#endif
     return true;
 }
 
@@ -226,9 +234,9 @@ void DownloadWindow::chooseAction(int row)
 #endif
     }
 }
+#ifdef Q_OS_LINUX
 void DownloadWindow::revert()
 {
-#ifdef Q_OS_LINUX
     int row;
     for (auto name : toInstall){
         row = model->find(name);
@@ -240,12 +248,11 @@ void DownloadWindow::revert()
         model->setData(model->index(row,3),UNINSTALL);
     }
     toUninstall.clear();
-#endif
 }
+
 
 bool DownloadWindow::applyChanges()
 {
-#ifdef Q_OS_LINUX
     if(toInstall.isEmpty() && toUninstall.isEmpty()) {
         accept();
         return true;
@@ -270,33 +277,29 @@ bool DownloadWindow::applyChanges()
     dir.setPath(DATALOCATION);
     QFile script(dir.absoluteFilePath("install-packages.sh"));
     script.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
-
+    
     //Generating bash script
+   //Argument -apy means that the Apertium-APY should be installed, -Rapy means to remove Apertium-APY
     script.write("#!/bin/bash\n"
-                 "#This script is generated automatically, do not modify it manually.\n"
-                 "#install packages\n"
-                 "#Argument -apy means that the Apertium-APY should be installed, -rapy means to remove Apertium-APY\n\n"
+                 "#This script is generated automatically, do not modify it manually.\n\n"
                  "DIR=\"$( cd \"$( dirname \"${BASH_SOURCE[0]}\" )\" && pwd )\"\n"
                  "cd \"$DIR\"\n"
                  "if [ \"$1\" = \"-apy\" ]; then\n"
-                 "apt-get -y install build-essential python3-dev python3-pip zlib1g-dev subversion\n"
-                 "pip3 install --upgrade tornado\n"
                  "svn co https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/apertium-apy\n"
-                 "elif [ \"$1\" = \"-rapy\" ]; then\n"
+                 "elif [ \"$1\" = \"-Rapy\" ]; then\n"
                  "rm -rf \"$DIR/apertium-apy\"\n"
                  "fi\n\n");
-    QByteArray pcks;
     QStringList args;
     args << script.fileName();
     int pos;
     if((pos = toUninstall.indexOf("Apertium-APY"))!=-1){
         QMessageBox box;
         if(box.critical(this, tr("Uninstalling server."),
-                     tr("You are going to remove Apertium-APY. "
-                        "After that this program may stop working. Are you sure?"),
-                     QMessageBox::Ok,QMessageBox::Abort)==QMessageBox::Ok) {
-        toUninstall.erase(toUninstall.begin()+pos);
-        args <<"-rapy";
+                        tr("You are going to remove Apertium-APY. "
+                           "After that this program may stop working. Are you sure?"),
+                        QMessageBox::Ok,QMessageBox::Abort)==QMessageBox::Ok) {
+            toUninstall.erase(toUninstall.begin()+pos);
+            args <<"-Rapy";
         }
         else{
             script.close();
@@ -305,42 +308,38 @@ bool DownloadWindow::applyChanges()
         }
     }
     else
-    if((pos = toInstall.indexOf("Apertium-APY"))!=-1) {
-        toInstall.erase(toInstall.begin()+pos);
-        args <<"-apy";
-    }
-
+        if((pos = toInstall.indexOf("Apertium-APY"))!=-1) {
+            toInstall.erase(toInstall.begin()+pos);
+            args <<"-apy";
+        }
+    
     if(!toInstall.isEmpty()) {
-        script.write("apt-get -y install");
+        QStringList pcks;
         for(auto name : toInstall) {
             qApp->processEvents();
             int row = model->find(name);
-            pcks += " " + model->item(row)->name.toLatin1();
-
+            pcks << model->item(row)->name;
             model->setData(model->index(row,STATE),UNINSTALL);
         }
-        script.write(pcks);
-        script.write("\n");
-        pcks.clear();
-    }
 
+        script.write((mngr->install(pcks)+"\n").toLatin1());
+    }
     if(!toUninstall.isEmpty()) {
-        script.write("apt-get -y remove");
+        QStringList pcks;
         for(auto name : toUninstall) {
             qApp->processEvents();
             int row = model->find(name);
-            pcks += " " + model->item(row)->name.toLatin1();
+            pcks << model->item(row)->name;
             model->setData(model->index(row,STATE),INSTALL);
         }
-        script.write(pcks);
+        script.write(mngr->remove(pcks).toLatin1());
     }
     script.close();
     script.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
     if(!toInstall.isEmpty() || !toUninstall.isEmpty() || pos!=-1)
     {
-        QProcess cmd;
+        QProcess cmd(this);
         cmd.start("pkexec", args);
-        qDebug() << cmd.arguments();
         cmd.waitForStarted();
         while(cmd.state()==QProcess::Running)
             qApp->processEvents();
@@ -351,12 +350,11 @@ bool DownloadWindow::applyChanges()
     dlg.close();
     accept();
     return true;
-#endif
-}
 
+}
+#else
 void DownloadWindow::installpkg(int row)
 {
-#ifndef Q_OS_LINUX
     actionCnt++;
     auto url = model->item(row)->link.toString();
     auto bsize = model->item(row)->size;
@@ -441,12 +439,10 @@ void DownloadWindow::installpkg(int row)
     ui->view->update(model->index(row,SIZE));
     actionCnt--;
     reply->deleteLater();
-#endif
 }
 
 void DownloadWindow::removepkg(int row)
 {
-#ifndef Q_OS_LINUX
     auto name = model->item(row)->name;
     QDir dir;
     if(name == "Required Core Tools")
@@ -460,7 +456,6 @@ void DownloadWindow::removepkg(int row)
     }
     else
         dir.setPath(DATALOCATION+"/usr/share/apertium/"+name);
-    qDebug() << Initializer::conf->contains("files/"+name);
     if (dir.exists())
     if (Initializer::conf->contains("files/"+name))
         if (dir.removeRecursively())
@@ -494,9 +489,9 @@ void DownloadWindow::removepkg(int row)
             QMessageBox box;
             box.critical(this,tr("An error occurs while deleteing"),tr("Cannot locate this package"));
         }
-#endif
-}
 
+}
+#endif
 void DownloadWindow::closeEvent(QCloseEvent *)
 {
     accept();
@@ -528,3 +523,5 @@ void DownloadWindow::on_refreshButton_clicked()
 {
     getData();
 }
+
+

@@ -3,6 +3,7 @@
 
 #include "downloadmodel.h"
 #include "installerdelegate.h"
+#include "managerhelper.h"
 #include <QDialog>
 #include <QNetworkAccessManager>
 #include <QProgressDialog>
@@ -25,8 +26,9 @@ public slots:
     void accept();
 private slots:
     void chooseAction(int row);
+#ifdef Q_OS_LINUX
     bool applyChanges();
-
+#endif
     void on_refreshButton_clicked();
 
 protected:
@@ -37,12 +39,19 @@ private:
     QProgressDialog *wait;
     DownloadModel *model;
     InstallerDelegate *delegate;
+    ManagerHelper *mngr;
 
+#ifndef Q_OS_LINUX
     void installpkg(int row);
     void removepkg(int row);
+#else
+    //cancel changes
     void revert();
-    int actionCnt;
+
     QVector <QString> toInstall, toUninstall;
+#endif
+    int actionCnt;
+
 
 
 };
