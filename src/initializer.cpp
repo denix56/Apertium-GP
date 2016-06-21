@@ -14,8 +14,13 @@ QSettings *Initializer::conf;
 bool Initializer::initialize()
 {
     conf = new QSettings(QSettings::NativeFormat,QSettings::UserScope,"Apertium","Apertium-GP");
-    auto db = QSqlDatabase::addDatabase("QSQLITE");
+#ifdef Q_OS_LINUX
+    QDir().mkpath("~/.local/share/apertium-gp");
+    QDir path("/usr/share/apertium-gp");
+#else
     QDir path(DATALOCATION);
+#endif
+    auto db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(path.absoluteFilePath("langNames.db"));
     if (!db.open())
     {
@@ -33,8 +38,10 @@ bool Initializer::initialize()
    }
     do
     {
-        langNamesMap[query.value("inLg").toString()] = query.value("name").toString();
-        langNamesMap[query.value("iso3").toString()] = query.value("name").toString();
+       if(query.value("iso3").toString().isEmpty())
+           langNamesMap[query.value("inLg").toString()] = query.value("name").toString();
+       else
+           langNamesMap[query.value("iso3").toString()] = query.value("name").toString();
     } while(query.next());
     db.close();
     return true;

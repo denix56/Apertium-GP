@@ -5,22 +5,8 @@
 #include <QStandardPaths>
 #include <QSettings>
 #include <QDir>
-//#ifndef DATALOCATION
-//    QDir tmp;
-//    tmp.cd("~");
-//    QString pth;
-//    if ((tmp(".local").exists()))
-//        pth = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-//    else
-//        pth = QStandardPaths::writableLocation(QStandardPaths::HomeLocation)+".apertium-gp";
-// DATALOCATION pth;
-//    qDebug() << DATALOCATION;
-//#endif
 
-#define DATALOCATION  QStandardPaths::writableLocation(QStandardPaths::AppDataLocation).isEmpty() \
-    ? QStandardPaths::writableLocation(QStandardPaths::HomeLocation)+".apertium-gp" \
-    : QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
-
+#define DATALOCATION  QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
 
 class Initializer
 {

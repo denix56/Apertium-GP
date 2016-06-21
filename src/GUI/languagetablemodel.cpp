@@ -4,8 +4,8 @@
 languageTableModel::languageTableModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
-    for(int i=0;i<rowN;i++)
-        list << "";
+//    for(int i=0;i<rowN;i++)
+//        list << "";
 }
 
 languageTableModel::languageTableModel(QStringList &list, QObject *parent)
@@ -16,9 +16,14 @@ languageTableModel::languageTableModel(QStringList &list, QObject *parent)
 
 int languageTableModel::rowCount(const QModelIndex &parent) const
 {
+    int res;
     if (itemCount()<rowN)
-        return itemCount();
-    return rowN;
+        res = list.size();
+    else
+        res = rowN;
+    qDebug() << res;
+    return res;
+//    return rowN;
 }
 
 int languageTableModel::columnCount(const QModelIndex &parent) const
@@ -34,7 +39,8 @@ QVariant languageTableModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role==Qt::DisplayRole)
     {
-        auto ans = list.at((index.column())*rowN+index.row());
+        qDebug() << index.column()*rowN+index.row() << list.size();
+        auto ans = list.at(index.column()*rowN+index.row());
         return QVariant(ans);
     }
     return QVariant();
@@ -43,22 +49,28 @@ QVariant languageTableModel::data(const QModelIndex &index, int role) const
 bool languageTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     int pos = index.column()*rowN+index.row();
+    qDebug() << index.column() << index.row();
     //if not in the end
     if (pos <list.size())
         list.replace(pos,value.toString());
     else
     {
+        if(list.size()>=rowN) {
         if (index.row()==0)
             beginInsertColumns(QModelIndex(),columnCount(),columnCount());
-        if(list.size()!=index.column()*rowN)
-
         list << value.toString();
         for (int i = index.row()+1; i<rowCount();i++)
             list << "";
         if (index.row()==0)
             endInsertColumns();
+        }
+        else {
+            beginInsertRows(QModelIndex(),rowCount()-1,rowCount()-1);
+            list << value.toString();
+            endInsertRows();
+        }
 
-    }
+   }
     //Alphabethic sorting
     qSort(list.begin(),list.begin()+itemCount());
     emit dataChanged(createIndex(0,0), createIndex(rowCount()-1,columnCount()-1), QVector<int>() << Qt::EditRole);
@@ -66,31 +78,42 @@ bool languageTableModel::setData(const QModelIndex &index, const QVariant &value
 }
 int languageTableModel::currentColumnRowCount(const QModelIndex &index)
 {
-    if (columnCount()-1 > index.column())
+    if (columnCount() > index.column() + 1)
         return rowN;
     else    
         for (int i = 0;i<rowCount();++i)
             if (list.at(rowN*index.column() + i)=="")
                 return i;
+    return 0;
 }
 
 bool languageTableModel::addItem(const QVariant &value)
 {
+    if (columnCount()>1 || list.size()==rowN) {
     int row = currentColumnRowCount(createIndex(0,columnCount()-1));
     if (row==rowCount())
         row = 0;
-
-    auto n = list.size();
+    int n = list.size();
     if (list.at(columnCount()*rowN-1)!="")
         ++n;
     return setData(createIndex(row, n/rowN + (n % rowN == 0 ? 0 : 1)-1),value);
+    }
+    else
+        return setData(createIndex(list.size(), 0), value);
 }
 
 bool languageTableModel::removeItem(const int &row, const int &column)
 {
+    beginRemoveRows(QModelIndex(),row,row);
         list.removeAt(column*rowN + row);
+        endRemoveRows();
+        if (itemCount()>rowN) {
+        beginInsertRows(QModelIndex(),rowCount()-1,rowCount()-1);
         list << "";
-        if (!currentColumnRowCount(createIndex(0,columnCount()-1)) && columnCount()!=1)
+        endInsertRows();
+        }
+        //remove empty column
+        if (columnCount()>1 && !currentColumnRowCount(createIndex(0,columnCount()-1)))
         {
             beginRemoveColumns(QModelIndex(),columnCount()-1,columnCount()-1);
             list.erase(list.begin()+(columnCount()-1)*rowN, list.begin()+columnCount()*rowN);
@@ -125,10 +148,10 @@ void languageTableModel::clear()
 {
     beginResetModel();
     list.clear();
-    for(int i=0;i<rowN;i++)
-        list << "";
+//    for(int i=0;i<rowN;i++)
+//        list << "";
     endResetModel();
-    //emit dataChanged(createIndex(0,0),createIndex(rowCount()-1, columnCount()-1), QVector<int>() << Qt::EditRole);
+    emit dataChanged(createIndex(0,0),createIndex(rowCount()-1, columnCount()-1), QVector<int>() << Qt::EditRole);
 }
 
 QModelIndex languageTableModel::findText(QString value) const
@@ -146,7 +169,7 @@ int languageTableModel::itemCount() const
     for (int i = 0; i < list.size(); i++)
     {
         if (list.at(i) == "")
-            break;
+            return count;
         count++;
     }
     return count;

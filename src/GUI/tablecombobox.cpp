@@ -46,10 +46,14 @@ void TableComboBox::setModel(languageTableModel* model)
 void TableComboBox::resizeT()
 {
     //TODO: bug with no elements in model list
-        int colc = model()->itemCount()/model()->maxRowCount() + (model()->itemCount() % model()->rowCount() ? 1 : 0);
-        for (int i=0; i < colc;i++)
-            view()->setColumnWidth(i, COLWIDTH);
-        view()->setMinimumWidth(COLWIDTH*colc);
+    if(model()->itemCount()==0)
+        return;
+    int colc = model()->columnCount();/*model()->itemCount()/model()->maxRowCount() +
+            (model()->itemCount() % model()->rowCount() ? 1 : 0);*/
+    for (int i=0; i < colc;i++)
+        view()->setColumnWidth(i, COLWIDTH);
+    view()->setMinimumWidth(COLWIDTH*colc);
+    view()->setMinimumHeight((model()->rowCount())*view()->rowHeight(0));
 }
 
 void TableComboBox::wheelEvent(QWheelEvent *e)

@@ -244,7 +244,8 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
         if (array.isEmpty()) {
             QMessageBox box;
             box.setModal(true);
-            box.critical(this,tr("No langpairs found."),tr("It seems, that no language pairs have been found."),
+            box.critical(this,tr("No langpairs found."),
+                         tr("It seems, that no language pairs have been found."),
                          QMessageBox::Ok);
             initRes = false;
             qDebug() << initRes;
@@ -269,21 +270,24 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
             auto targetLang = it.toObject().value("targetLanguage").toString();
             if (Initializer::conf->value(sourceLang + "-" + targetLang).toULongLong()>0ULL)
             {
-                langs.insert(langpairUsed(Initializer::langNamesMap[sourceLang]+ "-" + Initializer::langNamesMap[targetLang],
-                                          Initializer::conf->value(sourceLang + "-" + targetLang).toULongLong()));
+                langs.insert(langpairUsed(Initializer::langNamesMap[sourceLang]+
+                                          "-" + Initializer::langNamesMap[targetLang],
+                                          Initializer::conf->value(sourceLang +
+                                                                   "-" + targetLang).toULongLong()));
             }
             //unique languages
             for(int j=0;j< ui->SourceLangComboBox->model()->columnCount();++j)
                 for(int i=0; i < ui->SourceLangComboBox->model()->rowCount();++i)
                 if(ui->SourceLangComboBox->model()->
-                        data(ui->SourceLangComboBox->model()->index(i,j)).toString()==Initializer::langNamesMap[sourceLang])
+                        data(ui->SourceLangComboBox->model()->index(i,j))
+                        .toString()==Initializer::langNamesMap[sourceLang])
                     unique=false;
             if(unique)
                 ui->SourceLangComboBox->model()->addItem(Initializer::langNamesMap[sourceLang]);
         }
         int i = 0;
         //add to mru
-        for(auto it = langs.begin(); i < 3 && it != langs.end();it++, i++)
+        for(auto it = langs.begin(); i < 3 && it != langs.end();++it, ++i)
         {
             auto item = new QListWidgetItem(it->name);
             item->setTextAlignment(Qt::AlignCenter);
@@ -293,7 +297,8 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
         for (auto it : array)
             if(Initializer::langNamesMap[it.toObject().value("sourceLanguage").toString()]==
                     ui->SourceLangComboBox->model()->data(ui->SourceLangComboBox->model()->index(0,0)).toString())
-                ui->TargetLangComboBox->model()->addItem(Initializer::langNamesMap[it.toObject().value("targetLanguage").toString()]);
+                ui->TargetLangComboBox->model()->addItem(Initializer::langNamesMap[it.toObject()
+                        .value("targetLanguage").toString()]);
     }
     // Error occured
     else
@@ -353,7 +358,7 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
         }
 #endif
 
-        //fill buttons with first languages
+        //fill buttons with start languages
         for(int i=0;i<SourceLangBtns.size();++i)
         {
             SourceLangBtns[i]->setText(ui->SourceLangComboBox->model()->
@@ -367,6 +372,7 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
                                        data(ui->TargetLangComboBox->model()->index(i,0)).toString());
             TargetLangBtns[i]->setEnabled(!TargetLangBtns[i]->text().isEmpty());
         }
+        //remove items, that are showed in buttons
         for(int i=0;i<SourceLangBtns.size();++i)
             ui->SourceLangComboBox->model()->removeItem(0,0);
         for(int i=0;i<TargetLangBtns.size();++i)
@@ -404,6 +410,7 @@ void ApertiumGui::updateComboBox(QModelIndex index)
     auto curr = index.data().toString();
     if (curr.isEmpty())
         return;
+    qDebug() << index.row() << index.column();
     ui->SourceLangComboBox->model()->removeItem(index.row(),index.column());
     ui->SourceLangComboBox->model()->addItem(SourceLangBtns[2]->text());
     SourceLangBtns[2]->setText(SourceLangBtns[1]->text());
@@ -572,11 +579,15 @@ void ApertiumGui::getResponseOfAvailLang(QNetworkReply *reply)
     }
     ui->TargetLangComboBox->model()->clear();
     for (auto it : array)
-        if(Initializer::langNamesMap[it.toObject().value("sourceLanguage").toString()]==currentSButton->text())
-            ui->TargetLangComboBox->model()->addItem(Initializer::langNamesMap[it.toObject().value("targetLanguage").toString()]);
+        if(Initializer::langNamesMap[it.toObject().
+                value("sourceLanguage").toString()]==currentSButton->text())
+            ui->TargetLangComboBox->model()->addItem(
+                        Initializer::langNamesMap[it.toObject().value("targetLanguage").toString()]);
 
+    //fill buttons with new target languages
     for(int i=0;i<TargetLangBtns.size();++i)
-        TargetLangBtns[i]->setText(ui->TargetLangComboBox->model()->data(ui->TargetLangComboBox->model()->index(i,0)).toString());
+        TargetLangBtns[i]->setText(ui->TargetLangComboBox->model()
+                                   ->data(ui->TargetLangComboBox->model()->index(i,0)).toString());
     for(int i=0;i<TargetLangBtns.size();++i)
         ui->TargetLangComboBox->model()->removeItem(0,0);
 

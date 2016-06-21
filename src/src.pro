@@ -9,7 +9,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = apertium-gp
 TEMPLATE = app
-
+VERSION = 1.0.0
 DESTDIR = ../bin
 MOC_DIR = ../build/moc
 RCC_DIR = ../build/rcc
@@ -70,19 +70,11 @@ RESOURCES += \
 RC_FILE = GUI/apertium.rc
 
 unix:!macx {
-appdata.extra = \
-if !( [ -e "~/.local" ] ) then \
-    mkdir "~/.apertium-gp"; \
-    mv langNames.db ~/.apertium-gp/langNames.db; \
-    cp policy/org.apertium.apertiumgp.policy ../build/org.apertium.apertiumgp.policy; \
-    cd ../build \
-    perl -p -i -e \"s/local\/share\///g\" org.apertium.apertiumgp.policy; \
-else \
-    mv langNames.db ~/.local/share/apertium-gp/langNames.db; \
-fi
-appdata.files = ../build/org.apertium.apertium-gp.policy
-appdata.path = /usr/share/polkit-1/actions
+db.files = langNames.db
+db.path = /usr/share/apertium-gp
+policy.files = policy/org.apertium.apertium-gp.policy
+policy.path = /usr/share/polkit-1/actions
 
-INSTALLS += appdata
+INSTALLS += db policy
 }
 
