@@ -171,9 +171,11 @@ bool ApertiumGui::initialize()
 void ApertiumGui::dlAction_triggered()
 {
     DownloadWindow dlWindow(this);
+    setDisabled(true);
     if (dlWindow.getData(checked))
 #ifdef Q_OS_LINUX
     {   
+        setDisabled(false);
         checked = true;
         dlWindow.exec();
         //wait while server starts

@@ -142,12 +142,11 @@ actionCnt = 0;
     path.mkdir(".apertium-gp");
     path.cd(".apertium-gp");
     if(!checked){
+        connect(&wait, &QProgressDialog::canceled, [&](){ cmd.terminate();});
         QFile refreshScript(path.absoluteFilePath("refresh.sh"));
         refreshScript.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
         refreshScript.write("#!/bin/bash\n"
                             +mngr->update().toLatin1());
-        qDebug() << "#!/bin/bash\n"
-                    +mngr->update().toLatin1();
         refreshScript.close();
         refreshScript.setPermissions(QFileDevice::ReadOwner | QFileDevice::ExeOwner);
         cmd.start("pkexec", QStringList() << path.absoluteFilePath("refresh.sh"));
@@ -155,10 +154,6 @@ actionCnt = 0;
         while(cmd.state()==QProcess::Running)
             qApp->processEvents();
         refreshScript.remove();
-    }
-    if(cmd.exitCode()) {
-        wait.close();
-        return false;
     }
     cmd.start(mngr->search("apertium"));
     cmd.waitForStarted();
@@ -298,12 +293,13 @@ bool DownloadWindow::applyChanges()
         if((pos = toInstall.indexOf("apertium-apy"))!=-1) {
             toInstall.erase(toInstall.begin()+pos);
         }
-    
+    int row;
     if(!toInstall.isEmpty()) {
         QStringList pcks;
+
         for(auto name : toInstall) {
             qApp->processEvents();
-            int row = model->find(name);
+            row = model->find(name);
             pcks << model->item(row)->name;
             model->setData(model->index(row,STATE),UNINSTALL);
         }
@@ -314,7 +310,7 @@ bool DownloadWindow::applyChanges()
         QStringList pcks;
         for(auto name : toUninstall) {
             qApp->processEvents();
-            int row = model->find(name);
+            row = model->find(name);
             pcks << model->item(row)->name;
             model->setData(model->index(row,STATE),INSTALL);
         }
@@ -331,7 +327,6 @@ bool DownloadWindow::applyChanges()
         while(cmd.state()==QProcess::Running)
             qApp->processEvents();
         cmd.waitForFinished();
-        qDebug() << cmd.exitStatus();
         script.remove();
         toInstall.clear();
         toUninstall.clear();
