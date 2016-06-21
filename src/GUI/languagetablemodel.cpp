@@ -137,8 +137,6 @@ void languageTableModel::clear()
 {
     beginResetModel();
     list.clear();
-//    for(int i=0;i<rowN;i++)
-//        list << "";
     endResetModel();
     emit dataChanged(createIndex(0,0),createIndex(rowCount()-1, columnCount()-1), QVector<int>() << Qt::EditRole);
 }
