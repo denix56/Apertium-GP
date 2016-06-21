@@ -22,8 +22,9 @@ int main(int argc, char *argv[])
 
     if(!QFile(Initializer::conf->value("path/serverPath").toString()+"/servlet.py").exists())
     {
-        if(QFile(DATALOCATION+"/apertium-apy/apertium-apy/servlet.py").exists())
-            Initializer::conf->setValue("path/serverPath",QVariant(DATALOCATION+"/apertium-apy/apertium-apy"));
+        if(QDir("/usr/share/apertium-apy").exists())
+            Initializer::conf->setValue("path/serverPath",
+                                        QVariant("/usr/share/apertium-apy"));
         else {
             QMessageBox box;
             if(box.critical(nullptr,QObject::tr("Server not installed."),
@@ -33,6 +34,8 @@ int main(int argc, char *argv[])
             auto dlg = new DownloadWindow;
             if (dlg->getData(false))
                 qDebug() << dlg->exec();
+            else
+                return 5;
         }
     }
 #endif

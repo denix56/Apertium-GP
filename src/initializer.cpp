@@ -15,7 +15,6 @@ bool Initializer::initialize()
 {
     conf = new QSettings(QSettings::NativeFormat,QSettings::UserScope,"Apertium","Apertium-GP");
 #ifdef Q_OS_LINUX
-    QDir().mkpath("~/.local/share/apertium-gp");
     QDir path("/usr/share/apertium-gp");
 #else
     QDir path(DATALOCATION);
@@ -37,12 +36,10 @@ bool Initializer::initialize()
         query.next();
    }
     do
-    {
-       if(query.value("iso3").toString().isEmpty())
-           langNamesMap[query.value("inLg").toString()] = query.value("name").toString();
-       else
-           langNamesMap[query.value("iso3").toString()] = query.value("name").toString();
-    } while(query.next());
-    db.close();
-    return true;
+   {
+       langNamesMap[query.value("inLg").toString()] = query.value("name").toString();
+       langNamesMap[query.value("iso3").toString()] = query.value("name").toString();
+   } while(query.next());
+   db.close();
+   return true;
 }

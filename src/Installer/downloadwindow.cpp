@@ -138,9 +138,11 @@ actionCnt = 0;
 #else
     mngr->chooseManager();
     QProcess cmd(this);
-    QDir path(DATALOCATION);
+    QDir path(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
+    path.mkdir(".apertium-gp");
+    path.cd(".apertium-gp");
     if(!checked){
-        QFile refreshScript(DATALOCATION+"/refresh.sh");
+        QFile refreshScript(path.absoluteFilePath("refresh.sh"));
         refreshScript.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
         refreshScript.write("#!/bin/bash\n"
                             +mngr->update().toLatin1());
@@ -176,17 +178,22 @@ actionCnt = 0;
         if(name.contains("apertium-all-dev"))
             continue;
          auto state = INSTALL;
-         if (QFile("/usr/share/apertium/"+name).exists())
+         QRegularExpression lang("-[a-z]{2,3}");
+         auto lit = lang.globalMatch(name);
+         QString l1, l2;
+         l1 = lit.next().captured();
+         l2 = lit.next().captured();
+         if (QDir("/usr/share/apertium/apertium"+l1+l2).exists() ||
+                 QDir("/usr/share/apertium/apertium"+l2+l1).exists())
              state = UNINSTALL;
          model->addItem(file(name,LANGPAIRS, mngr->getSize(name), QUrl(),state, ""));
      }
+
     auto state = INSTALL;
-    if(QFile(DATALOCATION +"/apertium-apy/apertium-apy/servlet.py").exists())
+    if(QDir("/usr/share/apertium-apy").exists())
         state = UNINSTALL;
-    model->addItem(file("Apertium-APY",TOOLS, 2202010,
-                        QUrl("https://svn.code.sf.net/p/apertium/svn/"
-                             "trunk/apertium-tools/apertium-apy"),
-                        state,"",true));
+    model->addItem(file("apertium-apy",TOOLS, mngr->getSize("apertium-apy"),
+                        QUrl(), state,"",true));
     ui->view->resizeColumnsToContents();
     ui->view->setSortingEnabled(true);
     ui->view->sortByColumn(TYPE,Qt::AscendingOrder);
@@ -252,9 +259,9 @@ bool DownloadWindow::applyChanges()
     {
         QMessageBox box;
         box.critical(this, tr("Deleteing all lagpairs"),
-                     tr("The program cannot work without any language pairs. Please, leave at least one language pair"));
+                     tr("The program cannot work without any language pairs. "
+                        "Please, leave at least one language pair"));
         revert();
-        reject();
         return false;
     }
     QProgressDialog dlg(this);
@@ -263,36 +270,23 @@ bool DownloadWindow::applyChanges()
     dlg.setRange(0,0);
     dlg.setCancelButton(nullptr);
     dlg.show();
-    QDir dir("/home/denys/.local/share");
-    if(!QDir(DATALOCATION).exists())
-        dir.mkdir("Apertium-GP");
-    dir.setPath(DATALOCATION);
-    QFile script(dir.absoluteFilePath("install-packages.sh"));
+    QDir path(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
+    path.mkdir(".apertium-gp");
+    path.cd(".apertium-gp");
+    QFile script(path.absoluteFilePath("install-packages.sh"));
     script.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
-    
+    script.write("#!/bin/bash\n");
     //Generating bash script
-   //Argument -apy means that the Apertium-APY should be installed, -Rapy means to remove Apertium-APY
-    script.write("#!/bin/bash\n"
-                 "#This script is generated automatically, do not modify it manually.\n\n"
-                 "DIR=\"$( cd \"$( dirname \"${BASH_SOURCE[0]}\" )\" && pwd )\"\n"
-                 "cd \"$DIR\"\n"
-                 "if [ \"$1\" = \"-apy\" ]; then\n"
-                 "pip3 install --upgrade tornado;\n"
-                 "svn co https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/apertium-apy\n"
-                 "elif [ \"$1\" = \"-Rapy\" ]; then\n"
-                 "rm -rf \"$DIR/apertium-apy\"\n"
-                 "fi\n\n");
     QStringList args;
     args << script.fileName();
     int pos;
-    if((pos = toUninstall.indexOf("Apertium-APY"))!=-1){
+    if((pos = toUninstall.indexOf("apertium-apy"))!=-1){
         QMessageBox box;
         if(box.critical(this, tr("Uninstalling server."),
                         tr("You are going to remove Apertium-APY. "
                            "After that this program may stop working. Are you sure?"),
                         QMessageBox::Ok,QMessageBox::Abort)==QMessageBox::Ok) {
             toUninstall.erase(toUninstall.begin()+pos);
-            args <<"-Rapy";
         }
         else{
             script.close();
@@ -301,9 +295,8 @@ bool DownloadWindow::applyChanges()
         }
     }
     else
-        if((pos = toInstall.indexOf("Apertium-APY"))!=-1) {
+        if((pos = toInstall.indexOf("apertium-apy"))!=-1) {
             toInstall.erase(toInstall.begin()+pos);
-            args <<"-apy";
         }
     
     if(!toInstall.isEmpty()) {
@@ -325,10 +318,11 @@ bool DownloadWindow::applyChanges()
             pcks << model->item(row)->name;
             model->setData(model->index(row,STATE),INSTALL);
         }
-        script.write(mngr->remove(pcks).toLatin1());
+        script.write((mngr->remove(pcks)+"\n").toLatin1());
     }
+    script.write("systemctl restart apertium-apy");
     script.close();
-    script.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+    script.setPermissions(QFileDevice::ReadOwner | QFileDevice::ExeOwner);
     if(!toInstall.isEmpty() || !toUninstall.isEmpty() || pos!=-1)
     {
         QProcess cmd(this);
@@ -336,6 +330,8 @@ bool DownloadWindow::applyChanges()
         cmd.waitForStarted();
         while(cmd.state()==QProcess::Running)
             qApp->processEvents();
+        cmd.waitForFinished();
+        qDebug() << cmd.exitStatus();
         script.remove();
         toInstall.clear();
         toUninstall.clear();

@@ -13,6 +13,7 @@
 #include <QTableView>
 #include <QComboBox>
 #include <QDir>
+#include <QListWidgetItem>
 namespace Ui {
 class ApertiumGui;
 }
@@ -68,8 +69,6 @@ private slots:
 
     void fontSizeCancel();
 
-    void on_mru_currentTextChanged(const QString &currentText);
-
     //Not for Linux
     void saveMru();
     void translateReceived(const QString &result);
@@ -77,6 +76,8 @@ private slots:
     void on_boxInput_currentCharFormatChanged(const QTextCharFormat &format);
     void dlAction_triggered();
 
+
+    void on_mru_itemClicked(QListWidgetItem *item);
 
 private:
 

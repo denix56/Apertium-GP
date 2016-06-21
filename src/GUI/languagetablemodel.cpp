@@ -4,8 +4,6 @@
 languageTableModel::languageTableModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
-//    for(int i=0;i<rowN;i++)
-//        list << "";
 }
 
 languageTableModel::languageTableModel(QStringList &list, QObject *parent)
@@ -16,14 +14,7 @@ languageTableModel::languageTableModel(QStringList &list, QObject *parent)
 
 int languageTableModel::rowCount(const QModelIndex &parent) const
 {
-    int res;
-    if (itemCount()<rowN)
-        res = list.size();
-    else
-        res = rowN;
-    qDebug() << res;
-    return res;
-//    return rowN;
+    return itemCount()<rowN ? list.size() : rowN;
 }
 
 int languageTableModel::columnCount(const QModelIndex &parent) const
@@ -39,7 +30,6 @@ QVariant languageTableModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role==Qt::DisplayRole)
     {
-        qDebug() << index.column()*rowN+index.row() << list.size();
         auto ans = list.at(index.column()*rowN+index.row());
         return QVariant(ans);
     }
@@ -49,7 +39,6 @@ QVariant languageTableModel::data(const QModelIndex &index, int role) const
 bool languageTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     int pos = index.column()*rowN+index.row();
-    qDebug() << index.column() << index.row();
     //if not in the end
     if (pos <list.size())
         list.replace(pos,value.toString());
@@ -105,20 +94,20 @@ bool languageTableModel::addItem(const QVariant &value)
 bool languageTableModel::removeItem(const int &row, const int &column)
 {
     beginRemoveRows(QModelIndex(),row,row);
-        list.removeAt(column*rowN + row);
-        endRemoveRows();
-        if (itemCount()>rowN) {
+    list.removeAt(column*rowN + row);
+    endRemoveRows();
+    if (itemCount()>rowN) {
         beginInsertRows(QModelIndex(),rowCount()-1,rowCount()-1);
         list << "";
         endInsertRows();
-        }
-        //remove empty column
-        if (columnCount()>1 && !currentColumnRowCount(createIndex(0,columnCount()-1)))
-        {
-            beginRemoveColumns(QModelIndex(),columnCount()-1,columnCount()-1);
-            list.erase(list.begin()+(columnCount()-1)*rowN, list.begin()+columnCount()*rowN);
-            endRemoveColumns();
-        }
+    }
+    //remove empty column
+    if (columnCount()>1 && !currentColumnRowCount(createIndex(0,columnCount()-1)))
+    {
+        beginRemoveColumns(QModelIndex(),columnCount()-1,columnCount()-1);
+        list.erase(list.begin()+(columnCount()-1)*rowN, list.begin()+columnCount()*rowN);
+        endRemoveColumns();
+    }
     //Alphabethic sorting
     qSort(list.begin(),list.begin()+itemCount());
     emit dataChanged(createIndex(0,0), createIndex(rowCount()-1,columnCount()-1), QVector<int>() << Qt::EditRole);

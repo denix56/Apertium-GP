@@ -70,11 +70,13 @@ RESOURCES += \
 RC_FILE = GUI/apertium.rc
 
 unix:!macx {
-db.files = langNames.db
-db.path = /usr/share/apertium-gp
+req.files = \
+    langNames.db \
+    scripts/serverCmds.sh
+req.path = /usr/share/apertium-gp
 policy.files = policy/org.apertium.apertium-gp.policy
 policy.path = /usr/share/polkit-1/actions
 
-INSTALLS += db policy
+INSTALLS += req policy
 }
 
