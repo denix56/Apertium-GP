@@ -354,12 +354,12 @@ void DownloadWindow::installpkg(int row)
     connect(reply, &QNetworkReply::downloadProgress, [&](qint64 bytesReceived,qint64)
     {model->setData(model->index(row,2),bytesReceived);});
     auto connection = connect(delegate, &InstallerDelegate::stateChanged,[&](int r)
-    {if (r==row) reply->abort();});
+    {if (r==row) reply->abort(); });
     loop.exec();
     disconnect(connection);
     if (reply->error()!=QNetworkReply::NoError)
     {
-        model->setData(model->index(row,STATE),model->item(row)->state);
+        model->setData(model->index(row,STATE),INSTALL);
         reply->deleteLater();
         return;
     }

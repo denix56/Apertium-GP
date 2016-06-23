@@ -308,9 +308,11 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
             return;
         }
 #else
-        if (!QDir(DATALOCATION+"/usr/share/apertium/modes").exists() || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
+        if (!QDir(DATALOCATION+"/usr/share/apertium/modes").count() ||
+                !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
             QMessageBox box;
-            box.critical(this,tr("No installed langpairs."), tr("You have not installed any langpairs. The application will be closed."));
+            box.critical(this,tr("No installed langpairs."), tr("You have not installed any langpairs. "
+                                                                "The application will be closed."));
             initRes = false;
             return;
         }

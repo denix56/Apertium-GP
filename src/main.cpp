@@ -26,6 +26,9 @@ int main(int argc, char *argv[])
             Initializer::conf->setValue("path/serverPath",
                                         QVariant("/usr/share/apertium-apy"));
         else {
+#else
+    if (!QDir(DATALOCATION+"/apertium-all-dev").exists() ||  !QDir(DATALOCATION+"/usr/share/apertium/modes").count()) {
+#endif
             QMessageBox box;
             if(box.critical(nullptr,QObject::tr("Server not installed."),
                             QObject::tr("The program cannot find Apertium-APY. Please, press Ok and install it."),
@@ -37,6 +40,7 @@ int main(int argc, char *argv[])
             else
                 return 5;
         }
+#ifdef Q_OS_LINUX
     }
 #endif
     ApertiumGui w;
