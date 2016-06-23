@@ -430,8 +430,6 @@ void DownloadWindow::installpkg(int row)
 void DownloadWindow::removepkg(int row)
 {
     auto name = model->item(row)->name;
-   // auto sortConnection = connect(model, &DownloadModel::sorted, [&](){row = model->find(name);
-     //   name = model->item(row)->name;});
     QDir dir;
     if(name == "Required Core Tools")
     {
@@ -481,7 +479,6 @@ void DownloadWindow::removepkg(int row)
             box.critical(this,tr("An error occurs while deleteing"),
                          tr("Cannot locate this package"));
         }
-   // disconnect(sortConnection);
 }
 #endif
 void DownloadWindow::closeEvent(QCloseEvent *)
