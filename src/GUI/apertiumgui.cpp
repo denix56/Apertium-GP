@@ -143,11 +143,7 @@ bool ApertiumGui::initialize()
     connect(ui->boxInput,&InputTextEdit::printEnded,translator,&Translator::nonLinuxTranslate);
     connect(ui->boxInput,&InputTextEdit::printEnded,this,&ApertiumGui::saveMru);
     connect(translator,&Translator::resultReady,this,&ApertiumGui::translateReceived);
-<<<<<<< HEAD
     if (!QDir(DATALOCATION+"/usr/share/apertium/modes").exists() || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
-=======
-    if (!appdata->exists("usr/share/apertium/modes") || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
->>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
         QMessageBox box;
         if(box.critical(this, "Required packages are not installed.",
                         "The program cannot find required core tools and/or even one language pair installed. "
@@ -177,15 +173,9 @@ void ApertiumGui::dlAction_triggered()
     DownloadWindow dlWindow(this);
     setDisabled(true);
     if (dlWindow.getData(checked))
-<<<<<<< HEAD
         setDisabled(false);
 #ifdef Q_OS_LINUX
     {      
-=======
-#ifdef Q_OS_LINUX
-    {   
-        setDisabled(false);
->>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
         checked = true;
         dlWindow.exec();
         //wait while server starts
@@ -328,11 +318,7 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
         QDir moded(appdata->absoluteFilePath("usr/share/apertium/modes"));
         auto modes = moded.entryInfoList(QStringList() << "*.mode");
 
-<<<<<<< HEAD
         for (auto mode : modes) {
-=======
-        for (QFileInfo mode : modes) {
->>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
 
             bool unique = true;
             auto sourceLanguage = mode.baseName().left(mode.baseName().indexOf("-"));
@@ -365,11 +351,8 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
         for (auto mode : modes) {
             auto sourceLanguage = mode.baseName().left(mode.baseName().indexOf("-"));
             auto targetLanguage = mode.baseName().mid(mode.baseName().indexOf("-")+1);
-<<<<<<< HEAD
             if (targetLanguage.length() > 3)
                 continue;
-=======
->>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
             if(Initializer::langNamesMap[sourceLanguage]==ui->SourceLangComboBox->model()->
                     data(ui->SourceLangComboBox->model()->index(0,0)).toString())
                 ui->TargetLangComboBox->model()->addItem(Initializer::langNamesMap[targetLanguage]);
@@ -386,11 +369,8 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
 
         for(int i=0;i<TargetLangBtns.size();++i)
         {
-<<<<<<< HEAD
             qDebug() << ui->TargetLangComboBox->model()->
                         data(ui->TargetLangComboBox->model()->index(i,0)).toString();
-=======
->>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
             TargetLangBtns[i]->setText(ui->TargetLangComboBox->model()->
                                        data(ui->TargetLangComboBox->model()->index(i,0)).toString());
             TargetLangBtns[i]->setEnabled(!TargetLangBtns[i]->text().isEmpty());

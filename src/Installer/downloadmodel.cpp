@@ -196,10 +196,7 @@ void DownloadModel::sort(int column, Qt::SortOrder order)
     }
     emit dataChanged(createIndex(0,0),createIndex(rowCount()-1,columnCount()-1),
                      QVector<int>() << Qt::EditRole);
-<<<<<<< HEAD
     emit sorted();
-=======
->>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
 }
 
 int DownloadModel::find(const QString &name)

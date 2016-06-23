@@ -54,18 +54,11 @@ bool DownloadWindow::getData(bool checked)
                               tr("Can't check for updates as you appear to be offline."));
         return false;
     }
-<<<<<<< HEAD
 #else
     toInstall.clear();
     toUninstall.clear();
 #endif
     model->reset();
-=======
-#endif
-    model->reset();
-    toInstall.clear();
-    toUninstall.clear();
->>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
     ui->view->setSortingEnabled(false);
     QProgressDialog wait(tr("Checking for availiable packages to download..."),tr("Cancel"),0,0);
     wait.setModal(true);
@@ -348,7 +341,6 @@ bool DownloadWindow::applyChanges()
 void DownloadWindow::installpkg(int row)
 {
     actionCnt++;
-<<<<<<< HEAD
     auto name = model->item(row)->name;
     model->setData(model->index(row,STATE),DOWNLOADING);
     QNetworkRequest request;
@@ -358,18 +350,6 @@ void DownloadWindow::installpkg(int row)
     QEventLoop loop;
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     connect(model, &DownloadModel::sorted, [&](){row = model->find(name); name = model->item(row)->name;});
-=======
-    auto url = model->item(row)->link.toString();
-    auto bsize = model->item(row)->size;
-    auto lastState = model->item(row)->state;
-    model->setData(model->index(row,STATE),DOWNLOADING);
-    QNetworkRequest request;
-    request.setUrl(QUrl(url));
-    auto reply = manager->get(request);
-    reply->setReadBufferSize(bsize*2);
-    QEventLoop loop;
-    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
->>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
     connect(reply, &QNetworkReply::downloadProgress, [&](qint64 bytesReceived,qint64)
     {model->setData(model->index(row,2),bytesReceived);});
     auto connection = connect(delegate, &InstallerDelegate::stateChanged,[&](int r)
@@ -378,11 +358,7 @@ void DownloadWindow::installpkg(int row)
     disconnect(connection);
     if (reply->error()!=QNetworkReply::NoError)
     {
-<<<<<<< HEAD
         model->setData(model->index(row,STATE),model->item(row)->state);
-=======
-        model->setData(model->index(row,STATE),lastState);
->>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
         reply->deleteLater();
         return;
     }
@@ -403,10 +379,6 @@ void DownloadWindow::installpkg(int row)
     file.close();
 
     QDir exep(QCoreApplication::applicationDirPath());
-<<<<<<< HEAD
-=======
-
->>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
     auto up = new QProcess(this);
     up->setWorkingDirectory(appdata_path);
 #if defined(Q_OS_WIN) || defined(Q_OS_MAC)
@@ -445,11 +417,7 @@ void DownloadWindow::installpkg(int row)
                                      OS_PATH "/nightly/apertium-all-dev.7z"))
         Initializer::conf->setValue("files/apertium-all-dev", model->item(row)->lm);
     else
-<<<<<<< HEAD
         Initializer::conf->setValue("files/"+name, model->item(row)->lm);
-=======
-        Initializer::conf->setValue("files/"+model->item(row)->name, model->item(row)->lm);
->>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
     ui->view->repaint();
     model->setData(model->index(row,STATE),UNINSTALL);
     ui->view->update(model->index(row,SIZE));

@@ -47,11 +47,8 @@ inline QString formatBytes(double val) {
 class DownloadModel : public QAbstractTableModel
 {
     Q_OBJECT
-<<<<<<< HEAD
 signals:
     void sorted();
-=======
->>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
 public:
     explicit DownloadModel(QObject *parent = 0);
     void reset();
