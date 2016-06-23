@@ -1,5 +1,13 @@
+<<<<<<< HEAD
 <RCC>
     <qresource prefix="/">
         <file>images/Apertium_box_white_small.png</file>
     </qresource>
 </RCC>
+=======
+<RCC>
+    <qresource prefix="/">
+        <file>images/Apertium_box_white_small.png</file>
+    </qresource>
+</RCC>
+>>>>>>> a80b0491c6c41ea9ecc8150152ed6c393b815b83
