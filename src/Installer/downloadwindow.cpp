@@ -349,7 +349,8 @@ void DownloadWindow::installpkg(int row)
     reply->setReadBufferSize(model->item(row)->size*2);
     QEventLoop loop;
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    connect(model, &DownloadModel::sorted, [&](){row = model->find(name); name = model->item(row)->name;});
+    auto sortConnection = connect(model, &DownloadModel::sorted, [&](){row = model->find(name);
+        name = model->item(row)->name;});
     connect(reply, &QNetworkReply::downloadProgress, [&](qint64 bytesReceived,qint64)
     {model->setData(model->index(row,2),bytesReceived);});
     auto connection = connect(delegate, &InstallerDelegate::stateChanged,[&](int r)
@@ -422,6 +423,7 @@ void DownloadWindow::installpkg(int row)
     model->setData(model->index(row,STATE),UNINSTALL);
     ui->view->update(model->index(row,SIZE));
     actionCnt--;
+    disconnect(sortConnection);
     reply->deleteLater();
 }
 
