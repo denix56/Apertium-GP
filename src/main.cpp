@@ -26,9 +26,6 @@ int main(int argc, char *argv[])
             Initializer::conf->setValue("path/serverPath",
                                         QVariant("/usr/share/apertium-apy"));
         else {
-#else
-    if (!QDir(DATALOCATION+"/apertium-all-dev").exists() ||  !QDir(DATALOCATION+"/usr/share/apertium/modes").count()) {
-#endif
             QMessageBox box;
             if(box.critical(nullptr,QObject::tr("Server not installed."),
                             QObject::tr("The program cannot find Apertium-APY. Please, press Ok and install it."),
@@ -40,9 +37,21 @@ int main(int argc, char *argv[])
             else
                 return 5;
         }
-#ifdef Q_OS_LINUX
     }
 #endif
+//#else
+//if (!QDir(DATALOCATION+"/apertium-all-dev").exists() ||  !QDir(DATALOCATION+"/usr/share/apertium/modes").count()) {
+//    QMessageBox box;
+//    if(box.critical(nullptr,QObject::tr("No Required tools and/or langpairs installed"),
+//                    QObject::tr("The program cannot find Required tools. Please, press Ok and install it."),
+//                    QMessageBox::Ok,QMessageBox::Abort)==QMessageBox::Abort)
+//        return 0;
+//    auto dlg = new DownloadWindow;
+//    if (dlg->getData(false))
+//        qDebug() << dlg->exec();
+//    else
+//        return 5;
+//}
     ApertiumGui w;
     if (!w.initialize())
         return 2;
