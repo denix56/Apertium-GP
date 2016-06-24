@@ -14,15 +14,13 @@ Translator::Translator(ApertiumGui* parent)
 
 void Translator::nonLinuxTranslate() {
     auto name = parent->currentSourceLang + "-" + parent->currentTargetLang;
-    if (name.isEmpty()) {
+    if (name.isEmpty())
         return;
-    }
+
     QDir dir(parent->appdata->absoluteFilePath("usr/share/apertium/modes"));
-    if (!dir.exists() || !dir.exists(name+".mode")) {
-        name = parent->currentSourceLang3 + "-" + parent->currentTargetLang3;
-        if (!dir.exists() || !dir.exists(name+".mode"))
-            return;
-    }
+    if (!dir.exists() || !dir.exists(name+".mode"))
+        return;
+
     QFile file(dir.absoluteFilePath(name+".mode"));
     if (file.open(QIODevice::ReadOnly) == false) {
         return;
@@ -43,9 +41,9 @@ void Translator::nonLinuxTranslate() {
 #ifdef Q_OS_WIN
     // Windows can't handle C:/ paths in ' quotes
     mode.replace("'", "\"");
-    #define OS_SEP ";"
+#define OS_SEP ";"
 #else
-    #define OS_SEP ":"
+#define OS_SEP ":"
 #endif
 
     auto env = QProcessEnvironment::systemEnvironment();

@@ -79,20 +79,22 @@ private slots:
 
     void on_mru_itemClicked(QListWidgetItem *item);
 
+    void on_swapBtn_clicked();
+
 private:
 
     Ui::ApertiumGui *ui;
-    QVector <HeadButton*> SourceLangBtns;
-    QVector <HeadButton*> TargetLangBtns;
-    QString currentSourceLang, currentTargetLang, currentSourceLang3, currentTargetLang3;
-    QNetworkAccessManager* requestSender;
+    QVector <HeadButton *> SourceLangBtns;
+    QVector <HeadButton *> TargetLangBtns;
+    QString currentSourceLang, currentTargetLang;
+    QNetworkAccessManager *requestSender;
     QUrl url;
-    HeadButton* currentSButton;
+    HeadButton *currentSButton;
     QDialog* selectPathes;
     QString serverPath;
     QString langPairsPath;
-    QProcess* apy;
-    QDialog* fSizeBox;
+    QProcess *apy;
+    QDialog *fSizeBox;
     QTextDocument outputDoc;
     Translator *translator;
     QThread thread;
@@ -111,6 +113,7 @@ private:
     const QString LANGPATH = "path/langPath";
 
     void loadConf();
+    void setLangpair(QString source, QString target);
 
 };
 

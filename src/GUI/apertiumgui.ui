@@ -168,6 +168,13 @@ combobox-popup: 0;
           </property>
          </spacer>
         </item>
+        <item>
+         <widget class="QToolButton" name="swapBtn">
+          <property name="text">
+           <string>⇄</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item row="5" column="1" alignment="Qt::AlignRight">
