@@ -60,7 +60,7 @@ void Translator::nonLinuxTranslate() {
     run->start("/bin/sh", QStringList() << "-c" << mode);
 #endif
     run->waitForStarted();
-    run->write(parent->ui->boxInput->toPlainText().toLatin1()+"  ");
+    run->write(parent->ui->boxInput->toPlainText().toUtf8()+"  ");
     run->closeWriteChannel();
     run->waitForFinished();
     auto result = QString::fromUtf8(run->readAll());

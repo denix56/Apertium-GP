@@ -39,6 +39,19 @@ int main(int argc, char *argv[])
         }
     }
 #endif
+//#else
+//if (!QDir(DATALOCATION+"/apertium-all-dev").exists() ||  !QDir(DATALOCATION+"/usr/share/apertium/modes").count()) {
+//    QMessageBox box;
+//    if(box.critical(nullptr,QObject::tr("No Required tools and/or langpairs installed"),
+//                    QObject::tr("The program cannot find Required tools. Please, press Ok and install it."),
+//                    QMessageBox::Ok,QMessageBox::Abort)==QMessageBox::Abort)
+//        return 0;
+//    auto dlg = new DownloadWindow;
+//    if (dlg->getData(false))
+//        qDebug() << dlg->exec();
+//    else
+//        return 5;
+//}
     ApertiumGui w;
     if (!w.initialize())
         return 2;
