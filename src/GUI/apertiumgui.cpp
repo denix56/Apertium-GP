@@ -143,8 +143,7 @@ bool ApertiumGui::initialize()
     connect(ui->boxInput,&InputTextEdit::printEnded,translator,&Translator::nonLinuxTranslate);
     connect(ui->boxInput,&InputTextEdit::printEnded,this,&ApertiumGui::saveMru);
     connect(translator,&Translator::resultReady,this,&ApertiumGui::translateReceived);
-    if (QDir(DATALOCATION+"/usr/share/apertium/modes").count()<=2 ||
-            !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
+    if (!QDir(DATALOCATION+"/usr/share/apertium/modes").exists() || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
         QMessageBox box;
         if(box.critical(this, "Required packages are not installed.",
                         "The program cannot find required core tools and/or even one language pair installed. "
@@ -309,7 +308,6 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
         return;
     }
 #else
-<<<<<<< HEAD
     if (!QDir(DATALOCATION+"/usr/share/apertium/modes").exists() || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
         QMessageBox box;
         box.critical(this,tr("No installed langpairs."), tr("You have not installed any langpairs. The application will be closed."));
@@ -319,19 +317,6 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
     //get list of availiable languages
     QDir moded(appdata->absoluteFilePath("usr/share/apertium/modes"));
     auto modes = moded.entryInfoList(QStringList() << "*.mode");
-=======
-        if (QDir(DATALOCATION+"/usr/share/apertium/modes").count()<=2 ||
-                !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
-            QMessageBox box;
-            box.critical(this,tr("No installed langpairs."), tr("You have not installed any langpairs. "
-                                                                "The application will be closed."));
-            initRes = false;
-            return;
-        }
-        //get list of availiable languages
-        QDir moded(appdata->absoluteFilePath("usr/share/apertium/modes"));
-        auto modes = moded.entryInfoList(QStringList() << "*.mode");
->>>>>>> d99accf9a7578d69025ffde7e19896ee8c2c5228
 
     for (auto mode : modes) {
 
