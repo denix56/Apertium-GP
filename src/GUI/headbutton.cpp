@@ -17,13 +17,12 @@ HeadButton::HeadButton(QWidget* parent):QPushButton(parent)
 
 void HeadButton::denySameButtonClick()
 {
-    if(once)
-    {
-    if(wasClicked && !this->isChecked())
-        wasClicked=false;
-    else
-        if(!wasClicked && this->isChecked())
-            wasClicked=true;
+    if(once) {
+        if(wasClicked && !this->isChecked())
+            wasClicked=false;
+        else
+            if(!wasClicked && this->isChecked())
+                wasClicked=true;
     }
     once=!once;
 }
@@ -42,10 +41,10 @@ HeadButton::~HeadButton(){}
 
 void HeadButton::paintEvent(QPaintEvent *e)
 {
-    if(fontMetrics().width(text()) != lastFontWidth)
-    {
+    if(fontMetrics().width(text()) != lastFontWidth) {
         lastFontWidth = fontMetrics().width(text());
         setFixedSize(qMax(lastFontWidth+10,102),27);
     }
     QPushButton::paintEvent(e);
 }
+

@@ -8,10 +8,8 @@ class HeadButton : public QPushButton
 public:
     HeadButton(QWidget* parent=0);
     ~HeadButton();
-
 public slots:
     void changeButtonColor(bool);
-
 private slots:
     void denySameButtonClick();
     void denySameButtonClick2();

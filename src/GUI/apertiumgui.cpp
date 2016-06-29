@@ -490,19 +490,19 @@ void ApertiumGui::clearOtherSButtons()
 {
     ui->boxOutput->clear();
     currentSButton = qobject_cast<HeadButton*>(sender());
-    for (int i=0;i<SourceLangBtns.size();++i) {
-        if (SourceLangBtns[i]->text().isEmpty())
-            SourceLangBtns[i]->setEnabled(false);
-        else
-        {
-            SourceLangBtns[i]->setEnabled(true);
-            if(SourceLangBtns[i]!=currentSButton)
-                SourceLangBtns[i]->setChecked(false);
+    for (HeadButton *btn : SourceLangBtns) {
+
+        if (btn->text().isEmpty())
+            btn->setEnabled(false);
+        else {
+            btn->setEnabled(true);
+            if(btn!=currentSButton)
+                btn->setChecked(false);
 #ifdef Q_OS_LINUX
-            else
-            {
+            else {
+                btn->setChecked(true);
                 QString name = "";
-                for (auto tmp : Initializer::langNamesMap.keys(SourceLangBtns[i]->text()))
+                for (auto tmp : Initializer::langNamesMap.keys(btn->text()))
                     if(tmp.length()>name.length())
                         name = tmp;
                 currentSourceLang = name;
@@ -811,8 +811,7 @@ void ApertiumGui::translateReceived(const QString &result)
     format.setForeground(QColor(0, 0, 0));
     cursor.insertText(result, format);
     cursor.movePosition(QTextCursor::Start);
-    while(!cursor.atEnd())
-    {
+    while(!cursor.atEnd()) {
         auto cursor1 = cursor.document()->
                 find(QRegularExpression ("[\\*#]\\w+\\W?"),cursor.position());
         if (cursor1.isNull())
@@ -844,11 +843,6 @@ ApertiumGui::~ApertiumGui()
     delete ui;
 }
 
-void ApertiumGui::on_mru_itemClicked(QListWidgetItem *item)
-{
-    setLangpair(item->text().left(item->text().indexOf(' ')),
-                item->text().mid(item->text().indexOf("- ")+2));
-}
 void ApertiumGui::setLangpair(QString source, QString target) {
     int sBtnIndex = -1;
     int tBtnIndex = -1;
@@ -861,15 +855,14 @@ void ApertiumGui::setLangpair(QString source, QString target) {
     connect(this, &ApertiumGui::listOfLangsSet,&loop, &QEventLoop::quit);
     if (sBtnIndex!=-1)
         SourceLangBtns[sBtnIndex]->click();
-    else
-    {
-        emit ui->SourceLangComboBox->view()->activated(ui->SourceLangComboBox->model()->
-                                                       findText(source));
-
+    else {
+        QModelIndex index = ui->SourceLangComboBox->model()->
+                findText(source);
+        if (index.isValid())
+            emit ui->SourceLangComboBox->view()->activated(index);
     }
     loop.exec();
-    for (int i = 0; i<TargetLangBtns.size();++i)
-    {
+    for (int i = 0; i<TargetLangBtns.size();++i) {
         if (TargetLangBtns[i]->text()==target) {
             tBtnIndex = i;
             break;
@@ -877,10 +870,21 @@ void ApertiumGui::setLangpair(QString source, QString target) {
     }
     if (tBtnIndex!=-1)
         TargetLangBtns[tBtnIndex]->click();
-    else
-        emit ui->TargetLangComboBox->view()->activated(ui->TargetLangComboBox->model()->
-                                                       findText(target));
+    else {
+        QModelIndex index = ui->TargetLangComboBox->model()->
+                findText(target);
+        if (index.isValid())
+            emit ui->TargetLangComboBox->view()->activated(index);
+    }
+
 }
+
+void ApertiumGui::on_mru_itemClicked(QListWidgetItem *item)
+{
+    setLangpair(item->text().left(item->text().indexOf(' ')),
+                item->text().mid(item->text().indexOf("- ")+2));
+}
+
 
 void ApertiumGui::on_swapBtn_clicked()
 {

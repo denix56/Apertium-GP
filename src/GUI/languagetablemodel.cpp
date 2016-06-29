@@ -146,10 +146,8 @@ void languageTableModel::clear()
 QModelIndex languageTableModel::findText(QString value) const
 {
     int pos = list.indexOf(value);
-    if (pos != -1)
-        return createIndex(pos % rowN, pos / rowN);
-    else
-        return createIndex(-1,-1);
+    return pos != -1 ? createIndex(pos % rowN, pos / rowN)
+                     : createIndex(-1,-1);
 }
 
 int languageTableModel::itemCount() const
