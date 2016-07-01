@@ -14,6 +14,7 @@
 #include <QComboBox>
 #include <QDir>
 #include <QListWidgetItem>
+#include <QProgressDialog>
 namespace Ui {
 class ApertiumGui;
 }
@@ -38,6 +39,7 @@ protected:
 signals:
     void listOfLangsSet();
     void failedToStart();
+    void docForTransChoosed(QString filePath);
 private slots:
     //update ComboBoxes when new source language, that is choosed
     void updateComboBox(QModelIndex);
@@ -56,30 +58,40 @@ private slots:
 
     //parse json response
     void getReplyFromAPY(QNetworkReply*);
+
      //send translation request for each paragraph
     void createRequests();
 
     void createListOfLangs(QNetworkReply *reply = nullptr);
+
     //Uncheck Other Target language buttons when the new one is checked
     void clearOtherEButtons();
 
     //box for changing font size
     void fontSizeBox();
+
     void changeFontSize(int size);
 
     void fontSizeCancel();
 
     //Not for Linux
     void saveMru();
+
     void translateReceived(const QString &result);
 
     void on_boxInput_currentCharFormatChanged(const QTextCharFormat &format);
+
     void dlAction_triggered();
 
+    void showPostDocTransDlg(QString trFilePath);
+
+    void rejectPostDocTransDlg();
 
     void on_mru_itemClicked(QListWidgetItem *item);
 
     void on_swapBtn_clicked();
+
+    void on_docTransBtn_clicked();
 
 private:
 
@@ -98,7 +110,7 @@ private:
     QTextDocument outputDoc;
     Translator *translator;
     QThread thread;
-
+    QProgressDialog *docTransWaitDlg;
     //not for Linux
     QDir *appdata;
     int lastBlockCount = 1;

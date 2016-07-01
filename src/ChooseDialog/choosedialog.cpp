@@ -16,7 +16,6 @@ ChooseDialog::ChooseDialog(QWidget *parent) :
     if (QFile(Initializer::conf->fileName()).exists())
     {
         ui->serverPathEdit->setText(Initializer::conf->value("path/serverPath").toString());
-        //ui->langPathEdit->setText(Initializer::conf->value("path/langPath").toString());
     }
 }
 

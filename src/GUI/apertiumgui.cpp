@@ -25,6 +25,8 @@
 #include <QFileInfoList>
 #include <QFileInfo>
 #include <QStyle>
+#include <QFileDialog>
+#include <QDesktopServices>
 #include <QDebug>
 
 //TODO: choose language of app
@@ -39,8 +41,7 @@ ApertiumGui::ApertiumGui(QWidget *parent) :
 bool ApertiumGui::initialize()
 {
 #ifdef Q_OS_LINUX
-    auto dlg = new QProgressDialog(tr("Starting server..."),tr("Cancel"),0,100,this);
-    dlg->setRange(0,0);
+    auto dlg = new QProgressDialog(tr("Starting server..."),tr("Cancel"),0,0,this);
     dlg->setValue(0);
     dlg->show();
 #endif
@@ -59,14 +60,12 @@ bool ApertiumGui::initialize()
     TargetLangBtns[1]=ui->TargetLang2;
     TargetLangBtns[2]=ui->TargetLang3;
 
-    for(int i=0;i<SourceLangBtns.size();++i)
-    {
+    for(int i=0;i<SourceLangBtns.size();++i) {
         connect(SourceLangBtns[i],&HeadButton::clicked,this,&ApertiumGui::clearOtherSButtons);
         connect(SourceLangBtns[i],&HeadButton::toggled,SourceLangBtns[i],
                 &HeadButton::changeButtonColor);
     }
-    for(int i=0;i<TargetLangBtns.size();++i)
-    {
+    for(int i=0;i<TargetLangBtns.size();++i) {
         connect(TargetLangBtns[i],&HeadButton::clicked,this,&ApertiumGui::clearOtherEButtons);
         connect(TargetLangBtns[i],&HeadButton::toggled,TargetLangBtns[i],
                 &HeadButton::changeButtonColor);
@@ -81,6 +80,10 @@ bool ApertiumGui::initialize()
     translator = new Translator(this);
     translator->moveToThread(&thread);
     ui->toolBar->setMovable(false);
+    ui->swapBtn->setFixedHeight(ui->SourceLang1->height());
+    QFont font(ui->swapBtn->font());
+    font.setPointSize(14);
+    ui->swapBtn->setFont(font);
 #ifdef Q_OS_LINUX
 
     //start server and get available language pairs
@@ -91,8 +94,7 @@ bool ApertiumGui::initialize()
     apy = new QProcess;
     apy->setWorkingDirectory(serverPath);
     apy->setArguments(QStringList() << langPairsPath);
-    if(!QFile(apy->workingDirectory()+"/servlet.py").exists())
-    {
+    if(!QFile(apy->workingDirectory()+"/servlet.py").exists()) {
         QMessageBox box;
         box.critical(this,"Path error","Incorrect server directory");
         close();
@@ -100,14 +102,12 @@ bool ApertiumGui::initialize()
     }
     apy->execute("pkexec", QStringList() << "/usr/share/apertium-gp/serverCmds.sh" << "-s");
     //wait while server starts
-    while(true)
-    {
+    while(true) {
         QEventLoop loop;
         auto reply = requestSender->get(QNetworkRequest(QUrl(url.toString()+"/stats")));
         connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
         loop.exec();
-        if (reply->error()== QNetworkReply::NoError)
-        {
+        if (reply->error()== QNetworkReply::NoError) {
             reply->deleteLater();
             break;
         }
@@ -140,7 +140,8 @@ bool ApertiumGui::initialize()
     auto dlAction= new QAction(style()->standardIcon(QStyle::SP_ArrowDown),tr("Install packages"),ui->toolBar);
     ui->toolBar->addAction(dlAction);
     connect(dlAction, &QAction::triggered,this, &ApertiumGui::dlAction_triggered);
-    connect(ui->boxInput,&InputTextEdit::printEnded,translator,&Translator::nonLinuxTranslate);
+    connect(ui->boxInput,&InputTextEdit::printEnded,translator,&Translator::boxTranslate);
+    connect(this, &ApertiumGui::docForTransChoosed, translator, &Translator::docTranslate);
     connect(ui->boxInput,&InputTextEdit::printEnded,this,&ApertiumGui::saveMru);
     connect(translator,&Translator::resultReady,this,&ApertiumGui::translateReceived);
     if (!QDir(DATALOCATION+"/usr/share/apertium/modes").exists() || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
@@ -179,14 +180,12 @@ void ApertiumGui::dlAction_triggered()
         checked = true;
         dlWindow.exec();
         //wait while server starts
-        while(true)
-        {
+        while(true) {
             QEventLoop loop;
             auto reply = requestSender->get(QNetworkRequest(QUrl(url.toString()+"/stats")));
             connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
             loop.exec();
-            if (reply->error()== QNetworkReply::NoError)
-            {
+            if (reply->error()== QNetworkReply::NoError) {
                 reply->deleteLater();
                 break;
             }
@@ -253,8 +252,7 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
         //parse json response
 
         //delete non 2-letter names
-        for(auto it = array.begin(); it != array.end();)
-        {
+        for(auto it = array.begin(); it != array.end();) {
             QString sourceLanguage = it->toObject().value("sourceLanguage").toString();
             QString targetLanguage = it->toObject().value("targetLanguage").toString();
             if(sourceLanguage.length() > 3 || targetLanguage.length() > 3)
@@ -262,13 +260,11 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
             else
                 ++it;
         }
-        for (auto it : array)
-        {
+        for (auto it : array) {
             bool unique = true;
             auto sourceLang = it.toObject().value("sourceLanguage").toString();
             auto targetLang = it.toObject().value("targetLanguage").toString();
-            if (Initializer::conf->value(sourceLang + "-" + targetLang).toULongLong()>0ULL)
-            {
+            if (Initializer::conf->value(sourceLang + "-" + targetLang).toULongLong()>0ULL) {
                 langs.insert(langpairUsed(Initializer::langNamesMap[sourceLang]+
                                           " - " + Initializer::langNamesMap[targetLang],
                                           Initializer::conf->value(sourceLang +
@@ -286,8 +282,7 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
         }
         int i = 0;
         //add to mru
-        for(auto it = langs.begin(); i < 3 && it != langs.end();++it, ++i)
-        {
+        for(auto it = langs.begin(); i < 3 && it != langs.end();++it, ++i) {
             auto item = new QListWidgetItem(it->name);
             item->setTextAlignment(Qt::AlignCenter);
             ui->mru->addItem(item);
@@ -300,8 +295,7 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
                         .value("targetLanguage").toString()]);
     }
     // Error occured
-    else
-    {
+    else {
         QMessageBox box;
         box.critical(this,"Server error",reply->errorString());
         initRes = false;
@@ -337,13 +331,10 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
                         ==Initializer::langNamesMap[sourceLanguage])
                     unique=false;
         if(unique)
-        {
             ui->SourceLangComboBox->model()->addItem(Initializer::langNamesMap[sourceLanguage]);
-        }
     }
     int i=0;
-    for(auto it = langs.begin(); i < 3 && it != langs.end();++it, ++i)
-    {
+    for(auto it = langs.begin(); i < 3 && it != langs.end();++it, ++i) {
         auto item = new QListWidgetItem(it->name);
         item->setTextAlignment(Qt::AlignCenter);
         ui->mru->addItem(item);
@@ -360,15 +351,13 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
 #endif
 
     //fill buttons with start languages
-    for(int i=0;i<SourceLangBtns.size();++i)
-    {
+    for(int i=0;i<SourceLangBtns.size();++i) {
         SourceLangBtns[i]->setText(ui->SourceLangComboBox->model()->
                                    data(ui->SourceLangComboBox->model()->index(i,0)).toString());
         SourceLangBtns[i]->setEnabled(!SourceLangBtns[i]->text().isEmpty());
     }
 
-    for(int i=0;i<TargetLangBtns.size();++i)
-    {
+    for(int i=0;i<TargetLangBtns.size();++i) {
         TargetLangBtns[i]->setText(ui->TargetLangComboBox->model()->
                                    data(ui->TargetLangComboBox->model()->index(i,0)).toString());
         TargetLangBtns[i]->setEnabled(!TargetLangBtns[i]->text().isEmpty());
@@ -544,32 +533,28 @@ void ApertiumGui::clearOtherEButtons()
 {
     auto currentButton = qobject_cast<HeadButton*>(sender());
     for (int i=0;i<TargetLangBtns.size();++i) {
-        if (TargetLangBtns[i]->text().isEmpty())
-        {
+        if (TargetLangBtns[i]->text().isEmpty()) {
             TargetLangBtns[i]->setEnabled(false);
             TargetLangBtns[i]->setChecked(false);
         }
-        else
-        {
+        else {
             TargetLangBtns[i]->setEnabled(true);
             if(TargetLangBtns[i]!=currentButton)
                 TargetLangBtns[i]->setChecked(false);
-            else
+            else {
 #ifdef Q_OS_LINUX
-            {
                 QString name = "";
                 for (auto tmp : Initializer::langNamesMap.keys(TargetLangBtns[i]->text()))
                     if(tmp.length()>name.length())
                         name = tmp;
                 currentTargetLang = name;
-            }
 #else
             QDir path(DATALOCATION+"/usr/share/apertium/modes");
             HeadButton* currentSourceButton;
             for (HeadButton* btn : SourceLangBtns)
                 if (btn->isChecked())
                     currentSourceButton = btn;
-            for (auto key : Initializer::langNamesMap.keys(curr->text()))
+            for (auto key : Initializer::langNamesMap.keys(currentSourceButton->text()))
                 for (auto tKey : Initializer::langNamesMap.keys(TargetLangBtns[0]->text()))
                 if (!path.entryList(QStringList() << key+"-"+tKey+".mode").isEmpty()) {
                     currentSourceLang = key;
@@ -577,6 +562,7 @@ void ApertiumGui::clearOtherEButtons()
                     break;
                 }
 #endif
+            }
         }
     }
 }
@@ -893,3 +879,60 @@ void ApertiumGui::on_swapBtn_clicked()
 }
 
 
+
+void ApertiumGui::on_docTransBtn_clicked()
+{
+    //FIXME: format names
+    QString filePath = QFileDialog::getOpenFileName(this,tr("Choose document to translate"),
+                                                     QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
+                                                  tr("Documents (*.txt *.docx *.doc *.ppt, *.html "
+                                                     "*.rtf *.odt *.wxml *.xlsx *.xpresstag)"));
+    if(filePath.isEmpty())
+        return;
+    docTransWaitDlg = new QProgressDialog(tr("Translating document..."),"",0,0,this);
+    //TODO: implement cancel button
+    docTransWaitDlg->setCancelButton(nullptr);
+    docTransWaitDlg->setModal(true);
+    connect(translator, &Translator::docTranslated,this,&ApertiumGui::showPostDocTransDlg);
+    connect (translator, &Translator::docTranslateRejected, this, &ApertiumGui::rejectPostDocTransDlg);
+    emit docForTransChoosed(filePath);
+    docTransWaitDlg->exec();
+    delete docTransWaitDlg;
+}
+
+void ApertiumGui::showPostDocTransDlg(QString trFilePath)
+{
+    docTransWaitDlg->accept();
+    auto btnDlg = new QDialogButtonBox;
+    auto openFileButton = new QPushButton(tr("Open translated file"),btnDlg);
+    connect(openFileButton, &QPushButton::clicked, [&]()
+    {
+        QDesktopServices::openUrl(trFilePath);
+        btnDlg->close();
+        qApp->processEvents();
+        btnDlg->deleteLater();
+    });
+    auto openFolderButton = new QPushButton(tr("Open folder with translated file"),btnDlg);
+    connect(openFolderButton, &QPushButton::clicked, [&]()
+    {
+        QFileInfo f(trFilePath);
+        QDesktopServices::openUrl(f.absolutePath());
+        btnDlg->close();
+        qApp->processEvents();
+        btnDlg->deleteLater();
+    });
+    btnDlg->addButton(openFileButton,QDialogButtonBox::ActionRole);
+    btnDlg->addButton(openFolderButton,QDialogButtonBox::ActionRole);
+    btnDlg->setWindowModality(Qt::WindowModal);
+    btnDlg->setFixedSize(400,70);
+    btnDlg->setCenterButtons(true);
+    btnDlg->show();
+    QEventLoop loop;
+    connect(btnDlg, &QDialogButtonBox::clicked, [&loop](){loop.exit();});
+    loop.exec();
+}
+
+void ApertiumGui::rejectPostDocTransDlg()
+{
+    docTransWaitDlg->reject();
+}

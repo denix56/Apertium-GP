@@ -28,30 +28,92 @@ combobox-popup: 0;
       <property name="verticalSpacing">
        <number>15</number>
       </property>
-      <item row="2" column="3">
-       <widget class="InputTextEdit" name="boxOutput">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+      <item row="1" column="3">
+       <layout class="QHBoxLayout" name="TargetLangLayout">
+        <property name="spacing">
+         <number>4</number>
         </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>450</height>
-         </size>
-        </property>
-        <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
-        </property>
-        <property name="sizeAdjustPolicy">
-         <enum>QAbstractScrollArea::AdjustIgnored</enum>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
+        <item alignment="Qt::AlignLeft">
+         <widget class="HeadButton" name="TargetLang1">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Lang1</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item alignment="Qt::AlignLeft">
+         <widget class="HeadButton" name="TargetLang2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Lang2</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item alignment="Qt::AlignLeft">
+         <widget class="HeadButton" name="TargetLang3">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Lang3</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item alignment="Qt::AlignLeft">
+         <widget class="TableComboBox" name="TargetLangComboBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>20</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="sizeAdjustPolicy">
+           <enum>QComboBox::AdjustToMinimumContentsLength</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
       </item>
       <item row="1" column="1">
        <layout class="QHBoxLayout" name="SourceLangLayout">
@@ -170,6 +232,14 @@ combobox-popup: 0;
         </item>
         <item>
          <widget class="QToolButton" name="swapBtn">
+          <property name="font">
+           <font>
+            <weight>50</weight>
+            <italic>false</italic>
+            <bold>false</bold>
+            <stylestrategy>PreferAntialias</stylestrategy>
+           </font>
+          </property>
           <property name="text">
            <string>⇄</string>
           </property>
@@ -177,7 +247,7 @@ combobox-popup: 0;
         </item>
        </layout>
       </item>
-      <item row="5" column="1" alignment="Qt::AlignRight">
+      <item row="7" column="1" alignment="Qt::AlignRight">
        <widget class="QLabel" name="label">
         <property name="text">
          <string/>
@@ -190,7 +260,7 @@ combobox-popup: 0;
         </property>
        </widget>
       </item>
-      <item row="5" column="3" alignment="Qt::AlignLeft">
+      <item row="7" column="3" alignment="Qt::AlignLeft">
        <widget class="QLabel" name="label_2">
         <property name="styleSheet">
          <string notr="true">QLabel {
@@ -203,118 +273,6 @@ combobox-popup: 0;
         </property>
         <property name="text">
          <string>Apertium</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <layout class="QHBoxLayout" name="TargetLangLayout">
-        <property name="spacing">
-         <number>4</number>
-        </property>
-        <item alignment="Qt::AlignLeft">
-         <widget class="HeadButton" name="TargetLang1">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Lang1</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item alignment="Qt::AlignLeft">
-         <widget class="HeadButton" name="TargetLang2">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Lang2</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item alignment="Qt::AlignLeft">
-         <widget class="HeadButton" name="TargetLang3">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Lang3</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item alignment="Qt::AlignLeft">
-         <widget class="TableComboBox" name="TargetLangComboBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>20</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="sizeAdjustPolicy">
-           <enum>QComboBox::AdjustToMinimumContentsLength</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="1">
-       <widget class="InputTextEdit" name="boxInput">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>450</height>
-         </size>
-        </property>
-        <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
-        </property>
-        <property name="sizeAdjustPolicy">
-         <enum>QAbstractScrollArea::AdjustToContents</enum>
-        </property>
-        <property name="acceptRichText">
-         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -391,6 +349,66 @@ combobox-popup: 0;
         </property>
        </widget>
       </item>
+      <item row="2" column="1" rowspan="2">
+       <widget class="InputTextEdit" name="boxInput">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>450</height>
+         </size>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QAbstractScrollArea::AdjustToContents</enum>
+        </property>
+        <property name="acceptRichText">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3" rowspan="2">
+       <widget class="InputTextEdit" name="boxOutput">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>450</height>
+         </size>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QAbstractScrollArea::AdjustIgnored</enum>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QPushButton" name="docTransBtn">
+        <property name="text">
+         <string>Translate document</string>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -406,7 +424,7 @@ combobox-popup: 0;
      <x>0</x>
      <y>0</y>
      <width>968</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="locale">

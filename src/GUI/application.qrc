@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>images/Apertium_box_white_small.png</file>
+        <file>DocTrans.qml</file>
+        <file>DocTransForm.ui.qml</file>
     </qresource>
 </RCC>

@@ -11,26 +11,80 @@ Translator::Translator(ApertiumGui* parent)
     this->parent = parent;
 }
 
+void Translator::boxTranslate()
+{
+    QString result = notLinuxTranslate(parent->ui->boxInput->toPlainText());
+    emit resultReady(result.left(result.length()-2));
+}
 
-void Translator::nonLinuxTranslate() {
-    auto name = parent->currentSourceLang + "-" + parent->currentTargetLang;
-    if (name.isEmpty())
+void Translator::docTranslate(QString filePath)
+{
+    QFileInfo fileInfo(filePath);
+    QDir docDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+    docDir.mkdir(qApp->applicationName());
+    if (!docDir.cd(qApp->applicationName())) {
+        qDebug() << docDir.absolutePath();
+        emit docTranslateRejected();
         return;
+    }
+    QFile outF(docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->currentSourceLang+"-"+
+                                      parent->currentTargetLang+"."+fileInfo.suffix()));
+    if (fileInfo.suffix()=="txt") {
+        QFile f(filePath);
+
+        if (f.open(QIODevice::ReadOnly | QIODevice::Text) && outF.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            auto cmd = new QProcess(this);
+#ifdef Q_OS_WIN
+            cmd->setWorkingDirectory(parent->appdata->absoluteFilePath("apertium-all-dev/bin"));
+#endif
+            while (!f.atEnd()) {
+                qApp->processEvents();
+                QString line = f.readLine();
+                cmd->start("echo", QStringList() << "\""+line+"\"" << "|" << "apertium-destxt");
+                cmd->waitForReadyRead();
+                QString output = cmd->readAllStandardOutput();
+                output = output.mid(1,output.lastIndexOf('\"')-1);
+                qDebug() << output;
+                cmd->waitForFinished();
+                cmd->start("echo", QStringList() << "\""+notLinuxTranslate(output)+"\"" << "|" << "apertium-retxt");
+                cmd->waitForReadyRead();
+                output = cmd->readAllStandardOutput();
+                output = output.mid(1,output.lastIndexOf('\"')-1);
+                outF.write(output.toUtf8()+"\n");
+                cmd->waitForFinished();
+            }
+            cmd->deleteLater();
+            outF.close();
+            f.close();
+        }
+        else {
+            emit docTranslateRejected();
+            return;
+        }
+    }
+    emit docTranslated(outF.fileName());
+}
+
+QString Translator::notLinuxTranslate(QString text)
+{
+    QString name = parent->currentSourceLang + "-" + parent->currentTargetLang;
+    if (name.isEmpty())
+        return "";
 
     QDir dir(parent->appdata->absoluteFilePath("usr/share/apertium/modes"));
     if (!dir.exists() || !dir.exists(name+".mode"))
-        return;
+        return "";
 
     QFile file(dir.absoluteFilePath(name+".mode"));
     if (file.open(QIODevice::ReadOnly) == false) {
-        return;
+        return "";
     }
     QString mode = file.readAll();
     file.close();
 
     mode = mode.trimmed();
     if (mode.isEmpty()) {
-        return;
+        return "";
     }
     mode.replace("$1", "-g");
     mode.remove("$2");
@@ -60,12 +114,11 @@ void Translator::nonLinuxTranslate() {
     run->start("/bin/sh", QStringList() << "-c" << mode);
 #endif
     run->waitForStarted();
-    run->write(parent->ui->boxInput->toPlainText().toUtf8()+"  ");
+    run->write(text.toUtf8()+"  ");
     run->closeWriteChannel();
     run->waitForFinished();
-    auto result = QString::fromUtf8(run->readAll());
-    emit resultReady(result.left(result.length()-2));
     run->deleteLater();
+    return QString::fromUtf8(run->readAll());
 }
 
 void Translator::linuxTranslate(QNetworkRequest &request)
