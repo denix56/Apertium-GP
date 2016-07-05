@@ -126,7 +126,6 @@ private:
 
     void loadConf();
     void setLangpair(QString source, QString target);
-
 };
 
 #endif // ApertiumGui_H

@@ -27,6 +27,7 @@
 #include <QStyle>
 #include <QFileDialog>
 #include <QDesktopServices>
+#include <QWidget>
 #include <QDebug>
 
 //TODO: choose language of app
@@ -144,6 +145,8 @@ bool ApertiumGui::initialize()
     connect(this, &ApertiumGui::docForTransChoosed, translator, &Translator::docTranslate);
     connect(ui->boxInput,&InputTextEdit::printEnded,this,&ApertiumGui::saveMru);
     connect(translator,&Translator::resultReady,this,&ApertiumGui::translateReceived);
+    connect(translator, &Translator::docTranslated,this,&ApertiumGui::showPostDocTransDlg);
+    connect (translator, &Translator::docTranslateRejected, this, &ApertiumGui::rejectPostDocTransDlg);
     if (!QDir(DATALOCATION+"/usr/share/apertium/modes").exists() || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
         QMessageBox box;
         if(box.critical(this, "Required packages are not installed.",
@@ -885,7 +888,7 @@ void ApertiumGui::on_docTransBtn_clicked()
     //FIXME: format names
     QString filePath = QFileDialog::getOpenFileName(this,tr("Choose document to translate"),
                                                      QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
-                                                  tr("Documents (*.txt *.docx *.doc *.ppt, *.html "
+                                                  tr("Documents (*.txt *.docx *.pptx *.html "
                                                      "*.rtf *.odt *.wxml *.xlsx *.xpresstag)"));
     if(filePath.isEmpty())
         return;
@@ -893,8 +896,6 @@ void ApertiumGui::on_docTransBtn_clicked()
     //TODO: implement cancel button
     docTransWaitDlg->setCancelButton(nullptr);
     docTransWaitDlg->setModal(true);
-    connect(translator, &Translator::docTranslated,this,&ApertiumGui::showPostDocTransDlg);
-    connect (translator, &Translator::docTranslateRejected, this, &ApertiumGui::rejectPostDocTransDlg);
     emit docForTransChoosed(filePath);
     docTransWaitDlg->exec();
     delete docTransWaitDlg;
@@ -903,12 +904,14 @@ void ApertiumGui::on_docTransBtn_clicked()
 void ApertiumGui::showPostDocTransDlg(QString trFilePath)
 {
     docTransWaitDlg->accept();
-    auto btnDlg = new QDialogButtonBox;
+    auto btnDlg = new QMessageBox(this);
+    btnDlg->setWindowTitle(tr("Translation finished"));
+    btnDlg->setText(tr("Document has been successfully translated."));
     auto openFileButton = new QPushButton(tr("Open translated file"),btnDlg);
     connect(openFileButton, &QPushButton::clicked, [&]()
     {
-        QDesktopServices::openUrl(trFilePath);
-        btnDlg->close();
+        QDesktopServices::openUrl(QUrl("file:///"+trFilePath,QUrl::TolerantMode));
+        btnDlg->accept();
         qApp->processEvents();
         btnDlg->deleteLater();
     });
@@ -916,20 +919,16 @@ void ApertiumGui::showPostDocTransDlg(QString trFilePath)
     connect(openFolderButton, &QPushButton::clicked, [&]()
     {
         QFileInfo f(trFilePath);
-        QDesktopServices::openUrl(f.absolutePath());
-        btnDlg->close();
+        QDesktopServices::openUrl(QUrl("file:///"+f.absolutePath(),QUrl::TolerantMode));
+        btnDlg->accept();
         qApp->processEvents();
         btnDlg->deleteLater();
     });
-    btnDlg->addButton(openFileButton,QDialogButtonBox::ActionRole);
-    btnDlg->addButton(openFolderButton,QDialogButtonBox::ActionRole);
-    btnDlg->setWindowModality(Qt::WindowModal);
-    btnDlg->setFixedSize(400,70);
-    btnDlg->setCenterButtons(true);
-    btnDlg->show();
-    QEventLoop loop;
-    connect(btnDlg, &QDialogButtonBox::clicked, [&loop](){loop.exit();});
-    loop.exec();
+    //QMessageBox::RejectRole - fix to enable close button
+    btnDlg->addButton(openFileButton,QMessageBox::RejectRole);
+    btnDlg->addButton(openFolderButton,QMessageBox::ActionRole);
+    btnDlg->setModal(true);
+    btnDlg->exec();
 }
 
 void ApertiumGui::rejectPostDocTransDlg()

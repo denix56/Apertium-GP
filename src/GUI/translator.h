@@ -2,6 +2,7 @@
 #define NONLINUXTRANSLATOR_H
 #include <QObject>
 #include <QNetworkRequest>
+#include <QFileInfo>
 class ApertiumGui;
 //thread for nonlinuxtranslation
 class Translator : public QObject
@@ -23,5 +24,13 @@ public slots:
 private:
     ApertiumGui* parent;
     QString notLinuxTranslate(QString text);
+
+    void translateTxt(QString filePath, QDir &docDir);
+
+    void translateDocx(QString filePath, QDir &docDir);
+
+    void translatePptx(QString filePath, QDir &docDir);
+
+    QString replaceWrongEncodings(QString src, QString tr);
 };
 #endif // NONLINUXTRANSLATOR_H
