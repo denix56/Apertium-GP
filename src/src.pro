@@ -16,7 +16,7 @@ RCC_DIR = ../build/rcc
 UI_DIR = ../build/ui
 unix:OBJECTS_DIR = ../build/o/unix
 win32:OBJECTS_DIR = ../build/o/win32
-macx:OBJECTS_DIR = ../build/o/mac
+macx:OBJECTS_DIR = ../build/o/macx
 
 INCLUDEPATH += \
     GUI \

@@ -17,6 +17,7 @@ bool Initializer::initialize()
 #ifdef Q_OS_LINUX
     QDir path("/usr/share/apertium-gp");
 #else
+    qDebug() << DATALOCATION;
     QDir path(DATALOCATION);
 #endif
     auto db = QSqlDatabase::addDatabase("QSQLITE");

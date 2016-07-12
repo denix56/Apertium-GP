@@ -31,6 +31,6 @@ private:
 
     void translatePptx(QString filePath, QDir &docDir);
 
-    QString replaceWrongEncodings(QString src, QString tr);
+    //QString replaceWrongEncodings(QString src, QString tr);
 };
 #endif // NONLINUXTRANSLATOR_H

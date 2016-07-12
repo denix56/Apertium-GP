@@ -11,7 +11,6 @@
 #include <QDir>
 #include <QAbstractButton>
 #include <QPushButton>
-#include <QTemporaryDir>
 DownloadWindow::DownloadWindow(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DownloadWindow)
@@ -339,12 +338,26 @@ bool DownloadWindow::applyChanges()
 
 }
 #else
-void DownloadWindow::unpack(QNetworkReply *reply)
+void DownloadWindow::installpkg(int row)
 {
-    QString name = reply->rawHeader("name");
-    int row = reply->rawHeader("row").toInt();
+    ui->refreshButton->setEnabled(false);
+    actionCnt++;
+    auto name = model->item(row)->name;
+    model->setData(model->index(row,STATE),DOWNLOADING);
+    QNetworkRequest request;
+    request.setUrl(QUrl(model->item(row)->link.toString()));
+    auto reply = manager->get(request);
+    reply->setReadBufferSize(model->item(row)->size*2);
+    QEventLoop loop;
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     auto sortConnection = connect(model, &DownloadModel::sorted, [&](){row = model->find(name);
         name = model->item(row)->name;});
+    connect(reply, &QNetworkReply::downloadProgress, [&](qint64 bytesReceived,qint64)
+    {model->setData(model->index(row,2),bytesReceived);});
+    auto connection = connect(delegate, &InstallerDelegate::stateChanged,[&](int r)
+    {if (r==row) reply->abort(); });
+    loop.exec();
+    disconnect(connection);
     if (reply->error()!=QNetworkReply::NoError)
     {
         model->setData(model->index(row,STATE),INSTALL);
@@ -355,8 +368,14 @@ void DownloadWindow::unpack(QNetworkReply *reply)
     ui->view->update(model->index(row,SIZE));
     QString appdata_path = DATALOCATION;
     QDir().mkpath(appdata_path);
-    QTemporaryDir appdata(QDir(appdata_path).absoluteFilePath("name.XXXXXX"));
-    QFile file(QDir(appdata.path()).filePath("data.tmp"));
+    QDir appdata(appdata_path);
+    appdata.remove("data.tmp");
+    appdata.remove("data.tar");
+    appdata.remove("data.tar.xz");
+    appdata.remove("debian-binary");
+    appdata.remove("control.tar.gz");
+
+    QFile file(appdata.filePath("data.tmp"));
     file.open(QIODevice::WriteOnly);
     file.write(reply->readAll());
     file.close();
@@ -373,23 +392,28 @@ void DownloadWindow::unpack(QNetworkReply *reply)
     up->waitForFinished();
     up->deleteLater();
 
-    if (QDir(appdata.path()).exists("data.tar")) {
+    if (appdata.exists("data.tar")) {
         auto up = new QProcess(this);
-        up->setWorkingDirectory(appdata.path());
-        up->start(exep.absoluteFilePath("7z"), QStringList() << "x" << "-y" << "data.tar" << "-o../");
+        up->setWorkingDirectory(appdata_path);
+        up->start(exep.absoluteFilePath("7z"), QStringList() << "x" << "-y" << "data.tar");
         up->waitForStarted();
         up->waitForFinished();
         up->deleteLater();
     }
 
-    if (QDir(appdata.path()).exists("data.tar.xz")) {
+    if (appdata.exists("data.tar.xz")) {
         auto up = new QProcess(this);
-        up->setWorkingDirectory(appdata.path());
-        up->start("tar", QStringList() << "-Jxf" << "data.tar.xz" << "-C" << "../");
+        up->setWorkingDirectory(appdata_path);
+        up->start("tar", QStringList() << "-Jxf" << "data.tar.xz");
         up->waitForStarted();
         up->waitForFinished();
         up->deleteLater();
     }
+    appdata.remove("data.tmp");
+    appdata.remove("data.tar");
+    appdata.remove("data.tar.xz");
+    appdata.remove("debian-binary");
+    appdata.remove("control.tar.gz");
 
     if (model->item(row)->link==QUrl("http://apertium.projectjj.com/"
                                      OS_PATH "/nightly/apertium-all-dev.7z"))
@@ -401,30 +425,8 @@ void DownloadWindow::unpack(QNetworkReply *reply)
     ui->view->update(model->index(row,SIZE));
     actionCnt--;
     disconnect(sortConnection);
+    ui->refreshButton->setEnabled(true);
     reply->deleteLater();
-}
-
-void DownloadWindow::installpkg(int row)
-{
-    actionCnt++;
-    auto name = model->item(row)->name;
-    model->setData(model->index(row,STATE),DOWNLOADING);
-    QNetworkRequest request;
-    request.setUrl(QUrl(model->item(row)->link.toString()));
-    request.setRawHeader("name", name.toUtf8());
-    request.setRawHeader("row",QByteArray::number(row));
-    auto reply = manager->get(request);
-    reply->setReadBufferSize(model->item(row)->size*2);
-    auto connection = connect(delegate, &InstallerDelegate::stateChanged,[&](int r)
-    {if (r==row) reply->abort(); });
-    connect(manager, &QNetworkAccessManager::finished, [&](QNetworkReply *reply)
-    {
-        disconnect(connection);
-        unpack(reply);
-    });
-    connect(reply, &QNetworkReply::downloadProgress, [&](qint64 bytesReceived,qint64)
-    {model->setData(model->index(row,2),bytesReceived);});
-
 }
 
 void DownloadWindow::removepkg(int row)

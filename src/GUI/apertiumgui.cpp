@@ -176,10 +176,9 @@ void ApertiumGui::dlAction_triggered()
 {
     DownloadWindow dlWindow(this);
     setDisabled(true);
-    if (dlWindow.getData(checked))
+    if (dlWindow.getData(checked)) {
         setDisabled(false);
 #ifdef Q_OS_LINUX
-    {
         checked = true;
         dlWindow.exec();
         //wait while server starts
@@ -201,10 +200,11 @@ void ApertiumGui::dlAction_triggered()
         connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
         loop.exec();
         createListOfLangs(reply);
-    }
 #else
-    dlWindow.exec();
-    createListOfLangs();
+        dlWindow.exec();
+        createListOfLangs();
+    }
+    setDisabled(false);
 #endif
 }
 
@@ -843,7 +843,7 @@ void ApertiumGui::setLangpair(QString source, QString target) {
     QEventLoop loop;
     connect(this, &ApertiumGui::listOfLangsSet,&loop, &QEventLoop::quit);
     if (sBtnIndex!=-1)
-        SourceLangBtns[sBtnIndex]->click();
+        emit SourceLangBtns[sBtnIndex]->click();
     else {
         QModelIndex index = ui->SourceLangComboBox->model()->
                 findText(source);
@@ -893,8 +893,9 @@ void ApertiumGui::on_docTransBtn_clicked()
     if(filePath.isEmpty())
         return;
     docTransWaitDlg = new QProgressDialog(tr("Translating document..."),"",0,0,this);
-    //TODO: implement cancel button
     docTransWaitDlg->setCancelButton(nullptr);
+    docTransWaitDlg->setWindowFlags(docTransWaitDlg->windowFlags() & ~Qt::WindowCloseButtonHint);
+    //TODO: implement cancel button
     docTransWaitDlg->setModal(true);
     emit docForTransChoosed(filePath);
     docTransWaitDlg->exec();

@@ -26,8 +26,6 @@ public slots:
     void accept();
 private slots:
     void chooseAction(int row);
-
-    void unpack(QNetworkReply *reply);
 #ifdef Q_OS_LINUX
     bool applyChanges();
 #endif
