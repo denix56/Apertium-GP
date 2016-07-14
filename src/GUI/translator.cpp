@@ -193,27 +193,6 @@ void Translator::translateHtml(QString filePath, QDir &docDir)
     //#endif
 }
 
-//QString Translator::replaceWrongEncodings(QString src, QString tr)
-//{
-//    int iSrc1 = -1;
-//    int iSrc2 = -1;
-//    int iTr1 = -1;
-//    int iTr2 = -1;
-//    QString tmp1, tmp2;
-//    QRegExp regExp("\\?+");
-//    while(true) {
-//        iSrc1 = src.indexOf('\"',iSrc2+1);
-//        iSrc2 = src.indexOf('\"',iSrc1+1);
-//        iTr1 = tr.indexOf('\"',iTr2+1);
-//        iTr2 = tr.indexOf('\"',iTr1+1);
-//        if(iSrc1==-1)
-//            return tr;
-//        tmp1 = src.mid(iSrc1+1,iSrc2-iSrc1-1);
-//        tmp2 = tr.mid(iTr1+1,iTr2-iTr1-1);
-//        if (tmp2.contains(regExp) && !tmp1.contains(regExp))
-//            tr.replace(iTr1+1,tmp2.length(),tmp1);
-//    }
-//}
 
 void Translator::translatePptx(QString filePath, QDir &docDir)
 {

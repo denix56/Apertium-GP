@@ -35,6 +35,5 @@ private:
 
     void translateXlsx(QString filePath, QDir &docDir);
 
-    //QString replaceWrongEncodings(QString src, QString tr);
 };
 #endif // NONLINUXTRANSLATOR_H
