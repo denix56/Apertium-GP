@@ -346,75 +346,75 @@ void Translator::translateXlsx(QString filePath, QDir &docDir)
 
 void Translator::translateRtf(QString filePath, QDir &docDir)
 {
-    QFileInfo fileInfo(filePath);
-    QTemporaryFile tmpDoc(QDir(QDir::tempPath()).absoluteFilePath(fileInfo.baseName()));
-    auto cmd = new QProcess(this);
-#ifdef Q_OS_WIN
-    cmd->setWorkingDirectory(parent->appdata->absoluteFilePath("apertium-all-dev/bin"));
-#endif
-    qApp->processEvents();
-    //desrtf
-    QEventLoop loop;
+//    QFileInfo fileInfo(filePath);
+//    QTemporaryFile tmpDoc(QDir(QDir::tempPath()).absoluteFilePath(fileInfo.baseName()));
+//    auto cmd = new QProcess(this);
+//#ifdef Q_OS_WIN
+//    cmd->setWorkingDirectory(parent->appdata->absoluteFilePath("apertium-all-dev/bin"));
+//#endif
+//    qApp->processEvents();
+//    //desrtf
+//    QEventLoop loop;
 
-    //connect(cmd, &QProcess::readyReadStandardOutput, [&](){qDebug() << cmd->readAllStandardOutput();});
-    QStringList args;
-    cmd->setEnvironment( QProcess::systemEnvironment() );
-    //cmd->setProcessChannelMode( QProcess:);
-    #ifdef Q_OS_WIN
-    //windows bug with backslash
-    //use replace to fix windows bug
-    args << "/c" << "type" << "\""+filePath.replace('/', QDir::separator())+"\"" << "|" <<"apertium-desrtf";
-    cmd->setNativeArguments(args.join(' '));
-    //args.clear();
-    //cmd->setTextModeEnabled(true);
-    //cmd->setStandardOutputFile("C:/Users/Denis/Documents/t.txt");
-    //cmd->setArguments(args);
-    cmd->start("cmd.exe");
-//    cmd->execute("cmd.exe /c type \""+filePath.replace('/', QDir::separator())+"\" | \""
-//                 +parent->appdata->absoluteFilePath("apertium-all-dev/bin").replace('/', QDir::separator())+"\\apertium-desrtf\"");
-   // cmd->waitForFinished();
-    //loop.exec();
-    //cmd->waitForFinished();
-    cmd->waitForReadyRead();
-#endif
-    if(!tmpDoc.open()) {
-        emit docTranslateRejected();
-        cmd->deleteLater();
-        return;
-    }
-    tmpDoc.setTextModeEnabled(true);
-    cmd->waitForFinished();
-    //qDebug() << cmd->readAllStandardError();
-    QString out = cmd->readAllStandardOutput();
-    //qDebug() << out;
-    //qDebug() << notLinuxTranslate(out).toUtf8();
-    tmpDoc.write(notLinuxTranslate(out).toUtf8());
-    tmpDoc.close();
-    //rertf
-#ifdef Q_OS_WIN
-    args  << "/c" << "type" << "\""+tmpDoc.fileName().replace('/',QDir::separator())+"\""
-         << "|" << "apertium-rertf";
-    cmd->setNativeArguments(args.join(' '));
-    cmd->start("cmd.exe");
-#endif
-    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->currentSourceLang
-                                                 +"-"+parent->currentTargetLang+"."+fileInfo.suffix());
-    QFile newDoc(trFilePath);
-    if (!newDoc.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-        emit docTranslateRejected();
-        cmd->deleteLater();
-        return;
-    }
-    QByteArray ar = cmd->readAllStandardOutput();
-    qDebug() << ar;
-    newDoc.write(ar);
-    newDoc.close();
-    cmd->waitForFinished();
-    emit docTranslated(trFilePath);
-    cmd->deleteLater();
-    //#else
-    //    // cmd->start("ar", QStringList() << "x" << "data.tmp");
-    //#endif
+//    //connect(cmd, &QProcess::readyReadStandardOutput, [&](){qDebug() << cmd->readAllStandardOutput();});
+//    QStringList args;
+//    cmd->setEnvironment( QProcess::systemEnvironment() );
+//    //cmd->setProcessChannelMode( QProcess:);
+//    #ifdef Q_OS_WIN
+//    //windows bug with backslash
+//    //use replace to fix windows bug
+//    args << "/c" << "type" << "\""+filePath.replace('/', QDir::separator())+"\"" << "|" <<"apertium-desrtf";
+//    cmd->setNativeArguments(args.join(' '));
+//    //args.clear();
+//    //cmd->setTextModeEnabled(true);
+//    //cmd->setStandardOutputFile("C:/Users/Denis/Documents/t.txt");
+//    //cmd->setArguments(args);
+//    cmd->start("cmd.exe");
+////    cmd->execute("cmd.exe /c type \""+filePath.replace('/', QDir::separator())+"\" | \""
+////                 +parent->appdata->absoluteFilePath("apertium-all-dev/bin").replace('/', QDir::separator())+"\\apertium-desrtf\"");
+//   // cmd->waitForFinished();
+//    //loop.exec();
+//    //cmd->waitForFinished();
+//    cmd->waitForReadyRead();
+//#endif
+//    if(!tmpDoc.open()) {
+//        emit docTranslateRejected();
+//        cmd->deleteLater();
+//        return;
+//    }
+//    tmpDoc.setTextModeEnabled(true);
+//    cmd->waitForFinished();
+//    //qDebug() << cmd->readAllStandardError();
+//    QString out = cmd->readAllStandardOutput();
+//    //qDebug() << out;
+//    //qDebug() << notLinuxTranslate(out).toUtf8();
+//    tmpDoc.write(notLinuxTranslate(out).toUtf8());
+//    tmpDoc.close();
+//    //rertf
+//#ifdef Q_OS_WIN
+//    args  << "/c" << "type" << "\""+tmpDoc.fileName().replace('/',QDir::separator())+"\""
+//         << "|" << "apertium-rertf";
+//    cmd->setNativeArguments(args.join(' '));
+//    cmd->start("cmd.exe");
+//#endif
+//    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->currentSourceLang
+//                                                 +"-"+parent->currentTargetLang+"."+fileInfo.suffix());
+//    QFile newDoc(trFilePath);
+//    if (!newDoc.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+//        emit docTranslateRejected();
+//        cmd->deleteLater();
+//        return;
+//    }
+//    QByteArray ar = cmd->readAllStandardOutput();
+//    qDebug() << ar;
+//    newDoc.write(ar);
+//    newDoc.close();
+//    cmd->waitForFinished();
+//    emit docTranslated(trFilePath);
+//    cmd->deleteLater();
+//    //#else
+//    //    // cmd->start("ar", QStringList() << "x" << "data.tmp");
+//    //#endif
 }
 
 void Translator::docTranslate(QString filePath)
