@@ -5,7 +5,7 @@
 #include <QUrl>
 
 enum states {INSTALL, UPDATE, UNINSTALL, DOWNLOADING, UNPACKING};
-enum types {TOOLS, LANGPAIRS};
+enum types {LANGPAIRS, TOOLS};
 enum columns {NAME, TYPE, SIZE, STATE};
 
 struct file
@@ -75,10 +75,16 @@ public:
     void sort(int column, Qt::SortOrder order);
 private:
     QVector <file> downList;
-    QMap <states, QString> stateNames;
-    QMap <types, QString> typeNames;
 
-
+    const QMap <states, QString> stateNames {
+        {INSTALL,tr("Install")}, {UPDATE,tr("Update")},
+        {UNINSTALL,tr("Uninstall")}, {DOWNLOADING,tr("Cancel")},
+        {UNPACKING,tr("Unpacking")}
+    };
+    const QMap <types, QString> typeNames {
+        {LANGPAIRS, tr("Langpairs")},
+        {TOOLS, tr("Tools")}
+    };
 };
 
 #endif // DOWNLOADMODEL_H

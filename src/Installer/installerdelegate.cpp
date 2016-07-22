@@ -14,8 +14,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     auto model = qobject_cast<const DownloadModel *>(index.model());
 #ifndef Q_OS_LINUX
     if (index.column() == 2 && model->item(index.row())->state>=DOWNLOADING){
-        if (model->item(index.row())->state==DOWNLOADING)
-        {
+        if (model->item(index.row())->state==DOWNLOADING) {
             int progress = model->item(index.row())->progress;
             QStyleOptionProgressBar progressBarOption;
             progressBarOption.rect = option.rect;
@@ -47,8 +46,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     }
     else
 #endif
-        if (index.column()==3)
-        {
+        if (index.column()==3) {
 #ifndef Q_OS_LINUX
             QStyleOptionButton button;
             button.rect=option.rect;
@@ -76,8 +74,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 #endif
 
         }
-        else
-        {
+        else {
             QTextOption text;
             text.setAlignment(Qt::AlignCenter);
 
@@ -88,13 +85,12 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     painter->restore();
 }
 
-bool InstallerDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index)
+bool InstallerDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option,
+                                    const QModelIndex &index)
 {
     auto mod = qobject_cast<const DownloadModel *>(model);
-    if( event->type() == QEvent::MouseButtonRelease )
-    {
-        if (index.column()==3 && mod->item(index.row())->state != UNPACKING)
-        {
+    if( event->type() == QEvent::MouseButtonRelease ) {
+        if (index.column()==3 && mod->item(index.row())->state != UNPACKING) {
             emit stateChanged(index.row());
             return true;
         }
@@ -104,8 +100,7 @@ bool InstallerDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, co
 
 QSize InstallerDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    switch(index.column())
-    {
+    switch(index.column()) {
     case 0:
         return QSize(160,option.rect.height());
     case 1:

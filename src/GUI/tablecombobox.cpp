@@ -19,6 +19,9 @@ TableComboBox::TableComboBox(QWidget *parent)
     view()->setItemDelegate(new LangDelegate(view()));
     view()->setMouseTracking(true);
     setMaxVisibleItems(model()->rowCount());
+    QFont font(this->font());
+    font.setPointSize(10);
+    this->setFont(font);
     connect(model(),&languageTableModel::dataChanged,
             this,&TableComboBox::resizeT);
 }

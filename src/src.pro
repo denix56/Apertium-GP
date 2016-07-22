@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 QT       += core gui network sql
-
+win32: QT += winextras
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = apertium-gp
@@ -37,7 +37,9 @@ SOURCES += \
     Installer/installerdelegate.cpp \
     initializer.cpp \
     main.cpp \
-    Installer/managerhelper.cpp
+    Installer/managerhelper.cpp \
+    GUI/doctranslate.cpp \
+    GUI/dragndropwidget.cpp
 
 HEADERS  += \
     ChooseDialog/choosedialog.h \
@@ -52,13 +54,16 @@ HEADERS  += \
     Installer/downloadwindow.h \
     Installer/installerdelegate.h \
     initializer.h \
-    Installer/managerhelper.h
+    Installer/managerhelper.h \
+    GUI/doctranslate.h \
+    GUI/dragndropwidget.h
 
 
 FORMS    += \
     ChooseDialog/choosedialog.ui \
     GUI/apertiumgui.ui \
-    Installer/downloadwindow.ui
+    Installer/downloadwindow.ui \
+    GUI/doctranslate.ui
 
 
 QMAKE_CXXFLAGS += -std=c++11

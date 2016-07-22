@@ -15,3 +15,4 @@ void LangDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
 void LangDelegate::drawFocus(QPainter *painter, const QStyleOptionViewItem &option, const QRect &rect) const
 {
 }
+

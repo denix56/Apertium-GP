@@ -7,6 +7,9 @@ HeadButton::HeadButton(QWidget* parent):QPushButton(parent)
     setFocusPolicy(Qt::NoFocus);
     setCheckable(true);
     setFixedSize(102,27);
+    QFont font(this->font());
+    font.setPointSize(9);
+    setFont(font);
     wasClicked=false;
     once=true;
     //FIXME: is it needed?

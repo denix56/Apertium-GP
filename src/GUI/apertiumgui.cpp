@@ -1,6 +1,7 @@
 #include "apertiumgui.h"
-#include "ui_apertiumgui.h"
 #include "translator.h"
+#include "ui_apertiumgui.h"
+#include "doctranslate.h"
 #include "tablecombobox.h"
 #include "downloadwindow.h"
 #include "initializer.h"
@@ -28,6 +29,7 @@
 #include <QFileDialog>
 #include <QDesktopServices>
 #include <QWidget>
+
 #include <QDebug>
 
 //TODO: choose language of app
@@ -141,12 +143,9 @@ bool ApertiumGui::initialize()
     auto dlAction= new QAction(style()->standardIcon(QStyle::SP_ArrowDown),tr("Install packages"),ui->toolBar);
     ui->toolBar->addAction(dlAction);
     connect(dlAction, &QAction::triggered,this, &ApertiumGui::dlAction_triggered);
-    connect(ui->boxInput,&InputTextEdit::printEnded,translator,&Translator::boxTranslate);
-    connect(this, &ApertiumGui::docForTransChoosed, translator, &Translator::docTranslate);
+    connect(ui->boxInput,&InputTextEdit::printEnded,translator,&Translator::boxTranslate);   
     connect(ui->boxInput,&InputTextEdit::printEnded,this,&ApertiumGui::saveMru);
     connect(translator,&Translator::resultReady,this,&ApertiumGui::translateReceived);
-    connect(translator, &Translator::docTranslated,this,&ApertiumGui::showPostDocTransDlg);
-    connect (translator, &Translator::docTranslateRejected, this, &ApertiumGui::rejectPostDocTransDlg);
     if (!QDir(DATALOCATION+"/usr/share/apertium/modes").exists() || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
         QMessageBox box;
         if(box.critical(this, "Required packages are not installed.",
@@ -553,8 +552,8 @@ void ApertiumGui::clearOtherEButtons()
                 currentTargetLang = name;
 #else
             QDir path(DATALOCATION+"/usr/share/apertium/modes");
-            HeadButton* currentSourceButton;
-            for (HeadButton* btn : SourceLangBtns)
+            HeadButton *currentSourceButton;
+            for (HeadButton *btn : SourceLangBtns)
                 if (btn->isChecked())
                     currentSourceButton = btn;
             for (auto key : Initializer::langNamesMap.keys(currentSourceButton->text()))
@@ -633,8 +632,7 @@ void ApertiumGui::createRequests()
                     || i>=ui->boxOutput->document()->blockCount())
             {
 
-                if (i>=ui->boxOutput->document()->blockCount())
-                {
+                if (i>=ui->boxOutput->document()->blockCount()) {
                     cursor.movePosition(QTextCursor::End);
                     cursor.insertBlock();
                 }
@@ -670,15 +668,12 @@ void ApertiumGui::createRequests()
 //parse json response
 void ApertiumGui::getReplyFromAPY(QNetworkReply* reply)
 {
-    if (reply->error() == QNetworkReply::NoError)
-    {
+    if (reply->error() == QNetworkReply::NoError) {
         auto doc = QJsonDocument::fromJson(reply->readAll());
-        if (reply->request().rawHeader("whole")=="no")
-        {
+        if (reply->request().rawHeader("whole")=="no") {
             auto cursor = ui->boxOutput->textCursor();
             int blockNumber = reply->request().rawHeader("blockNumber").toInt();
-            if(blockNumber>=ui->boxOutput->document()->blockCount())
-            {
+            if(blockNumber>=ui->boxOutput->document()->blockCount()) {
                 cursor.movePosition(QTextCursor::End);
                 cursor.insertBlock();
             }
@@ -692,8 +687,7 @@ void ApertiumGui::getReplyFromAPY(QNetworkReply* reply)
 
             cursor.movePosition(QTextCursor::StartOfBlock);
             ui->boxOutput->verticalScrollBar()->setValue(ui->boxInput->verticalScrollBar()->value());
-            while(cursor.blockNumber()==blockNumber && !cursor.atBlockEnd())
-            {
+            while(cursor.blockNumber()==blockNumber && !cursor.atBlockEnd()) {
 
                 auto cursor1 = cursor.document()->
                         find(QRegularExpression ("\\*\\w+\\W?"),cursor.position());
@@ -881,58 +875,17 @@ void ApertiumGui::on_swapBtn_clicked()
                 Initializer::langNamesMap[currentSourceLang]);
 }
 
-
-
-void ApertiumGui::on_docTransBtn_clicked()
+void ApertiumGui::on_docTranslateBtn_clicked()
 {
-    //FIXME: format names
-    QString filePath = QFileDialog::getOpenFileName(this,tr("Choose document to translate"),
-                                                     QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
-                                                  tr("Documents (*.txt *.docx *.pptx *.html "
-                                                     "*.rtf *.odt *.wxml *.xlsx *.xpresstag)"));
-    if(filePath.isEmpty())
-        return;
-    docTransWaitDlg = new QProgressDialog(tr("Translating document..."),"",0,0,this);
-    docTransWaitDlg->setCancelButton(nullptr);
-    docTransWaitDlg->setWindowFlags(docTransWaitDlg->windowFlags() & ~Qt::WindowCloseButtonHint);
-    //TODO: implement cancel button
-    docTransWaitDlg->setModal(true);
-    emit docForTransChoosed(filePath);
-    docTransWaitDlg->exec();
-    delete docTransWaitDlg;
+    auto DocTranslateWidget = new DocTranslate(this);
+    ui->boxInput->setEnabled(false);
+    ui->boxOutput->setEnabled(false);
+    DocTranslateWidget->show();
+    connect(DocTranslateWidget, &DocTranslate::destroyed, [&]() { ui->boxInput->setEnabled(true);});
+    connect(DocTranslateWidget, &DocTranslate::destroyed, [&]() { ui->boxOutput->setEnabled(true);});
 }
 
-void ApertiumGui::showPostDocTransDlg(QString trFilePath)
+void ApertiumGui::closeEvent(QCloseEvent *event)
 {
-    docTransWaitDlg->accept();
-    auto btnDlg = new QMessageBox(this);
-    btnDlg->setWindowTitle(tr("Translation finished"));
-    btnDlg->setText(tr("Document has been successfully translated."));
-    auto openFileButton = new QPushButton(tr("Open translated file"),btnDlg);
-    connect(openFileButton, &QPushButton::clicked, [&]()
-    {
-        QDesktopServices::openUrl(QUrl("file:///"+trFilePath,QUrl::TolerantMode));
-        btnDlg->accept();
-        qApp->processEvents();
-        btnDlg->deleteLater();
-    });
-    auto openFolderButton = new QPushButton(tr("Open folder with translated file"),btnDlg);
-    connect(openFolderButton, &QPushButton::clicked, [&]()
-    {
-        QFileInfo f(trFilePath);
-        QDesktopServices::openUrl(QUrl("file:///"+f.absolutePath(),QUrl::TolerantMode));
-        btnDlg->accept();
-        qApp->processEvents();
-        btnDlg->deleteLater();
-    });
-    //QMessageBox::RejectRole - fix to enable close button
-    btnDlg->addButton(openFileButton,QMessageBox::RejectRole);
-    btnDlg->addButton(openFolderButton,QMessageBox::ActionRole);
-    btnDlg->setModal(true);
-    btnDlg->exec();
-}
-
-void ApertiumGui::rejectPostDocTransDlg()
-{
-    docTransWaitDlg->reject();
+    qApp->exit();
 }

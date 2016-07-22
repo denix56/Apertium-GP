@@ -16,6 +16,9 @@
 #include <QListWidgetItem>
 #include <QProgressDialog>
 namespace Ui {
+
+class DocTranslate;
+
 class ApertiumGui;
 }
 
@@ -32,14 +35,18 @@ friend class DownloadWindow;
 public:
     explicit ApertiumGui(QWidget *parent = 0);
     bool initialize();
+    inline const Translator* getTranslator() const
+    {
+        return static_cast<const Translator *>(translator);
+    }
     ~ApertiumGui();
 
 protected:
     void resizeEvent(QResizeEvent*);
+    void closeEvent(QCloseEvent *event);
 signals:
     void listOfLangsSet();
     void failedToStart();
-    void docForTransChoosed(QString filePath);
 private slots:
     //update ComboBoxes when new source language, that is choosed
     void updateComboBox(QModelIndex);
@@ -83,15 +90,11 @@ private slots:
 
     void dlAction_triggered();
 
-    void showPostDocTransDlg(QString trFilePath);
-
-    void rejectPostDocTransDlg();
-
     void on_mru_itemClicked(QListWidgetItem *item);
 
     void on_swapBtn_clicked();
 
-    void on_docTransBtn_clicked();
+    void on_docTranslateBtn_clicked();
 
 private:
 
@@ -110,7 +113,6 @@ private:
     QTextDocument outputDoc;
     Translator *translator;
     QThread thread;
-    QProgressDialog *docTransWaitDlg;
     //not for Linux
     QDir *appdata;
     int lastBlockCount = 1;

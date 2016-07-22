@@ -4,27 +4,14 @@
 #include <QSize>
 DownloadModel::DownloadModel(QObject *parent)
     : QAbstractTableModel(parent)
-{
-    stateNames.insert(INSTALL,tr("Install"));
-    stateNames.insert(UPDATE,tr("Update"));
-    stateNames.insert(UNINSTALL,tr("Uninstall"));
-    stateNames.insert(DOWNLOADING,tr("Cancel"));
-    stateNames.insert(UNPACKING,tr("Unpacking"));
-
-    typeNames.insert(TOOLS, tr("Tools"));
-    typeNames.insert(LANGPAIRS, tr("Langpairs"));
-}
-
-
+{}
 
 QVariant DownloadModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (orientation==Qt::Horizontal)
-            if (role == Qt::DisplayRole)
-            {
+            if (role == Qt::DisplayRole) {
                 auto c = static_cast<columns>(section);
-                switch(c)
-                {
+                switch(c) {
                 case NAME:
                     return QVariant(tr("Name"));
                 case TYPE:
@@ -55,11 +42,9 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
         return QVariant();
-    if (role == Qt::DisplayRole)
-    {
+    if (role == Qt::DisplayRole) {
         int i = index.row();
-        switch(index.column())
-        {
+        switch(index.column()) {
         case 0:
             if (downList[i].type == LANGPAIRS)
                 return QVariant(nameToFull(downList[i].name));
@@ -88,8 +73,7 @@ bool DownloadModel::setData(const QModelIndex &index, const QVariant &value, int
     if (data(index, role) != value) {
         int i = index.row();
         auto c = static_cast<columns>(index.column());
-        switch(c)
-        {
+        switch(c) {
         case NAME:
             downList[i].name = value.toString();
             break;
@@ -156,19 +140,17 @@ void DownloadModel::sort(int column, Qt::SortOrder order)
         //sort by types
     case TYPE:
         qSort(downList.begin(),downList.end(),[&order](const file &a,const file &b)
-        {return order == Qt::AscendingOrder ? a.type < b.type
-                                            : a.type > b.type;});
+        { return order == Qt::AscendingOrder ? a.type < b.type
+                                            : a.type > b.type; });
         types lastType;
         //TODO: maybe replace lasttype
         for(int i = 0,first=0;i < downList.size();i++)
         {
             if (!i)
                 lastType = downList[0].type;
-            else
-            {
+            else {
                 if(lastType!=downList[i].type || i==downList.size()-1){
-                    qSort(downList.begin()+first,downList.begin()+i-1,[](const file &a,const file &b)
-                    {
+                    qSort(downList.begin()+first,downList.begin()+i-1,[](const file &a,const file &b) {
                         auto an = nameToFull(a.name);
                         auto bn = nameToFull(b.name);
                         return an.localeAwareCompare(bn) < 0;});

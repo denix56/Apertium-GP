@@ -68,14 +68,14 @@ bool DownloadWindow::getData(bool checked)
     //TODO: implement cancel option
 
 #ifndef Q_OS_LINUX
-wait.setMaximum(100);
-actionCnt = 0;
+    wait.setMaximum(100);
+    actionCnt = 0;
 #if defined(Q_OS_WIN)
-    #define OS_PATH "win32"
+#define OS_PATH "win32"
 #elif defined(Q_OS_MAC)
-    #define OS_PATH "osx"
+#define OS_PATH "osx"
 #else
-    #error "Not yet specialized for other OSs"
+#error "Not yet specialized for other OSs"
 #endif
     //get headers of Core Tools
     auto reply = manager->head(
@@ -121,14 +121,14 @@ actionCnt = 0;
             state = UNINSTALL;
             if (Initializer::conf->value("files/"+name).toString() != m.captured(3))
                 state = UPDATE;
-            }
+        }
         model->addItem(file(name,LANGPAIRS, m.captured(2).toUInt(),
                             QUrl(QString("http://apertium.projectjj.com/" OS_PATH "/nightly/data.php?deb=")+name),
                             state, m.captured(3)));
     }
     ui->view->resizeColumnsToContents();
     ui->view->setSortingEnabled(true);
-    ui->view->sortByColumn(TYPE,Qt::AscendingOrder);
+    ui->view->sortByColumn(TYPE,Qt::DescendingOrder);
     wait.close();
     if (state == INSTALL)
     {
@@ -173,17 +173,17 @@ actionCnt = 0;
         name = name.left(name.length()-1);
         if(name.contains("apertium-all-dev"))
             continue;
-         auto state = INSTALL;
-         QRegularExpression lang("-[a-z]{2,3}");
-         auto lit = lang.globalMatch(name);
-         QString l1, l2;
-         l1 = lit.next().captured();
-         l2 = lit.next().captured();
-         if (QDir("/usr/share/apertium/apertium"+l1+l2).exists() ||
-                 QDir("/usr/share/apertium/apertium"+l2+l1).exists())
-             state = UNINSTALL;
-         model->addItem(file(name,LANGPAIRS, mngr->getSize(name), QUrl(),state, ""));
-     }
+        auto state = INSTALL;
+        QRegularExpression lang("-[a-z]{2,3}");
+        auto lit = lang.globalMatch(name);
+        QString l1, l2;
+        l1 = lit.next().captured();
+        l2 = lit.next().captured();
+        if (QDir("/usr/share/apertium/apertium"+l1+l2).exists() ||
+                QDir("/usr/share/apertium/apertium"+l2+l1).exists())
+            state = UNINSTALL;
+        model->addItem(file(name,LANGPAIRS, mngr->getSize(name), QUrl(),state, ""));
+    }
 
     auto state = INSTALL;
     if(QDir("/usr/share/apertium-apy").exists())
@@ -437,50 +437,47 @@ void DownloadWindow::removepkg(int row)
     {
         QMessageBox box;
         if (box.warning(this,tr("Deleting Core tools"),
-                    tr("After deleteing this package the translation stops working. Are you sure?"),
-                    QMessageBox::Ok, QMessageBox::Cancel)==QMessageBox::Cancel)
+                        tr("After deleteing this package the translation stops working. Are you sure?"),
+                        QMessageBox::Ok, QMessageBox::Cancel)==QMessageBox::Cancel)
             return;
         dir.setPath(DATALOCATION+"/apertium-all-dev");
     }
     else
         dir.setPath(DATALOCATION+"/usr/share/apertium/"+name);
     if (dir.exists())
-    if (Initializer::conf->contains("files/"+name))
-        if (dir.removeRecursively())
-        {
-            auto pair = model->item(row)->name.mid
-                    (model->item(row)->name.indexOf(QRegExp("(-[a-z]{2,3}){2}$"))).mid(1);
-            dir.setPath(DATALOCATION+"/usr/share/apertium/modes");
-            auto sourceLang = pair.left(pair.indexOf("-"));
-            auto targetLang = pair.mid(pair.indexOf("-")+1);
-            QRegExp expr(sourceLang+"|"+targetLang+"\\D*"+targetLang+"|"+sourceLang+"\\D*");
-            for (QString filename : dir.entryList())
-                if (expr.indexIn(filename)!=-1)
-                    dir.remove(filename);
-
-            model->setData(model->index(row,3),INSTALL);
-            Initializer::conf->remove("files/"+name);
-        }
+        if (Initializer::conf->contains("files/"+name))
+            if (dir.removeRecursively()) {
+                auto pair = model->item(row)->name.mid
+                        (model->item(row)->name.indexOf(QRegExp("(-[a-z]{2,3}){2}$"))).mid(1);
+                dir.setPath(DATALOCATION+"/usr/share/apertium/modes");
+                auto sourceLang = pair.left(pair.indexOf("-"));
+                auto targetLang = pair.mid(pair.indexOf("-")+1);
+                QRegExp expr(sourceLang+"|"+targetLang+"\\D*"+targetLang+"|"+sourceLang+"\\D*");
+                for (QString filename : dir.entryList())
+                    if (expr.indexIn(filename)!=-1)
+                        dir.remove(filename);
+                
+                model->setData(model->index(row,3),INSTALL);
+                Initializer::conf->remove("files/"+name);
+            }
+            else {
+                QMessageBox box;
+                box.critical(this, tr("An error occurs while deleteing"),
+                             tr("Cannot delete this package"));
+            }
         else
-        {
-            QMessageBox box;
-            box.critical(this, tr("An error occurs while deleteing"),
-                         tr("Cannot delete this package"));
-        }
-    else
-        if (name == "Required Core Tools" &&
-                Initializer::conf->contains("files/apertium-all-dev")) {
-            dir.setPath(DATALOCATION+"/apertium-all-dev");
-            dir.removeRecursively();
-            model->setData(model->index(row,3),INSTALL);
-            Initializer::conf->remove("files/apertium-all-dev");
-        }
-        else
-        {
-            QMessageBox box;
-            box.critical(this,tr("An error occurs while deleteing"),
-                         tr("Cannot locate this package"));
-        }
+            if (name == "Required Core Tools" &&
+                    Initializer::conf->contains("files/apertium-all-dev")) {
+                dir.setPath(DATALOCATION+"/apertium-all-dev");
+                dir.removeRecursively();
+                model->setData(model->index(row,3),INSTALL);
+                Initializer::conf->remove("files/apertium-all-dev");
+            }
+            else {
+                QMessageBox box;
+                box.critical(this,tr("An error occurs while deleteing"),
+                             tr("Cannot locate this package"));
+            }
 }
 #endif
 void DownloadWindow::closeEvent(QCloseEvent *)
@@ -508,7 +505,7 @@ void DownloadWindow::accept()
     }
 #endif
 
-QDialog::accept();
+    QDialog::accept();
 
 }
 

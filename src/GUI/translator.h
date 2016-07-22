@@ -19,12 +19,13 @@ public slots:
     //translate on other OS
     void boxTranslate();
     void docTranslate(QString filePath);
-    //sent synchronuous translation requests to APY on Linux
+    //sent synchronous translation requests to APY on Linux
     void linuxTranslate(QNetworkRequest &request);
 private:
     ApertiumGui* parent;
     QString notLinuxTranslate(QString text);
 
+    //TODO: create one function for translating due to similar code
     void translateTxt(QString filePath, QDir &docDir);
 
     void translateDocx(QString filePath, QDir &docDir);
@@ -34,6 +35,8 @@ private:
     void translateHtml(QString filePath, QDir &docDir);
 
     void translateXlsx(QString filePath, QDir &docDir);
+
+    void translateRtf(QString filePath, QDir &docDir);
 
 };
 #endif // NONLINUXTRANSLATOR_H
