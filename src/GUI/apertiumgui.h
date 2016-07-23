@@ -29,16 +29,27 @@ class ApertiumGui : public QMainWindow
 {
     Q_OBJECT
 
-friend class Translator;
-friend class DownloadWindow;
-
 public:
     explicit ApertiumGui(QWidget *parent = 0);
     bool initialize();
-    inline const Translator* getTranslator() const
+    inline Translator *const getTranslator() const
     {
-        return static_cast<const Translator *>(translator);
+        return translator;
     }
+    inline QNetworkAccessManager *const getManager() const
+    {
+        return requestSender;
+    }
+    inline QString getCurrentSourceLang() const
+    {
+        return currentSourceLang;
+    }
+    inline QString getCurrentTargetLang() const
+    {
+        return currentTargetLang;
+    }
+    QNetworkReply* postRequest(QNetworkRequest &request, QHttpMultiPart *multiPart);
+    QString getText() const;
     ~ApertiumGui();
 
 protected:

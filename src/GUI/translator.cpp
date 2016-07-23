@@ -1,14 +1,17 @@
 
 #include "translator.h"
 #include "apertiumgui.h"
-#include "ui_apertiumgui.h"
+#include "initializer.h"
 #include <QDir>
 #include <QProcess>
 #include <QRegularExpression>
 #include <QTemporaryDir>
 #include <QTemporaryFile>
 #include <QTextCodec>
+#include <QUrlQuery>
+#include <QHttpMultiPart>
 #include <QDebug>
+#include <QApplication>
 Translator::Translator(ApertiumGui* parent)
 {
     this->parent = parent;
@@ -16,10 +19,11 @@ Translator::Translator(ApertiumGui* parent)
 
 void Translator::boxTranslate()
 {
-    QString result = notLinuxTranslate(parent->ui->boxInput->toPlainText());
+    QString result = notLinuxTranslate(parent->getText());
     emit resultReady(result.left(result.length()-2));
 }
 
+#ifndef Q_OS_LINUX
 void Translator::translateTxt(QString filePath, QDir &docDir)
 {
     QFile f(filePath);
@@ -27,7 +31,7 @@ void Translator::translateTxt(QString filePath, QDir &docDir)
     QTemporaryFile tmpDoc(fileInfo.baseName());
     auto cmd = new QProcess(this);
 #ifdef Q_OS_WIN
-    cmd->setWorkingDirectory(parent->appdata->absoluteFilePath("apertium-all-dev/bin"));
+    cmd->setWorkingDirectory(QDir(DATALOCATION).absoluteFilePath("apertium-all-dev/bin"));
 #endif
     qApp->processEvents();
     //destxt
@@ -47,8 +51,8 @@ void Translator::translateTxt(QString filePath, QDir &docDir)
                +"\"" << "|" << "apertium-retxt");
     cmd->waitForFinished();
     cmd->waitForReadyRead();
-    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->currentSourceLang
-                                                 +"-"+parent->currentTargetLang+"."+fileInfo.suffix());
+    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->getCurrentSourceLang()
+                                                 +"-"+parent->getCurrentTargetLang()+"."+fileInfo.suffix());
     QFile newDoc(trFilePath);
     if (!newDoc.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
         emit docTranslateRejected();
@@ -84,7 +88,7 @@ void Translator::translateDocx(QString filePath, QDir &docDir)
 
     QTemporaryFile tmpDoc("document.xml");
     QFile doc(dir.path()+"/word/document.xml");
-    cmd->setWorkingDirectory(parent->appdata->absoluteFilePath("apertium-all-dev/bin"));
+    cmd->setWorkingDirectory(QDir(DATALOCATION).absoluteFilePath("apertium-all-dev/bin"));
     QStringList args;
     qApp->processEvents();
     //deswxml
@@ -124,8 +128,8 @@ void Translator::translateDocx(QString filePath, QDir &docDir)
     doc.write(cmd->readAllStandardOutput());
     doc.close();
     cmd->setWorkingDirectory(dir.path());
-    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->currentSourceLang
-                                                 +"-"+parent->currentTargetLang+"."+fileInfo.suffix());
+    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->getCurrentSourceLang()
+                                                 +"-"+parent->getCurrentTargetLang()+"."+fileInfo.suffix());
     cmd->start(exep.absoluteFilePath("7z"), QStringList() << "a" << "-tzip" << "-y"
                << trFilePath << dir.path()+"/*");
     cmd->waitForFinished();
@@ -143,7 +147,7 @@ void Translator::translateHtml(QString filePath, QDir &docDir)
     auto cmd = new QProcess(this);
 
     QTemporaryFile tmpDoc("document.html");
-    cmd->setWorkingDirectory(parent->appdata->absoluteFilePath("apertium-all-dev/bin"));
+    cmd->setWorkingDirectory(QDir(DATALOCATION).absoluteFilePath("apertium-all-dev/bin"));
     QStringList args;
     qApp->processEvents();
     //deshtml
@@ -176,8 +180,8 @@ void Translator::translateHtml(QString filePath, QDir &docDir)
 #endif
     cmd->waitForFinished();
     cmd->waitForReadyRead();
-    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->currentSourceLang
-                                                 +"-"+parent->currentTargetLang+"."+fileInfo.suffix());
+    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->getCurrentSourceLang()
+                                                 +"-"+parent->getCurrentTargetLang()+"."+fileInfo.suffix());
     QFile newDoc(trFilePath);
     if (!newDoc.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
         emit docTranslateRejected();
@@ -220,7 +224,7 @@ void Translator::translatePptx(QString filePath, QDir &docDir)
     for (QString slideName : slideDir.entryList(QStringList() << "slide*.xml")) {
         QFile slide (slideDir.absoluteFilePath(slideName));
         QTemporaryFile tmpSlide(slide.fileName());
-        cmd->setWorkingDirectory(parent->appdata->absoluteFilePath("apertium-all-dev/bin"));
+        cmd->setWorkingDirectory(QDir(DATALOCATION).absoluteFilePath("apertium-all-dev/bin"));
 
         qApp->processEvents();
         //despptx
@@ -257,8 +261,8 @@ void Translator::translatePptx(QString filePath, QDir &docDir)
         slide.close();
     }
     cmd->setWorkingDirectory(dir.path());
-    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->currentSourceLang
-                                                 +"-"+parent->currentTargetLang+"."+fileInfo.suffix());
+    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->getCurrentSourceLang()
+                                                 +"-"+parent->getCurrentTargetLang()+"."+fileInfo.suffix());
     QFile(trFilePath).remove();
     args << "a" << "-tzip" << "-y"
          << "\""+trFilePath+"\""
@@ -331,8 +335,8 @@ void Translator::translateXlsx(QString filePath, QDir &docDir)
 
         sheet.close();
     cmd->setWorkingDirectory(dir.path());
-    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->currentSourceLang
-                                                 +"-"+parent->currentTargetLang+"."+fileInfo.suffix());
+    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->getCurrentSourceLang()
+                                                 +"-"+parent->getCurrentTargetLang()+"."+fileInfo.suffix());
     QFile(trFilePath).remove();
     args << "a" << "-tzip" << "-y"
          << "\""+trFilePath+"\""
@@ -397,8 +401,8 @@ void Translator::translateRtf(QString filePath, QDir &docDir)
 //    cmd->setNativeArguments(args.join(' '));
 //    cmd->start("cmd.exe");
 //#endif
-//    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->currentSourceLang
-//                                                 +"-"+parent->currentTargetLang+"."+fileInfo.suffix());
+//    QString trFilePath = docDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->getCurrentSourceLang()
+//                                                 +"-"+parent->getCurrentTargetLang()+"."+fileInfo.suffix());
 //    QFile newDoc(trFilePath);
 //    if (!newDoc.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
 //        emit docTranslateRejected();
@@ -416,43 +420,108 @@ void Translator::translateRtf(QString filePath, QDir &docDir)
 //    //    // cmd->start("ar", QStringList() << "x" << "data.tmp");
 //    //#endif
 }
-
+#endif
 void Translator::docTranslate(QString filePath)
 {
-    QDir docDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+    docTransWaitDlg = new QProgressDialog(tr("Translating document..."),"",0,0);
+#ifdef Q_OS_LINUX
+    docTransWaitDlg->setMaximum(100);
+#endif
+    docTransWaitDlg->setCancelButton(nullptr);
+    docTransWaitDlg->setWindowFlags(docTransWaitDlg->windowFlags() & ~Qt::WindowCloseButtonHint);
+    docTransWaitDlg->setModal(true);
+    docTransWaitDlg->show();
+
+    QDir outputDocDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
     QString dirName = tr("Apertium Translated Documents");
-    docDir.mkdir(dirName);
-    if (!docDir.cd(dirName)) {
+    outputDocDir.mkdir(dirName);
+    if (!outputDocDir.cd(dirName)) {
         emit docTranslateRejected();
         return;
     }
     QFileInfo fileInfo(filePath);
+#ifdef Q_OS_LINUX
+    auto multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+    QHttpPart filePart;
+    filePart.setHeader(QNetworkRequest::ContentDispositionHeader,
+                       QVariant("form-data; filename=\""+fileInfo.fileName()+"\"; name=\"file\""));
+    auto file = new QFile(filePath);
+    if(!file->open(QIODevice::ReadOnly)) {
+        emit docTranslateRejected();
+        return;
+    }
+    filePart.setBodyDevice(file);
+    file->setParent(multiPart);
+    multiPart->append(filePart);
+
+    QUrlQuery query;
+    query.addQueryItem("langpair",parent->getCurrentSourceLang()+"|"+parent->getCurrentTargetLang());
+    QUrl url("http://localhost:2737/translateDoc?");
+    QNetworkRequest request(QUrl(url.url()+query.query()));
+    docTransWaitDlg->setValue(1);
+    QNetworkAccessManager mngr;
+    QEventLoop loop;
+    QNetworkReply *reply = mngr.post(request,multiPart);
+    connect(reply,&QNetworkReply::uploadProgress,[&](qint64 bytesSent, qint64 bytesTotal)
+    {
+        docTransWaitDlg->setValue((int)(33.*bytesSent/bytesTotal));
+    });
+    connect(reply,&QNetworkReply::downloadProgress,[&](qint64 bytesSent, qint64 bytesTotal)
+    {
+        //progress for translation
+        if (docTransWaitDlg->value()==34)
+            docTransWaitDlg->setValue(67);
+        docTransWaitDlg->setValue(67+(int)(23.*bytesSent/bytesTotal));
+    });
+    connect(reply,&QNetworkReply::finished,[&](){
+        loop.exit();
+        if (reply->error()!=QNetworkReply::NoError) {
+            qDebug() << reply->errorString();
+            docTransWaitDlg->reject();
+            return;
+        }
+        QFile outDoc(outputDocDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->getCurrentSourceLang()
+                                             +"-"+parent->getCurrentTargetLang()+"."+fileInfo.completeSuffix()));
+        if (!outDoc.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                emit docTranslateRejected();
+                reply->deleteLater();
+                return;
+            }
+        outDoc.write(reply->readAll());
+        outDoc.close();
+        docTransWaitDlg->setValue(100);
+        emit docTranslated(outDoc.fileName());
+        reply->deleteLater();
+    });
+            loop.exec();
+#else
     if (fileInfo.suffix()=="txt")
-        translateTxt(filePath, docDir);
+        translateTxt(filePath, outputDocDir);
     else
         if (fileInfo.suffix()=="docx")
-            translateDocx(filePath, docDir);
+            translateDocx(filePath, outputDocDir);
         else
             if (fileInfo.suffix()=="pptx")
-                translatePptx(filePath, docDir);
+                translatePptx(filePath, outputDocDir);
             else
                 if (fileInfo.suffix()=="xlsx")
-                    translateXlsx(filePath, docDir);
+                    translateXlsx(filePath, outputDocDir);
                 else
                     if (fileInfo.suffix()=="html")
-                        translateHtml(filePath, docDir);
+                        translateHtml(filePath, outputDocDir);
                     else
                         if (fileInfo.suffix()=="rtf")
-                            translateRtf(filePath, docDir);
+                            translateRtf(filePath, outputDocDir);
+#endif
 }
 
 QString Translator::notLinuxTranslate(QString text)
 {
-    QString name = parent->currentSourceLang + "-" + parent->currentTargetLang;
+    QString name = parent->getCurrentSourceLang() + "-" + parent->getCurrentTargetLang();
     if (name.isEmpty())
         return "";
 
-    QDir dir(parent->appdata->absoluteFilePath("usr/share/apertium/modes"));
+    QDir dir(QDir(DATALOCATION).absoluteFilePath("usr/share/apertium/modes"));
     if (!dir.exists() || !dir.exists(name+".mode"))
         return "";
 
@@ -472,7 +541,7 @@ QString Translator::notLinuxTranslate(QString text)
     if (mode.indexOf("'/usr/share") == -1) {
         mode.replace(QRegularExpression("(\\s*)(/usr/share/\\S+)(\\s*)"), "\\1\"\\2\"\\3");
     }
-    mode.replace("/usr/share", parent->appdata->absolutePath()+"/usr/share");
+    mode.replace("/usr/share", QDir(DATALOCATION).absolutePath()+"/usr/share");
 #ifdef Q_OS_WIN
     // Windows can't handle C:/ paths in ' quotes
     mode.replace("'", "\"");
@@ -482,7 +551,7 @@ QString Translator::notLinuxTranslate(QString text)
 #endif
 
     auto env = QProcessEnvironment::systemEnvironment();
-    env.insert("PATH", parent->appdata->absoluteFilePath("apertium-all-dev/bin") + OS_SEP + env.value("PATH"));
+    env.insert("PATH", QDir(DATALOCATION).absoluteFilePath("apertium-all-dev/bin") + OS_SEP + env.value("PATH"));
     env.insert("LC_ALL", "en_US.UTF-8");
 
     auto run = new QProcess(this);
@@ -505,6 +574,6 @@ QString Translator::notLinuxTranslate(QString text)
 void Translator::linuxTranslate(QNetworkRequest &request)
 {
     QEventLoop loop;
-    connect(parent->requestSender->get(request),&QNetworkReply::finished,&loop, &QEventLoop::quit);
+    connect(parent->getManager()->get(request),&QNetworkReply::finished,&loop, &QEventLoop::quit);
     loop.exec();
 }

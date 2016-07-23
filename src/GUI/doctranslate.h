@@ -3,7 +3,6 @@
 #include "apertiumgui.h"
 #include "dragndropwidget.h"
 #include <QWidget>
-#include <QProgressDialog>
 namespace Ui {
 class DocTranslate;
 }
@@ -21,11 +20,9 @@ signals:
 private slots:
     void on_browseBtn_clicked();
     void showPostDocTransDlg(QString trFilePath);
-    void rejectPostDocTransDlg();
 
 private:
-    Ui::DocTranslate *ui;
-    QProgressDialog *docTransWaitDlg;
+    Ui::DocTranslate *ui;   
     ApertiumGui *parent;
 };
 

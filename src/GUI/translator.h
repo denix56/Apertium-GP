@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QNetworkRequest>
 #include <QFileInfo>
+#include <QProgressDialog>
 class ApertiumGui;
 //thread for nonlinuxtranslation
 class Translator : public QObject
@@ -10,6 +11,10 @@ class Translator : public QObject
     Q_OBJECT
 public:
     Translator(ApertiumGui* parent = 0);
+    inline const QProgressDialog* getWaitDlg() const
+    {
+        return static_cast<const QProgressDialog*>(docTransWaitDlg);
+    }
 
 signals:
     void resultReady(const QString &result);
@@ -22,9 +27,11 @@ public slots:
     //sent synchronous translation requests to APY on Linux
     void linuxTranslate(QNetworkRequest &request);
 private:
-    ApertiumGui* parent;
+    ApertiumGui *parent;
     QString notLinuxTranslate(QString text);
+    QProgressDialog *docTransWaitDlg;
 
+#ifndef Q_OS_LINUX
     //TODO: create one function for translating due to similar code
     void translateTxt(QString filePath, QDir &docDir);
 
@@ -37,6 +44,7 @@ private:
     void translateXlsx(QString filePath, QDir &docDir);
 
     void translateRtf(QString filePath, QDir &docDir);
+#endif
 
 };
 #endif // NONLINUXTRANSLATOR_H

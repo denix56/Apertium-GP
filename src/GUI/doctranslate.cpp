@@ -5,7 +5,8 @@
 #include <QStandardPaths>
 #include <QMessageBox>
 #include <QDesktopServices>
-#include <qDebug>
+#include <QProgressDialog>
+#include <QDebug>
 const QStringList DocTranslate::fileTypes {"txt", "docx", "pptx", "html",
                                            "rtf", "odt", "xlsx", "xtg"};
 DocTranslate::DocTranslate(ApertiumGui *parent) :
@@ -18,16 +19,10 @@ DocTranslate::DocTranslate(ApertiumGui *parent) :
     Pal.setColor(QPalette::Background, Qt::white);
     ui->DropWidget->setPalette(Pal);
     setAttribute(Qt::WA_DeleteOnClose);
-    docTransWaitDlg = new QProgressDialog(tr("Translating document..."),"",0,0,this);
-    docTransWaitDlg->setCancelButton(nullptr);
-    docTransWaitDlg->setWindowFlags(docTransWaitDlg->windowFlags() & ~Qt::WindowCloseButtonHint);
-    docTransWaitDlg->setModal(true);
-    docTransWaitDlg->close();
+
     connect(this, &DocTranslate::docForTransChoosed, parent->getTranslator(), &Translator::docTranslate);
-    connect(this, &DocTranslate::docForTransChoosed, docTransWaitDlg, &QProgressDialog::exec);
-    connect(parent->getTranslator(), &Translator::docTranslated, this, &DocTranslate::showPostDocTransDlg);
-    connect (parent->getTranslator(), &Translator::docTranslateRejected, this, &DocTranslate::rejectPostDocTransDlg);
     connect(ui->DropWidget, &DragnDropWidget::documentDropped, this, &DocTranslate::docForTransChoosed);
+    connect(parent->getTranslator(),&Translator::docTranslated,this,&DocTranslate::showPostDocTransDlg);
 }
 
 DocTranslate::~DocTranslate()
@@ -50,7 +45,6 @@ void DocTranslate::on_browseBtn_clicked()
 
 void DocTranslate::showPostDocTransDlg(QString trFilePath)
 {
-    docTransWaitDlg->accept();
     auto btnDlg = new QMessageBox(this);
     btnDlg->setWindowTitle(tr("Translation finished"));
     btnDlg->setText(tr("Document has been successfully translated."));
@@ -78,7 +72,3 @@ void DocTranslate::showPostDocTransDlg(QString trFilePath)
     btnDlg->exec();
 }
 
-void DocTranslate::rejectPostDocTransDlg()
-{
-    docTransWaitDlg->reject();
-}

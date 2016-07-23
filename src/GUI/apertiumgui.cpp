@@ -171,6 +171,11 @@ bool ApertiumGui::initialize()
     return initRes;
 }
 
+QString ApertiumGui::getText() const
+{
+    return ui->boxInput->toPlainText();
+}
+
 void ApertiumGui::dlAction_triggered()
 {
     DownloadWindow dlWindow(this);
@@ -199,6 +204,7 @@ void ApertiumGui::dlAction_triggered()
         connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
         loop.exec();
         createListOfLangs(reply);
+    }
 #else
         dlWindow.exec();
         createListOfLangs();
@@ -619,6 +625,7 @@ void ApertiumGui::createRequests()
         {
             urlQ.addQueryItem("q",QUrl::toPercentEncoding(paragraph));
             request.setUrl(QUrl(url.toString()+mode+urlQ.query()));
+            qDebug() << request.url();
             request.setRawHeader("whole","yes");
             translator->linuxTranslate(request);
         }
@@ -888,4 +895,9 @@ void ApertiumGui::on_docTranslateBtn_clicked()
 void ApertiumGui::closeEvent(QCloseEvent *event)
 {
     qApp->exit();
+}
+
+QNetworkReply* ApertiumGui::postRequest(QNetworkRequest &request, QHttpMultiPart *multiPart)
+{
+    return requestSender->post(request, multiPart);
 }
