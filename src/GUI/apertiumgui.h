@@ -48,7 +48,7 @@ public:
     {
         return currentTargetLang;
     }
-    QNetworkReply* postRequest(QNetworkRequest &request, QHttpMultiPart *multiPart);
+
     QString getText() const;
     ~ApertiumGui();
 
@@ -136,6 +136,7 @@ private:
     const QString FONTSIZE = "interface/fontsize";
     const QString SERVERPATH = "path/serverPath";
     const QString LANGPATH = "path/langPath";
+    const QString idLangText = tr("Identify language...");
 
     void loadConf();
     void setLangpair(QString source, QString target);

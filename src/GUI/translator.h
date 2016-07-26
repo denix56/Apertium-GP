@@ -11,6 +11,7 @@ class Translator : public QObject
     Q_OBJECT
 public:
     Translator(ApertiumGui* parent = 0);
+
     inline const QProgressDialog* getWaitDlg() const
     {
         return static_cast<const QProgressDialog*>(docTransWaitDlg);
@@ -18,14 +19,19 @@ public:
 
 signals:
     void resultReady(const QString &result);
+
     void docTranslated(QString trFilePath);
+
     void docTranslateRejected();
 public slots:
     //translate on other OS
     void boxTranslate();
+
     void docTranslate(QString filePath);
+
     //sent synchronous translation requests to APY on Linux
     void linuxTranslate(QNetworkRequest &request);
+
 private:
     ApertiumGui *parent;
     QString notLinuxTranslate(QString text);

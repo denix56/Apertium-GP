@@ -22,8 +22,7 @@ bool Initializer::initialize()
 #endif
     auto db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(path.absoluteFilePath("langNames.db"));
-    if (!db.open())
-    {
+    if (!db.open()) {
         QMessageBox box;
         box.critical(0,"Database Error", "Database is not open.");
         return false;
@@ -31,13 +30,11 @@ bool Initializer::initialize()
     QSqlQuery query;
     query.exec("SELECT * FROM languageNames WHERE lg = '"
                +QLocale::system().name().left(QLocale::system().name().indexOf('_'))+"'");
-   if (!query.next())
-   {
+   if (!query.next()) {
         query.exec("SELECT * FROM languageNames WHERE lg = 'en'");
         query.next();
    }
-    do
-   {
+    do {
        langNamesMap[query.value("inLg").toString()] = query.value("name").toString();
        langNamesMap[query.value("iso3").toString()] = query.value("name").toString();
    } while(query.next());

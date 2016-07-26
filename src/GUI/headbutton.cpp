@@ -15,7 +15,6 @@ HeadButton::HeadButton(QWidget* parent):QPushButton(parent)
     //FIXME: is it needed?
     connect(this,&HeadButton::pressed,this,&HeadButton::denySameButtonClick2);
     connect(this,&HeadButton::toggled,this,&HeadButton::denySameButtonClick);
-
 }
 
 void HeadButton::denySameButtonClick()
@@ -40,7 +39,6 @@ void HeadButton::changeButtonColor(bool checked)
     setDefault(checked);
 }
 
-HeadButton::~HeadButton(){}
 
 void HeadButton::paintEvent(QPaintEvent *e)
 {
@@ -51,3 +49,9 @@ void HeadButton::paintEvent(QPaintEvent *e)
     QPushButton::paintEvent(e);
 }
 
+ void HeadButton::setText(const QString &text)
+ {
+     if (!text.isEmpty())
+        setToolTip(text);
+     QPushButton::setText(text);
+ }

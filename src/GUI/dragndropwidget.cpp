@@ -23,7 +23,6 @@ void DragnDropWidget::dragEnterEvent(QDragEnterEvent *event)
                                           data("application/x-qt-windows-mime;value=\"FileNameW\"").data()));
 #elif defined(Q_OS_LINUX)
     QFileInfo fileInfo(QUrl::fromPercentEncoding(event->mimeData()->data("text/uri-list").trimmed()).remove("file:"));
-    qDebug() << fileInfo.absoluteFilePath();
 #endif
     if (fileInfo.fileName().contains(QRegExp("("+DocTranslate::fileTypes.join('|')+")")))
         event->acceptProposedAction();

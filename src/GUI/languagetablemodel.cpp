@@ -29,8 +29,7 @@ QVariant languageTableModel::data(const QModelIndex &index, int role) const
     int pos = index.column()*rowN+index.row();
     if (!index.isValid() || pos>=list.size())
         return QVariant();
-    if (role==Qt::DisplayRole)
-    {
+    if (role == Qt::DisplayRole || role == Qt::ToolTipRole) {
         auto ans = list.at(pos);
         return QVariant(ans);
     }
@@ -61,7 +60,13 @@ bool languageTableModel::setData(const QModelIndex &index, const QVariant &value
         }
    }
     //Alphabethic sorting
+    QString text = tr("Identify language...");
+    int i = list.indexOf(text);
+    if (i!=-1)
+        list.removeAt(i);
     qSort(list.begin(),list.begin()+itemCount());
+    if (i!=-1)
+        list.push_front(text);
     emit dataChanged(createIndex(0,0), createIndex(rowCount()-1,columnCount()-1), QVector<int>() << Qt::EditRole);
     return true;
 }
