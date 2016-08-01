@@ -15,6 +15,7 @@ HeadButton::HeadButton(QWidget* parent):QPushButton(parent)
     //FIXME: is it needed?
     connect(this,&HeadButton::pressed,this,&HeadButton::denySameButtonClick2);
     connect(this,&HeadButton::toggled,this,&HeadButton::denySameButtonClick);
+    connect(this,&HeadButton::toggled,this,&HeadButton::changeButtonColor);
 }
 
 void HeadButton::denySameButtonClick()

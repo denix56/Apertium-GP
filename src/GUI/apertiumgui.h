@@ -36,28 +36,40 @@ public:
     {
         return translator;
     }
+
     inline QNetworkAccessManager *const getManager() const
     {
         return requestSender;
     }
+
     inline QString getCurrentSourceLang() const
     {
         return currentSourceLang;
     }
+
     inline QString getCurrentTargetLang() const
     {
         return currentTargetLang;
     }
+
+    int getFontSize() const;
 
     QString getText() const;
     ~ApertiumGui();
 
 protected:
     void resizeEvent(QResizeEvent*);
+
     void closeEvent(QCloseEvent *event);
+
 signals:
     void listOfLangsSet();
+
     void failedToStart();
+
+public slots:
+    void setFontSize(int size);
+
 private slots:
     //update ComboBoxes when new source language, that is choosed
     void updateComboBox(QModelIndex);
@@ -86,11 +98,7 @@ private slots:
     void clearOtherEButtons();
 
     //box for changing font size
-    void fontSizeBox();
-
-    void changeFontSize(int size);
-
-    void fontSizeCancel();
+    //void fontSizeBox();
 
     //Not for Linux
     void saveMru();
@@ -114,7 +122,6 @@ private:
     QVector <HeadButton *> TargetLangBtns;
     QString currentSourceLang, currentTargetLang;
     QNetworkAccessManager *requestSender;
-    QUrl url;
     HeadButton *currentSButton;
     QDialog* selectPathes;
     QString serverPath;
@@ -137,6 +144,7 @@ private:
     const QString SERVERPATH = "path/serverPath";
     const QString LANGPATH = "path/langPath";
     const QString idLangText = tr("Identify language...");
+    const QString url = "http://localhost:2737";
 
     void loadConf();
     void setLangpair(QString source, QString target);
