@@ -55,6 +55,7 @@ public:
     int getFontSize() const;
 
     QString getText() const;
+
     ~ApertiumGui();
 
 protected:
