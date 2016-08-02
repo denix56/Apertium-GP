@@ -40,11 +40,11 @@ bool languageTableModel::setData(const QModelIndex &index, const QVariant &value
 {
     int pos = index.column()*rowN+index.row();
     //if not in the end
-    if (pos <list.size())
+    if (pos < list.size())
         list.replace(pos,value.toString());
     else
     {
-        if(list.size()>=rowN) {
+        if(list.size() >= rowN) {
         if (index.row()==0)
             beginInsertColumns(QModelIndex(),columnCount(),columnCount());
         list << value.toString();
@@ -84,13 +84,13 @@ int languageTableModel::currentColumnRowCount(const QModelIndex &index)
 bool languageTableModel::addItem(const QVariant &value)
 {
     if (columnCount()>1 || list.size()==rowN) {
-    int row = currentColumnRowCount(createIndex(0,columnCount()-1));
-    if (row==rowCount())
-        row = 0;
-    int n = list.size();
-    if (list.at(columnCount()*rowN-1)!="")
-        ++n;
-    return setData(createIndex(row, n/rowN + (n % rowN == 0 ? 0 : 1)-1),value);
+        int row = currentColumnRowCount(createIndex(0,columnCount()-1));
+        if (row==rowCount())
+            row = 0;
+        int n = list.size();
+        if (list.at(columnCount()*rowN-1)!="")
+            ++n;
+        return setData(createIndex(row, n/rowN + (n % rowN == 0 ? 0 : 1)-1),value);
     }
     else
         return setData(createIndex(list.size(), 0), value);
@@ -145,7 +145,7 @@ void languageTableModel::clear()
     beginResetModel();
     list.clear();
     endResetModel();
-    emit dataChanged(createIndex(0,0),createIndex(rowCount()-1, columnCount()-1), QVector<int>() << Qt::EditRole);
+    emit dataChanged(createIndex(0,0),createIndex(rowCount(), columnCount()), QVector<int>() << Qt::EditRole);
 }
 
 QModelIndex languageTableModel::findText(QString value) const

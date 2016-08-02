@@ -2,11 +2,13 @@
 #define TRAYINPUTEXTEDIT_H
 #include "inputtextedit.h"
 
-class TrayInpuTextEdit : public InputTextEdit
+class TrayInputTextEdit : public InputTextEdit
 {
     Q_OBJECT
 public:
-    TrayInpuTextEdit(QWidget *parent = 0);
+    TrayInputTextEdit(QWidget *parent = 0);
+signals:
+    void printEnded(QString text);
 protected:
     void keyPressEvent(QKeyEvent *e);
 };

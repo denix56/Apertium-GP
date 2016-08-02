@@ -19,8 +19,15 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->spinBox->setValue(Initializer::conf->value("interface/fontsize").toInt());
 
     auto quickTr = new QListWidgetItem(tr("Quick translation"),ui->listWidget);
+    quickTr->setFont(listFont);
     connect(ui->listWidget,&QListWidget::currentRowChanged,ui->stackedWidget,
             &QStackedWidget::setCurrentIndex);
+    ui->enableTrayWidget->setChecked(
+                Initializer::conf->value("extra/traywidget",ui->enableTrayWidget->isChecked()).toBool());
+    connect(ui->enableTrayWidget,&QCheckBox::clicked,[&](bool checked)
+    {
+        Initializer::conf->setValue("extra/traywidget",checked);
+    });
     ui->listWidget->setCurrentRow(0);
 
 }
@@ -45,6 +52,7 @@ void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)
             || stdBtn==QDialogButtonBox::Ok) {
        ApertiumGui *parent = qobject_cast<ApertiumGui*>(this->parent());
        parent->setFontSize(ui->spinBox->value());
+       parent->setTrayWidgetEnabled(ui->enableTrayWidget->isChecked());
     }
     if (stdBtn==QDialogButtonBox::Ok)
         this->accept();

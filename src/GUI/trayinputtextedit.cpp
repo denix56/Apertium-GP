@@ -1,14 +1,17 @@
-#include "trayinputextedit.h"
+#include "trayinputtextedit.h"
 #include <QKeyEvent>
 #include <QClipboard>
 #include <QApplication>
-TrayInpuTextEdit::TrayInpuTextEdit(QWidget* parent)
+TrayInputTextEdit::TrayInputTextEdit(QWidget* parent)
     :InputTextEdit(parent)
 {
-
+    connect(qobject_cast<InputTextEdit *>(this),&InputTextEdit::printEnded,[&]()
+    {
+        emit printEnded(this->toPlainText());
+    });
 }
 
-void TrayInpuTextEdit::keyPressEvent(QKeyEvent *e)
+void TrayInputTextEdit::keyPressEvent(QKeyEvent *e)
 {
     if(e->key()==Qt::Key_Return || e->key()==Qt::Key_Enter)
         return;

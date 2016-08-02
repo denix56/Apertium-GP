@@ -40,8 +40,8 @@ SOURCES += \
     GUI/doctranslate.cpp \
     GUI/dragndropwidget.cpp \
     GUI/settingsdialog.cpp \
-    GUI/traywidgetaction.cpp \
-    GUI/trayinputextedit.cpp
+    GUI/traywidget.cpp \
+    GUI/trayinputtextedit.cpp
 
 HEADERS  += \
     GUI/apertiumgui.h \
@@ -59,15 +59,16 @@ HEADERS  += \
     GUI/doctranslate.h \
     GUI/dragndropwidget.h \
     GUI/settingsdialog.h \
-    GUI/traywidgetaction.h \
-    GUI/trayinputextedit.h
+    GUI/traywidget.h \
+    GUI/trayinputtextedit.h
 
 
 FORMS    += \
     GUI/apertiumgui.ui \
     Installer/downloadwindow.ui \
     GUI/doctranslate.ui \
-    GUI/settingsdialog.ui
+    GUI/settingsdialog.ui \
+    GUI/traywidget.ui
 
 
 QMAKE_CXXFLAGS += -std=c++11

@@ -2,7 +2,7 @@
 #define ApertiumGui_H
 #include "headbutton.h"
 #include "languagetablemodel.h"
-#include "traywidgetaction.h"
+#include "traywidget.h"
 #include <QMainWindow>
 #include <QTextEdit>
 #include <QNetworkAccessManager>
@@ -33,7 +33,9 @@ class ApertiumGui : public QMainWindow
 
 public:
     explicit ApertiumGui(QWidget *parent = 0);
+
     bool initialize();
+
     inline Translator *const getTranslator() const
     {
         return translator;
@@ -57,7 +59,7 @@ public:
     int getFontSize() const;
 
     QString getText() const;
-
+    void setTrayWidgetEnabled(bool b);
     ~ApertiumGui();
 
 protected:
@@ -134,8 +136,10 @@ private:
     QTextDocument outputDoc;
     Translator *translator;
 
+    TrayWidget *trayWidget;
     QSystemTrayIcon *trayIcon;
-    TrayWidgetAction *widgetAction;
+    QAction *showFullAction;
+    QAction * exitAction;
 
     QThread thread;
     //not for Linux
@@ -154,7 +158,7 @@ private:
     const QString url = "http://localhost:2737";
 
     void loadConf();
-    void setLangpair(QString source, QString target);
+    void setLangpair(QString source, QString target = QString());
 };
 
 #endif // ApertiumGui_H

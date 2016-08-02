@@ -23,6 +23,12 @@ void Translator::boxTranslate()
     emit resultReady(result.left(result.length()-2));
 }
 
+void Translator::winTrayTranslate(QString text)
+{
+    QString result = notLinuxTranslate(text);
+    emit trayResultReady(result.left(result.length()-2));
+}
+
 #ifndef Q_OS_LINUX
 void Translator::translateTxt(QString filePath, QDir &docDir)
 {
@@ -299,7 +305,7 @@ void Translator::translateXlsx(QString filePath, QDir &docDir)
     //for (QString sheetName : sheetDir.entryList(QStringList() << "sheet*.xml")) {
         QFile sheet (QDir(dir.path()+"/xl").absoluteFilePath("sharedStrings.xml"));
         QTemporaryFile tmpSheet(sheet.fileName());
-        cmd->setWorkingDirectory(parent->appdata->absoluteFilePath("apertium-all-dev/bin"));
+        cmd->setWorkingDirectory(QDir(DATALOCATION).absoluteFilePath("apertium-all-dev/bin"));
 
         qApp->processEvents();
         //desxlsx

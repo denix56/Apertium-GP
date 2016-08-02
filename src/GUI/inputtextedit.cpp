@@ -1,6 +1,5 @@
 #include "inputtextedit.h"
 #include <QKeyEvent>
-#include <QDebug>
 InputTextEdit::InputTextEdit(QWidget* parent) :
     QTextEdit(parent)
 {

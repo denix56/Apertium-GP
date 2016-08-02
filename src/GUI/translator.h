@@ -20,12 +20,16 @@ public:
 signals:
     void resultReady(const QString &result);
 
+    void trayResultReady(const QString &result);
+
     void docTranslated(QString trFilePath);
 
     void docTranslateRejected();
 public slots:
     //translate on other OS
     void boxTranslate();
+
+    void winTrayTranslate(QString text);
 
     void docTranslate(QString filePath);
 
