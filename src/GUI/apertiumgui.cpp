@@ -992,7 +992,6 @@ void ApertiumGui::setLangpair(QString source, QString target) {
         if (index.isValid())
             emit ui->TargetLangComboBox->view()->activated(index);
     }
-
 }
 
 void ApertiumGui::on_mru_itemClicked(QListWidgetItem *item)
@@ -1000,7 +999,6 @@ void ApertiumGui::on_mru_itemClicked(QListWidgetItem *item)
     setLangpair(item->text().left(item->text().indexOf(' ')),
                 item->text().mid(item->text().indexOf("- ")+2));
 }
-
 
 void ApertiumGui::on_swapBtn_clicked()
 {
