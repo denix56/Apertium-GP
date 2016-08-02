@@ -39,7 +39,9 @@ SOURCES += \
     Installer/managerhelper.cpp \
     GUI/doctranslate.cpp \
     GUI/dragndropwidget.cpp \
-    GUI/settingsdialog.cpp
+    GUI/settingsdialog.cpp \
+    GUI/traywidgetaction.cpp \
+    GUI/trayinputextedit.cpp
 
 HEADERS  += \
     GUI/apertiumgui.h \
@@ -56,7 +58,9 @@ HEADERS  += \
     Installer/managerhelper.h \
     GUI/doctranslate.h \
     GUI/dragndropwidget.h \
-    GUI/settingsdialog.h
+    GUI/settingsdialog.h \
+    GUI/traywidgetaction.h \
+    GUI/trayinputextedit.h
 
 
 FORMS    += \

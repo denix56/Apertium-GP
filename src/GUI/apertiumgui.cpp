@@ -30,7 +30,6 @@
 #include <QFileDialog>
 #include <QDesktopServices>
 #include <QWidget>
-
 #include <QDebug>
 
 //TODO: choose language of app
@@ -124,7 +123,7 @@ bool ApertiumGui::initialize()
     const QString mode = "/listPairs";
     request->setUrl(url+mode);
     QEventLoop loop;
-    auto reply= requestSender->get(*request);
+    auto reply = requestSender->get(*request);
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
     createListOfLangs(reply);
@@ -160,6 +159,16 @@ bool ApertiumGui::initialize()
     }
 #endif  
     thread.start();
+
+    trayIcon = new QSystemTrayIcon(QIcon(":/images/Apertium_box_white_small.png"),this);
+    trayIcon->setToolTip(tr("Apertium-GP Quick translation"));
+    widgetAction = new TrayWidgetAction(this);
+    auto trayMenu = new QMenu(this);
+    trayMenu->addAction(widgetAction);
+    trayIcon->setContextMenu(trayMenu);
+    trayIcon->show();
+    //ui->menuTest->addAction(widgetAction);
+    //trayIcon->showMessage("hello","world");
     connect(ui->SourceLangComboBox->view(), &QTableView::activated, this, &ApertiumGui::updateComboBox);
     connect(ui->SourceLangComboBox->view(), &QTableView::clicked, this, &ApertiumGui::updateComboBox);
 
@@ -289,8 +298,10 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
                             data(ui->SourceLangComboBox->model()->index(i,j))
                             .toString()==Initializer::langNamesMap[sourceLang])
                         unique=false;
-            if(unique)
+            if(unique) {
                 ui->SourceLangComboBox->model()->addItem(Initializer::langNamesMap[sourceLang]);
+                //widgetAction->getInputComboBox()->addItem(Initializer::langNamesMap[sourceLang]);
+            }
         }
         int i = 0;
         //add to mru
@@ -633,7 +644,6 @@ void ApertiumGui::getResponseOfAvailLang(QNetworkReply *reply)
                                    ->data(ui->TargetLangComboBox->model()->index(i,0)).toString());
     for(int i=0;i<TargetLangBtns.size();++i)
         ui->TargetLangComboBox->model()->removeItem(0,0);
-    //emit TargetLangBtns[0]->clicked();
     emit TargetLangBtns[0]->clicked(true);
     emit listOfLangsSet();
     reply->deleteLater();

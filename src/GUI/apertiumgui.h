@@ -2,6 +2,7 @@
 #define ApertiumGui_H
 #include "headbutton.h"
 #include "languagetablemodel.h"
+#include "traywidgetaction.h"
 #include <QMainWindow>
 #include <QTextEdit>
 #include <QNetworkAccessManager>
@@ -15,6 +16,7 @@
 #include <QDir>
 #include <QListWidgetItem>
 #include <QProgressDialog>
+#include <QSystemTrayIcon>
 namespace Ui {
 
 class DocTranslate;
@@ -131,6 +133,10 @@ private:
     QDialog *fSizeBox;
     QTextDocument outputDoc;
     Translator *translator;
+
+    QSystemTrayIcon *trayIcon;
+    TrayWidgetAction *widgetAction;
+
     QThread thread;
     //not for Linux
     QDir *appdata;

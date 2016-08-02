@@ -451,7 +451,13 @@ combobox-popup: 0;
     <addaction name="actionOptions"/>
     <addaction name="actionExit"/>
    </widget>
+   <widget class="QMenu" name="menuTest">
+    <property name="title">
+     <string>Test</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuTest"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
