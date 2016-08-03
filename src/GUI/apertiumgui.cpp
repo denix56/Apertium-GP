@@ -598,7 +598,9 @@ void ApertiumGui::clearOtherSButtons()
             }
 
             else {
-                //trayWidget->inputComboBox()->setCurrentText(btn->text());
+                trayWidget->inputComboBox()->blockSignals(true);
+                trayWidget->inputComboBox()->setCurrentText(btn->text());
+                trayWidget->inputComboBox()->blockSignals(false);
                 #ifdef Q_OS_LINUX
                 btn->setChecked(true);
                 if (btn->text()==idLangText) {
