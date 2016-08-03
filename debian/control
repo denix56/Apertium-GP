@@ -9,7 +9,5 @@ Homepage: https://www.apertium.org/
 Package: apertium-gp
 Architecture: any
 Depends: libqt5gui5, libqt5widgets5, libqt5core5a, libqt5network5, libqt5sql5-sqlite, ${misc:Depends}, ${shlibs:Depends}
-Description: Apertium is an translator program.
- Apertium-GP is a GUI for Apertium transaltor.
+Description: Apertium-GP is a GUI for Apertium translator.
  It is test build
- It is licensed under licensename. See so and so file for more information.

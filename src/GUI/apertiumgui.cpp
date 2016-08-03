@@ -209,6 +209,7 @@ bool ApertiumGui::initialize()
     connect(trayWidget->inputComboBox(),&QComboBox::currentTextChanged,[&](QString text)
     {
         if(!text.isEmpty()) {
+#ifdef Q_OS_LINUX
             if (trayWidget->inputComboBox()->findText(idLangText)==-1) {
                 trayWidget->inputComboBox()->blockSignals(true);
                 trayWidget->inputComboBox()->removeItem(trayWidget->inputComboBox()->findText(
@@ -217,6 +218,7 @@ bool ApertiumGui::initialize()
                 trayWidget->inputComboBox()->setCurrentText(text);
                 trayWidget->inputComboBox()->blockSignals(false);
             }
+#endif
             setLangpair(text);
         }
     });
