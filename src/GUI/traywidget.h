@@ -28,6 +28,9 @@ public slots:
 
 private:
     Ui::TrayWidget *ui;
+
+    const int WIDTH = 250;
+    const int HEIGHT = 120;
 };
 
 #endif // TRAYWIDGET_H

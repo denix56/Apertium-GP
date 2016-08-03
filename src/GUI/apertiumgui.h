@@ -95,7 +95,7 @@ private slots:
     void getReplyFromAPY(QNetworkReply*);
 
      //send translation request for each paragraph
-    void createRequests();
+    void createRequests(QString text = QString());
 
     void createListOfLangs(QNetworkReply *reply = nullptr);
 

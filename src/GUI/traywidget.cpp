@@ -9,11 +9,19 @@ TrayWidget::TrayWidget(QWidget *parent) :
 {
     ui->setupUi(this);
     auto desktop = qApp->desktop();
-    setGeometry(desktop->availableGeometry().width()-this->width(),
-                      desktop->availableGeometry().height()-this->height(),
-                      this->width(),this->height());
+#ifdef Q_OS_WIN
+    setGeometry(desktop->availableGeometry().width(),
+                      desktop->availableGeometry().height(),
+                      width(),height());
+#else
+    setGeometry(desktop->availableGeometry().width(),
+                      desktop->availableGeometry().y()+1,
+                      width(),height());
+#endif
     connect(ui->textEdit,&TrayInputTextEdit::printEnded,this,&TrayWidget::prindEnded);
 }
+
+
 
 void TrayWidget::translationReceived(const QString &result)
 {
