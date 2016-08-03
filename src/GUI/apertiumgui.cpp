@@ -51,6 +51,7 @@ bool ApertiumGui::initialize()
     appdata  = new QDir(DATALOCATION);
     setWindowTitle("Apertium-GP");
     setAttribute(Qt::WA_AlwaysShowToolTips);
+    setContextMenuPolicy(Qt::NoContextMenu);
     //open file with Initializer::conf
     loadConf();
     //initialize language selection buttons
