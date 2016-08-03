@@ -340,7 +340,9 @@ bool DownloadWindow::applyChanges()
 #else
 void DownloadWindow::installpkg(int row)
 {
-    ui->refreshButton->setEnabled(false);
+    bool disabled = !ui->refreshButton->isEnabled();
+    if (!disabled)
+        ui->refreshButton->setEnabled(false);
     actionCnt++;
     auto name = model->item(row)->name;
     model->setData(model->index(row,STATE),DOWNLOADING);
@@ -425,7 +427,8 @@ void DownloadWindow::installpkg(int row)
     ui->view->update(model->index(row,SIZE));
     actionCnt--;
     disconnect(sortConnection);
-    ui->refreshButton->setEnabled(true);
+    if (!disabled)
+        ui->refreshButton->setEnabled(true);
     reply->deleteLater();
 }
 
