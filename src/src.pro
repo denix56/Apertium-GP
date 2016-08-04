@@ -92,5 +92,7 @@ INSTALLS += req policy
 
 DISTFILES += \
     ../AUTHORS \
-    ../COPYING
+    ../COPYING \
+    ../Apertium-GP.desktop \
+    ../apertium.ico
 
