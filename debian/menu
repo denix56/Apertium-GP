@@ -1,4 +1,0 @@
-?package(apertium-gp):needs="x11" \
-	section="Applications/Translators" \
-	title="Apertium-GP" \
-	command="/usr/bin/apertium-gp"
