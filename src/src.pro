@@ -90,3 +90,7 @@ policy.path = /usr/share/polkit-1/actions
 INSTALLS += req policy
 }
 
+DISTFILES += \
+    ../AUTHORS \
+    ../COPYING
+
