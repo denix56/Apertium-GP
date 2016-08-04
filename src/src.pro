@@ -95,14 +95,4 @@ DISTFILES += \
     ../COPYING \
     ../Apertium-GP.desktop \
     ../apertium.ico \
-    ../debian/source/format \
-    ../debian/apertium-gp.install \
-    ../debian/compat \
-    ../debian/control \
-    ../debian/copyright \
-    ../debian/dirs \
-    ../debian/menu \
-    ../debian/watch \
-    ../debian/changelog \
-    ../debian/rules
 
