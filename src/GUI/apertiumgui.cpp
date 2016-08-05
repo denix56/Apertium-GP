@@ -302,7 +302,6 @@ void ApertiumGui::resizeEvent(QResizeEvent* e)
     ui->label->setPixmap(ui->label->pixmap()->
                          scaled(ui->label->pixmap()->width(),
                                 ui->label->pixmap()->height(),Qt::KeepAspectRatio));
-    //ui->label->repaint();
     QMainWindow::resizeEvent(e);
 }
 
@@ -318,7 +317,7 @@ void ApertiumGui::setFontSize(int size)
     font.setPointSize(size);
     ui->boxInput->setFont(font);
     ui->boxOutput->setFont(font);
-    Initializer::conf->setValue(FONTSIZE,QVariant(font.pointSize()));
+    Initializer::conf->setValue(FONTSIZE,size);
 }
 
 //get available language pairs
@@ -389,6 +388,7 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
             item->setTextAlignment(Qt::AlignCenter);
             ui->mru->addItem(item);
         }
+
         ui->SourceLangComboBox->model()->addItem(idLangText);
         trayWidget->inputComboBox()->addItem(idLangText);
         trayWidget->inputComboBox()->blockSignals(false);
@@ -412,7 +412,6 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
     auto modes = moded.entryInfoList(QStringList() << "*.mode");
 
     for (auto mode : modes) {
-
         bool unique = true;
         auto sourceLanguage = mode.baseName().left(mode.baseName().indexOf("-"));
         auto targetLanguage = mode.baseName().mid(mode.baseName().indexOf("-")+1);
@@ -423,6 +422,7 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
                                       + Initializer::langNamesMap[targetLanguage],
                                       Initializer::conf->value(sourceLanguage + "-" + targetLanguage).toULongLong()));
         }
+
         for(int j=0;j< ui->SourceLangComboBox->model()->columnCount();++j)
             for(int i=0; i < ui->SourceLangComboBox->model()->rowCount();++i)
                 if(ui->SourceLangComboBox->model()->data(ui->SourceLangComboBox->model()->index(i,j)).toString()
@@ -433,6 +433,7 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
             trayWidget->inputComboBox()->addItem(Initializer::langNamesMap[sourceLanguage]);
         }
     }
+
     int i=0;
     for(auto it = langs.begin(); i < 3 && it != langs.end();++it, ++i) {
         auto item = new QListWidgetItem(it->name);
@@ -447,9 +448,11 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
                                    data(ui->SourceLangComboBox->model()->index(i,0)).toString());
         SourceLangBtns[i]->setEnabled(!SourceLangBtns[i]->text().isEmpty());
     }
+
     //remove items, that are showed in buttons
     for(int i=0;i<SourceLangBtns.size();++i)
         ui->SourceLangComboBox->model()->removeItem(0,0);
+
 #ifdef Q_OS_LINUX
     if (SourceLangBtns[0]->text().contains(idLangText)) {
         SourceLangBtns[0]->setText(SourceLangBtns[2]->text());
@@ -473,7 +476,6 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
             name = tmp;
     currentTargetLang = name;
     reply->deleteLater();
-
 
 #else
     QDir path(DATALOCATION+"/usr/share/apertium/modes");
@@ -752,7 +754,6 @@ void ApertiumGui::createRequests(QString text)
     const QString mode = "/translate?";
     QUrlQuery urlQ;
     urlQ.addQueryItem("langpair", currentSourceLang+"|"+currentTargetLang);
-    //if(sender()!=ui->boxInput)
     if (text.isEmpty() && lastBlockCount!=ui->boxInput->document()->blockCount()) {
         ui->boxOutput->clear();
         outputDoc.clear();

@@ -291,6 +291,7 @@ bool DownloadWindow::applyChanges()
     QFile script(path.absoluteFilePath("install-packages.sh"));
     script.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
     script.write("#!/bin/bash\n");
+
     //Generating bash script
     QStringList args;
     args << script.fileName();
