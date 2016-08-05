@@ -351,8 +351,8 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
 
         //delete non 2-letter names
         for(auto it = array.begin(); it != array.end();) {
-            QString sourceLanguage = it->toObject().value("sourceLanguage").toString();
-            QString targetLanguage = it->toObject().value("targetLanguage").toString();
+            QString sourceLanguage = (*it).toObject().value("sourceLanguage").toString();
+            QString targetLanguage = (*it).toObject().value("targetLanguage").toString();
             if(sourceLanguage.length() > 3 || targetLanguage.length() > 3)
                 it = array.erase(it);
             else
@@ -702,7 +702,7 @@ void ApertiumGui::getResponseOfAvailLang(QNetworkReply *reply)
     auto array = docAvailLang.object().value("responseData").toArray();
     for(auto it = array.begin(); it != array.end();) {
         QString sourceLanguage = (*it).toObject().value("sourceLanguage").toString();
-        QString targetLanguage = it->toObject().value("targetLanguage").toString();
+        QString targetLanguage = (*it).toObject().value("targetLanguage").toString();
         if(sourceLanguage.length() > 3 || targetLanguage.length() > 3)
             it = array.erase(it);
         else
@@ -856,7 +856,7 @@ void ApertiumGui::getReplyFromAPY(QNetworkReply *reply)
                 while(cursor.blockNumber()==blockNumber && !cursor.atBlockEnd()) {
 
                     auto cursor1 = cursor.document()->
-                            find(QRegularExpression ("\\*\\w+\\W?"),cursor.position());
+                            find(QRegExp ("\\*\\w+\\W?"),cursor);
                     if (cursor1.isNull())
                         break;
                     cursor = cursor1;
@@ -877,7 +877,7 @@ void ApertiumGui::getReplyFromAPY(QNetworkReply *reply)
             cursor.movePosition(QTextCursor::StartOfBlock);
             while(!cursor.atBlockEnd()) {
                 auto cursor1 = cursor.document()->
-                        find(QRegularExpression ("\\*\\w+\\W?"),cursor.position());
+                        find(QRegExp("\\*\\w+\\W?"),cursor);
                 if (cursor1.isNull())
                     break;
                 cursor = cursor1;
@@ -928,7 +928,7 @@ void ApertiumGui::translateReceived(const QString &result)
     cursor.movePosition(QTextCursor::Start);
     while(!cursor.atEnd()) {
         auto cursor1 = cursor.document()->
-                find(QRegularExpression ("[\\*#]\\w+\\W?"),cursor.position());
+                find(QRegExp("[\\*#]\\w+\\W?"),cursor);
         if (cursor1.isNull())
             break;
         cursor = cursor1;

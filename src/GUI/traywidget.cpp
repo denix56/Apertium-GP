@@ -53,7 +53,7 @@ void TrayWidget::translationReceived(const QString &result)
     cursor.movePosition(QTextCursor::Start);
     while(!cursor.atEnd()) {
         auto cursor1 = cursor.document()->
-                find(QRegularExpression ("[\\*#]\\w+\\W?"),cursor.position());
+                find(QRegExp("[\\*#]\\w+\\W?"), cursor);
         if (cursor1.isNull())
             break;
         cursor = cursor1;
