@@ -246,6 +246,7 @@ combobox-popup: 0;
          <widget class="QToolButton" name="swapBtn">
           <property name="font">
            <font>
+            <pointsize>14</pointsize>
             <weight>50</weight>
             <italic>false</italic>
             <bold>false</bold>
@@ -291,7 +292,7 @@ combobox-popup: 0;
       <item row="2" column="4" rowspan="2">
        <widget class="InputTextEdit" name="boxOutput">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -316,7 +317,7 @@ combobox-popup: 0;
       <item row="2" column="2" rowspan="2">
        <widget class="InputTextEdit" name="boxInput">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -342,7 +343,7 @@ combobox-popup: 0;
        <widget class="QPushButton" name="docTranslateBtn">
         <property name="font">
          <font>
-          <pointsize>10</pointsize>
+          <pointsize>11</pointsize>
          </font>
         </property>
         <property name="text">
@@ -366,8 +367,13 @@ combobox-popup: 0;
             <height>50</height>
            </size>
           </property>
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
           <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;The most recently used language pairs:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>The most recently used language pairs:</string>
           </property>
           <property name="scaledContents">
            <bool>false</bool>

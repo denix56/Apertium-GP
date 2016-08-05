@@ -23,8 +23,13 @@
 #include <QStandardPaths>
 #include <QSettings>
 #include <QDir>
+#include <QtGlobal>
 
-#define DATALOCATION  QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
+#if QT_VERSION >= 0x050400
+    #define DATALOCATION QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
+#else
+    #define DATALOCATION QStandardPaths::writableLocation(QStandardPaths::DataLocation)
+#endif
 
 class Initializer
 {

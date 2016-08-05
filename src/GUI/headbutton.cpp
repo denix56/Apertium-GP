@@ -27,7 +27,7 @@ HeadButton::HeadButton(QWidget* parent):QPushButton(parent)
     setCheckable(true);
     setFixedSize(102,27);
     QFont font(this->font());
-    font.setPointSize(9);
+    font.setPointSize(11);
     setFont(font);
     wasClicked=false;
     once=true;

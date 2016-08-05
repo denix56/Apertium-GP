@@ -60,19 +60,36 @@ ApertiumGui::ApertiumGui(QWidget *parent) :
 
 }
 
+struct ApertiumGui::langpairUsed
+{
+    QString name;
+    unsigned long long n;
+    langpairUsed(QString _name, unsigned long long _n)
+    {
+        name = _name;
+        n = _n;
+    }
+    bool operator <(const langpairUsed &op) const
+    {
+        //reverse
+        return n > op.n;
+    }
+};
+
 bool ApertiumGui::initialize()
 {
+    setWindowTitle("Apertium-GP");
+    setAttribute(Qt::WA_AlwaysShowToolTips);
+    setContextMenuPolicy(Qt::NoContextMenu);
 #ifdef Q_OS_LINUX
     auto dlg = new QProgressDialog(tr("Starting server..."),tr("Cancel"),0,0,this);
     dlg->setValue(0);
     dlg->show();
 #endif
     appdata  = new QDir(DATALOCATION);
-    setWindowTitle("Apertium-GP");
-    setAttribute(Qt::WA_AlwaysShowToolTips);
-    setContextMenuPolicy(Qt::NoContextMenu);
     //open file with Initializer::conf
     loadConf();
+
     //initialize language selection buttons
     SourceLangBtns.resize(3);
     TargetLangBtns.resize(3);
@@ -95,16 +112,15 @@ bool ApertiumGui::initialize()
     TargetLangBtns[0]->setChecked(true);
 
     trayWidget = new TrayWidget(this);
+
     trayIcon = new QSystemTrayIcon(QIcon(":/images/Apertium_box_white_small.png"),this);
     trayIcon->setToolTip(tr("Apertium-GP"));
     auto trayMenu = new QMenu(this);
-
     showFullAction = new QAction(this);
     if (!this->isVisible())
         showFullAction->setText(tr("Hide main window"));
     else
         showFullAction->setText(tr("Show main window"));
-
     connect(showFullAction,&QAction::triggered,[&]()
     {
         if (!this->isVisible()) {
@@ -119,7 +135,6 @@ bool ApertiumGui::initialize()
 
     exitAction = new QAction(tr("Exit"),this);
     connect(exitAction, &QAction::triggered, qApp, &QApplication::quit);
-
     trayMenu->addAction(exitAction);
     trayIcon->setContextMenu(trayMenu);
     if (Initializer::conf->value("extra/traywidget").toBool()) {
@@ -127,6 +142,7 @@ bool ApertiumGui::initialize()
         trayWidget->show();
         qApp->setQuitOnLastWindowClosed(false);
     }
+
     ui->SourceLangComboBox->setFixedHeight(ui->SourceLang1->height()-2);
     ui->TargetLangComboBox->setFixedHeight(ui->SourceLang1->height()-2);
     ui->boxInput->setTextColor(Qt::black);
@@ -135,22 +151,17 @@ bool ApertiumGui::initialize()
     //translate in the other thread
     translator = new Translator(this);
     translator->moveToThread(&thread);
-    ui->toolBar->setMovable(false);
+
     ui->swapBtn->setFixedHeight(ui->SourceLang1->height());
-    QFont font(ui->swapBtn->font());
-    font.setPointSize(14);
-    ui->swapBtn->setFont(font);
 
 #ifdef Q_OS_LINUX
     //start server and get available language pairs
-    auto request = new QNetworkRequest;
     requestSender = new QNetworkAccessManager(this);
+    QNetworkRequest request;
     apy = new QProcess;
-    apy->setWorkingDirectory(serverPath);
-    apy->setArguments(QStringList() << langPairsPath);
-    if(!QFile(apy->workingDirectory()+"/servlet.py").exists()) {
+    if(!QFile(serverPath+"/servlet.py").exists()) {
         QMessageBox box;
-        box.critical(this,"Path error","Incorrect server directory");
+        box.critical(this,tr("Path error"),tr("Incorrect server directory"));
         close();
         return false;
     }
@@ -168,28 +179,31 @@ bool ApertiumGui::initialize()
         }
         reply->deleteLater();
     }
+
     QAction *dlAction =  new QAction(style()->standardIcon(QStyle::SP_ArrowDown),
                                      tr("Install packages"),ui->toolBar);
     ui->toolBar->addAction(dlAction);
     //Installing new packages
     connect(dlAction, &QAction::triggered,this,&ApertiumGui::dlAction_triggered);
-    const QString mode = "/listPairs";
-    request->setUrl(url+mode);
+
+    request.setUrl(url+"/listPairs");
     QEventLoop loop;
-    auto reply = requestSender->get(*request);
+    auto reply = requestSender->get(request);
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
+
     createListOfLangs(reply);
     if (!initRes) {
         dlg->accept();
         dlAction->trigger();
     }
+
     connect(requestSender,&QNetworkAccessManager::finished,this,&ApertiumGui::getReplyFromAPY);
     connect(ui->boxInput,&InputTextEdit::printEnded,[&](){this->createRequests();});
     connect (trayWidget,&TrayWidget::prindEnded,this,&ApertiumGui::createRequests);
-    reply->deleteLater();
     dlg->accept();
     dlg->deleteLater();
+    reply->deleteLater();  
 
 #else
     checked = true;
@@ -216,7 +230,6 @@ bool ApertiumGui::initialize()
     }
 #endif  
     thread.start();
-
 
     connect(ui->SourceLangComboBox->view(), &QTableView::activated, this, &ApertiumGui::updateComboBox);
     connect(ui->SourceLangComboBox->view(), &QTableView::clicked, this, &ApertiumGui::updateComboBox);
@@ -255,6 +268,11 @@ bool ApertiumGui::initialize()
     return initRes;
 }
 
+int ApertiumGui::getFontSize() const
+{
+    return ui->boxInput->fontInfo().pointSize();
+}
+
 QString ApertiumGui::getText() const
 {
     return ui->boxInput->toPlainText();
@@ -267,58 +285,41 @@ void ApertiumGui::setTrayWidgetEnabled(bool b)
     qApp->setQuitOnLastWindowClosed(!b);
 }
 
-void ApertiumGui::dlAction_triggered()
+ApertiumGui::~ApertiumGui()
 {
-    DownloadWindow dlWindow(this);
-    setDisabled(true);
-    if (dlWindow.getData(checked)) {
-        setDisabled(false);
 #ifdef Q_OS_LINUX
-        checked = true;
-        dlWindow.exec();
-        //wait while server starts
-        while(true) {
-            QEventLoop loop;
-            auto reply = requestSender->get(QNetworkRequest(url+"/stats"));
-            connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
-            loop.exec();
-            if (reply->error()== QNetworkReply::NoError) {
-                reply->deleteLater();
-                break;
-            }
-            reply->deleteLater();
-        }
-        const QString mode = "/listPairs";
-        QNetworkAccessManager tmp(this);
-        auto reply = tmp.get(QNetworkRequest(url+mode));
-        QEventLoop loop;
-        connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
-        loop.exec();
-        createListOfLangs(reply);
-    }
-#else
-        dlWindow.exec();
-        createListOfLangs();
-    }
-    setDisabled(false);
+    QProcess apy;
+    apy.execute("pkexec", QStringList() << "/usr/share/apertium-gp/serverCmds.sh");
 #endif
+    thread.quit();
+    thread.wait();
+    delete Initializer::conf;
+    delete ui;
 }
 
-struct ApertiumGui::langpairUsed
+void ApertiumGui::resizeEvent(QResizeEvent* e)
 {
-    QString name;
-    unsigned long long n;
-    langpairUsed(QString _name, unsigned long long _n)
-    {
-        name = _name;
-        n = _n;
-    }
-    bool operator <(const langpairUsed &op) const
-    {
-        //reverse
-        return n > op.n;
-    }
-};
+    ui->label->setPixmap(ui->label->pixmap()->
+                         scaled(ui->label->pixmap()->width(),
+                                ui->label->pixmap()->height(),Qt::KeepAspectRatio));
+    //ui->label->repaint();
+    QMainWindow::resizeEvent(e);
+}
+
+void ApertiumGui::closeEvent(QCloseEvent *event)
+{
+    emit showFullAction->triggered();
+    QMainWindow::closeEvent(event);
+}
+
+void ApertiumGui::setFontSize(int size)
+{
+    QFont font(ui->boxInput->font());
+    font.setPointSize(size);
+    ui->boxInput->setFont(font);
+    ui->boxOutput->setFont(font);
+    Initializer::conf->setValue(FONTSIZE,QVariant(font.pointSize()));
+}
 
 //get available language pairs
 void ApertiumGui::createListOfLangs(QNetworkReply *reply)
@@ -388,13 +389,6 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
             item->setTextAlignment(Qt::AlignCenter);
             ui->mru->addItem(item);
         }
-
-//        //fill target ComboBox
-//        for (auto it : array)
-//            if(Initializer::langNamesMap[it.toObject().value("sourceLanguage").toString()]==
-//                    ui->SourceLangComboBox->model()->data(ui->SourceLangComboBox->model()->index(0,0)).toString())
-//                ui->TargetLangComboBox->model()->addItem(Initializer::langNamesMap[it.toObject()
-//                        .value("targetLanguage").toString()]);
         ui->SourceLangComboBox->model()->addItem(idLangText);
         trayWidget->inputComboBox()->addItem(idLangText);
         trayWidget->inputComboBox()->blockSignals(false);
@@ -445,15 +439,6 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
         item->setTextAlignment(Qt::AlignCenter);
         ui->mru->addItem(item);
     }
-//    for (auto mode : modes) {
-//        auto sourceLanguage = mode.baseName().left(mode.baseName().indexOf("-"));
-//        auto targetLanguage = mode.baseName().mid(mode.baseName().indexOf("-")+1);
-//        if (targetLanguage.length() > 3)
-//            continue;
-//        if(Initializer::langNamesMap[sourceLanguage]==ui->SourceLangComboBox->model()->
-//                data(ui->SourceLangComboBox->model()->index(0,0)).toString())
-//            ui->TargetLangComboBox->model()->addItem(Initializer::langNamesMap[targetLanguage]);
-//    }
 #endif
 
     //fill buttons with start languages
@@ -462,17 +447,9 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
                                    data(ui->SourceLangComboBox->model()->index(i,0)).toString());
         SourceLangBtns[i]->setEnabled(!SourceLangBtns[i]->text().isEmpty());
     }
-
-//    for(int i=0;i<TargetLangBtns.size();++i) {
-//        TargetLangBtns[i]->setText(ui->TargetLangComboBox->model()->
-//                                   data(ui->TargetLangComboBox->model()->index(i,0)).toString());
-//        TargetLangBtns[i]->setEnabled(!TargetLangBtns[i]->text().isEmpty());
-//    }
     //remove items, that are showed in buttons
     for(int i=0;i<SourceLangBtns.size();++i)
         ui->SourceLangComboBox->model()->removeItem(0,0);
-//    for(int i=0;i<TargetLangBtns.size();++i)
-//        ui->TargetLangComboBox->model()->removeItem(0,0);
 #ifdef Q_OS_LINUX
     if (SourceLangBtns[0]->text().contains(idLangText)) {
         SourceLangBtns[0]->setText(SourceLangBtns[2]->text());
@@ -507,7 +484,7 @@ void ApertiumGui::createListOfLangs(QNetworkReply *reply)
             currentTargetLang = tKey;
             break;
         }
-#endif        
+#endif
     emit listOfLangsSet();
     initRes = true;
     return;
@@ -581,9 +558,7 @@ void ApertiumGui::updateComboBox(QModelIndex index)
     }
 #endif
     ui->SourceLangComboBox->setCurrentIndex(-1);
-
     emit SourceLangBtns[0]->clicked(true);
-
 }
 
 //update ComboBox with Tatget Languages when the new one is choosed
@@ -600,6 +575,7 @@ void ApertiumGui::updateEndComboBox(QModelIndex index)
     ui->TargetLangComboBox->setCurrentIndex(-1);
 }
 
+
 //Uncheck Other Source language buttons when the new one is checked
 void ApertiumGui::clearOtherSButtons()
 {
@@ -615,7 +591,6 @@ void ApertiumGui::clearOtherSButtons()
                 if (btn->text().contains(idLangText))
                     btn->setText(idLangText);
             }
-
             else {
                 trayWidget->inputComboBox()->blockSignals(true);
                 trayWidget->inputComboBox()->setCurrentText(btn->text());
@@ -718,7 +693,6 @@ void ApertiumGui::clearOtherEButtons()
     }
 }
 
-//FOR LINUX
 //update available Target languages
 void ApertiumGui::getResponseOfAvailLang(QNetworkReply *reply)
 {
@@ -920,36 +894,6 @@ void ApertiumGui::getReplyFromAPY(QNetworkReply *reply)
     reply->deleteLater();
 }
 
-void ApertiumGui::resizeEvent(QResizeEvent* e)
-{
-    ui->boxInput->resize(this->width()/2-100,300);
-    ui->boxOutput->resize(this->width()/2-100,300);
-    ui->label->setPixmap(ui->label->pixmap()->
-                         scaled(ui->label->pixmap()->width(),
-                                ui->label->pixmap()->height(),Qt::KeepAspectRatio));
-    ui->label->repaint();
-}
-
-void ApertiumGui::closeEvent(QCloseEvent *event)
-{
-    emit showFullAction->triggered();
-    QMainWindow::closeEvent(event);
-}
-
-int ApertiumGui::getFontSize() const
-{
-    return ui->boxInput->fontInfo().pointSize();
-}
-
-void ApertiumGui::setFontSize(int size)
-{
-    QFont font(ui->boxInput->font());
-    font.setPointSize(size);
-    ui->boxInput->setFont(font);
-    ui->boxOutput->setFont(font);
-    Initializer::conf->setValue(FONTSIZE,QVariant(font.pointSize()));
-}
-
 void ApertiumGui::loadConf()
 {
     //Save entered pathes to Server and langpairs
@@ -963,10 +907,6 @@ void ApertiumGui::loadConf()
     ui->boxOutput->setFont(font);
 }
 
-
-//NOT FOR LINUX
-//taken from Simpleton
-
 void ApertiumGui::saveMru()
 {
     if (currentSourceLang==idLangText)
@@ -975,6 +915,7 @@ void ApertiumGui::saveMru()
     Initializer::conf->setValue(langpair, QVariant(Initializer::conf->value
                                                    (langpair,QVariant(0ULL)).toULongLong() + 1ULL));
 }
+
 void ApertiumGui::translateReceived(const QString &result)
 {
     ui->boxOutput->clear();
@@ -1003,16 +944,63 @@ void ApertiumGui::on_boxInput_currentCharFormatChanged(const QTextCharFormat &fo
     ui->boxInput->setTextColor(Qt::black);
 }
 
-ApertiumGui::~ApertiumGui()
+void ApertiumGui::dlAction_triggered()
 {
+    DownloadWindow dlWindow(this);
+    setDisabled(true);
+    if (dlWindow.getData(checked)) {
+        setDisabled(false);
 #ifdef Q_OS_LINUX
-    QProcess apy;
-    apy.execute("pkexec", QStringList() << "/usr/share/apertium-gp/serverCmds.sh");
+        checked = true;
+        dlWindow.exec();
+        //wait while server starts
+        while(true) {
+            QEventLoop loop;
+            auto reply = requestSender->get(QNetworkRequest(url+"/stats"));
+            connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
+            loop.exec();
+            if (reply->error()== QNetworkReply::NoError) {
+                reply->deleteLater();
+                break;
+            }
+            reply->deleteLater();
+        }
+        const QString mode = "/listPairs";
+        QNetworkAccessManager tmp(this);
+        auto reply = tmp.get(QNetworkRequest(url+mode));
+        QEventLoop loop;
+        connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
+        loop.exec();
+        createListOfLangs(reply);
+    }
+#else
+        dlWindow.exec();
+        createListOfLangs();
+    }
+    setDisabled(false);
 #endif
-    thread.quit();
-    thread.wait();
-    delete Initializer::conf;
-    delete ui;
+}
+
+void ApertiumGui::on_mru_itemClicked(QListWidgetItem *item)
+{
+    setLangpair(item->text().left(item->text().indexOf(' ')),
+                item->text().mid(item->text().indexOf("- ")+2));
+}
+
+void ApertiumGui::on_swapBtn_clicked()
+{
+    setLangpair(Initializer::langNamesMap[currentTargetLang],
+                Initializer::langNamesMap[currentSourceLang]);
+}
+
+void ApertiumGui::on_docTranslateBtn_clicked()
+{
+    auto DocTranslateWidget = new DocTranslate(this);
+    ui->boxInput->setEnabled(false);
+    ui->boxOutput->setEnabled(false);
+    DocTranslateWidget->show();
+    connect(DocTranslateWidget, &DocTranslate::destroyed, [&]() { ui->boxInput->setEnabled(true);});
+    connect(DocTranslateWidget, &DocTranslate::destroyed, [&]() { ui->boxOutput->setEnabled(true);});
 }
 
 void ApertiumGui::setLangpair(QString source, QString target) {
@@ -1056,27 +1044,5 @@ void ApertiumGui::setLangpair(QString source, QString target) {
         if (index.isValid())
             emit ui->TargetLangComboBox->view()->activated(index);
     }
-}
-
-void ApertiumGui::on_mru_itemClicked(QListWidgetItem *item)
-{
-    setLangpair(item->text().left(item->text().indexOf(' ')),
-                item->text().mid(item->text().indexOf("- ")+2));
-}
-
-void ApertiumGui::on_swapBtn_clicked()
-{
-    setLangpair(Initializer::langNamesMap[currentTargetLang],
-                Initializer::langNamesMap[currentSourceLang]);
-}
-
-void ApertiumGui::on_docTranslateBtn_clicked()
-{
-    auto DocTranslateWidget = new DocTranslate(this);
-    ui->boxInput->setEnabled(false);
-    ui->boxOutput->setEnabled(false);
-    DocTranslateWidget->show();
-    connect(DocTranslateWidget, &DocTranslate::destroyed, [&]() { ui->boxInput->setEnabled(true);});
-    connect(DocTranslateWidget, &DocTranslate::destroyed, [&]() { ui->boxOutput->setEnabled(true);});
 }
 

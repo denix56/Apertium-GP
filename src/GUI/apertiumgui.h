@@ -55,6 +55,14 @@ public:
 
     bool initialize();
 
+    int getFontSize() const;
+
+    QString getText() const;
+
+    void setTrayWidgetEnabled(bool b);
+
+    ~ApertiumGui();
+
     inline Translator *const getTranslator() const
     {
         return translator;
@@ -75,12 +83,6 @@ public:
         return currentTargetLang;
     }
 
-    int getFontSize() const;
-
-    QString getText() const;
-    void setTrayWidgetEnabled(bool b);
-    ~ApertiumGui();
-
 protected:
     void resizeEvent(QResizeEvent*);
 
@@ -95,6 +97,9 @@ public slots:
     void setFontSize(int size);
 
 private slots:
+    //get available language pairs
+    void createListOfLangs(QNetworkReply *reply = nullptr);
+
     //update ComboBoxes when new source language, that is choosed
     void updateComboBox(QModelIndex);
 
@@ -104,29 +109,22 @@ private slots:
     //Uncheck Other Source language buttons when the new one is checked
     void clearOtherSButtons();
 
+    //Uncheck Other Target language buttons when the new one is checked
+    void clearOtherEButtons();
 
-
-    //get available language pairs
     //update available Target languages
     void getResponseOfAvailLang(QNetworkReply*);
+
+    //send translation request for each paragraph
+   void createRequests(QString text = QString());
 
     //parse json response
     void getReplyFromAPY(QNetworkReply*);
 
-     //send translation request for each paragraph
-    void createRequests(QString text = QString());
-
-    void createListOfLangs(QNetworkReply *reply = nullptr);
-
-    //Uncheck Other Target language buttons when the new one is checked
-    void clearOtherEButtons();
-
-    //box for changing font size
-    //void fontSizeBox();
-
-    //Not for Linux
+    //add new langpairs to mru
     void saveMru();
 
+    //NOT FOR LINUX
     void translateReceived(const QString &result);
 
     void on_boxInput_currentCharFormatChanged(const QTextCharFormat &format);
