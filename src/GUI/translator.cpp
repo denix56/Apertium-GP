@@ -398,8 +398,8 @@ void Translator::translateRtf(QString filePath, QDir &docDir)
 //    //cmd->setStandardOutputFile("C:/Users/Denis/Documents/t.txt");
 //    //cmd->setArguments(args);
 //    cmd->start("cmd.exe");
-////    cmd->execute("cmd.exe /c type \""+filePath.replace('/', QDir::separator())+"\" | \""
-////                 +parent->appdata->absoluteFilePath("apertium-all-dev/bin").replace('/', QDir::separator())+"\\apertium-desrtf\"");
+//    cmd->execute("cmd.exe /c type \""+filePath.replace('/', QDir::separator())+"\" | \""
+//                 +parent->appdata->absoluteFilePath("apertium-all-dev/bin").replace('/', QDir::separator())+"\\apertium-desrtf\"");
 //   // cmd->waitForFinished();
 //    //loop.exec();
 //    //cmd->waitForFinished();
@@ -448,6 +448,8 @@ void Translator::translateRtf(QString filePath, QDir &docDir)
 void Translator::docTranslate(QString filePath)
 {
     docTransWaitDlg = new QProgressDialog(tr("Translating document..."),"",0,0);
+    connect(this, &Translator::docTranslated,docTransWaitDlg,&QProgressDialog::accept);
+    connect(this, &Translator::docTranslateRejected,docTransWaitDlg,&QProgressDialog::reject);
 #ifdef Q_OS_LINUX
     docTransWaitDlg->setMaximum(100);
 #endif
