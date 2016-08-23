@@ -17,8 +17,8 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef ApertiumGui_H
-#define ApertiumGui_H
+#ifndef GPMAINWINDOW_H
+#define GPMAINWINDOW_H
 #include "headbutton.h"
 #include "languagetablemodel.h"
 #include "traywidget.h"
@@ -38,20 +38,19 @@
 #include <QSystemTrayIcon>
 namespace Ui {
 
-class DocTranslate;
-
-class ApertiumGui;
+class DocsHandler;
+class GpMainWindow;
 }
 
 class Translator;
 class DownloadWindow;
 
-class ApertiumGui : public QMainWindow
+class GpMainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit ApertiumGui(QWidget *parent = 0);
+    explicit GpMainWindow(QWidget *parent = 0);
 
     bool initialize();
 
@@ -61,7 +60,7 @@ public:
 
     void setTrayWidgetEnabled(bool b);
 
-    ~ApertiumGui();
+    ~GpMainWindow();
 
     inline Translator *const getTranslator() const
     {
@@ -139,9 +138,9 @@ private slots:
 
 private:
 
-    Ui::ApertiumGui *ui;
-    QVector <HeadButton *> SourceLangBtns;
-    QVector <HeadButton *> TargetLangBtns;
+    Ui::GpMainWindow *ui;
+    QVector <HeadButton*> SourceLangBtns;
+    QVector <HeadButton*> TargetLangBtns;
     QString currentSourceLang, currentTargetLang;
     QNetworkAccessManager *requestSender;
     HeadButton *currentSButton;
@@ -178,4 +177,4 @@ private:
     void setLangpair(QString source, QString target = QString());
 };
 
-#endif // ApertiumGui_H
+#endif

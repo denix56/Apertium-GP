@@ -18,7 +18,7 @@
 */
 
 #include "translator.h"
-#include "apertiumgui.h"
+#include "gpmainwindow.h"
 #include "initializer.h"
 #include <QDir>
 #include <QProcess>
@@ -30,7 +30,7 @@
 #include <QHttpMultiPart>
 #include <QDebug>
 #include <QApplication>
-Translator::Translator(ApertiumGui* parent)
+Translator::Translator(GpMainWindow* parent)
 {
     this->parent = parent;
 }
@@ -159,9 +159,6 @@ void Translator::translateDocx(QString filePath, QDir &docDir)
     cmd->waitForFinished();
     emit docTranslated(trFilePath);
     cmd->deleteLater();
-    //#else
-    //    // cmd->start("ar", QStringList() << "x" << "data.tmp");
-    //#endif
 }
 
 //TODO: add support of URL
@@ -447,16 +444,6 @@ void Translator::translateRtf(QString filePath, QDir &docDir)
 #endif
 void Translator::docTranslate(QString filePath)
 {
-    docTransWaitDlg = new QProgressDialog(tr("Translating document..."),"",0,0);
-    connect(this, &Translator::docTranslated,docTransWaitDlg,&QProgressDialog::accept);
-    connect(this, &Translator::docTranslateRejected,docTransWaitDlg,&QProgressDialog::reject);
-#ifdef Q_OS_LINUX
-    docTransWaitDlg->setMaximum(100);
-#endif
-    docTransWaitDlg->setCancelButton(nullptr);
-    docTransWaitDlg->setWindowFlags(docTransWaitDlg->windowFlags() & ~Qt::WindowCloseButtonHint);
-    docTransWaitDlg->setModal(true);
-    docTransWaitDlg->show();
 
     QDir outputDocDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
     QString dirName = tr("Apertium Translated Documents");

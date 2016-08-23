@@ -17,32 +17,35 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DOCTRANSLATE_H
-#define DOCTRANSLATE_H
-#include "apertiumgui.h"
+#ifndef DOCSHANDLER_H
+#define DOCSHANDLER_H
+#include "gpmainwindow.h"
 #include "dragndropwidget.h"
 #include <QWidget>
 namespace Ui {
-class DocTranslate;
+class DocsHandler;
 }
 
-class DocTranslate : public QWidget
+class DocsHandler : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit DocTranslate(ApertiumGui *parent = 0);
-    ~DocTranslate();
+    explicit DocsHandler(GpMainWindow *parent = 0);
+    ~DocsHandler();
     static const QStringList fileTypes;
 signals:
     void docForTransChoosed(QString filePath);
 private slots:
     void on_browseBtn_clicked();
     void showPostDocTransDlg(QString trFilePath);
+    void docTranslateFailed();
 
 private:
-    Ui::DocTranslate *ui;   
-    ApertiumGui *parent;
+    Ui::DocsHandler *ui;
+    GpMainWindow *parent;
+    QProgressDialog *docTransWaitDlg;
+
 };
 
 #endif // DOCTRANSLATE_H

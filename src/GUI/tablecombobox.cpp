@@ -40,7 +40,7 @@ TableComboBox::TableComboBox(QWidget *parent)
     setMaxVisibleItems(model()->rowCount());
     QFont font(this->font());
     font.setPointSize(10);
-    this->setFont(font);
+    setFont(font);
     connect(model(),&languageTableModel::dataChanged,
             this,&TableComboBox::resizeT);
 }
@@ -70,8 +70,7 @@ void TableComboBox::resizeT()
     //TODO: bug with no elements in model list
     if(model()->itemCount()==0)
         return;
-    int colc = model()->columnCount();/*model()->itemCount()/model()->maxRowCount() +
-            (model()->itemCount() % model()->rowCount() ? 1 : 0);*/
+    int colc = model()->columnCount();
     for (int i=0; i < colc;i++)
         view()->setColumnWidth(i, COLWIDTH);
     view()->setMinimumWidth(COLWIDTH*(colc));

@@ -17,8 +17,8 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "doctranslate.h"
-#include "ui_doctranslate.h"
+#include "docshandler.h"
+#include "ui_docshandler.h"
 #include "translator.h"
 #include <QFileDialog>
 #include <QStandardPaths>
@@ -26,11 +26,11 @@
 #include <QDesktopServices>
 #include <QProgressDialog>
 #include <QDebug>
-const QStringList DocTranslate::fileTypes {"txt", "docx", "pptx", "html",
+const QStringList DocsHandler::fileTypes {"txt", "docx", "pptx", "html",
                                            "rtf", "odt", "xlsx", "xtg"};
-DocTranslate::DocTranslate(ApertiumGui *parent) :
+DocsHandler::DocsHandler(GpMainWindow *parent) :
     parent(parent),
-    ui(new Ui::DocTranslate)
+    ui(new Ui::DocsHandler)
 {
     ui->setupUi(this);
     QPalette Pal(palette());
@@ -39,17 +39,29 @@ DocTranslate::DocTranslate(ApertiumGui *parent) :
     ui->DropWidget->setPalette(Pal);
     setAttribute(Qt::WA_DeleteOnClose);
 
-    connect(this, &DocTranslate::docForTransChoosed, parent->getTranslator(), &Translator::docTranslate);
-    connect(ui->DropWidget, &DragnDropWidget::documentDropped, this, &DocTranslate::docForTransChoosed);
-    connect(parent->getTranslator(),&Translator::docTranslated,this,&DocTranslate::showPostDocTransDlg);
+    connect(this, &DocsHandler::docForTransChoosed, [&]()
+    {
+        docTransWaitDlg = new QProgressDialog(tr("Translating document..."),"",0,0,this);
+#ifdef Q_OS_LINUX
+    docTransWaitDlg->setMaximum(100);
+#endif
+    docTransWaitDlg->setCancelButton(nullptr);
+    docTransWaitDlg->setWindowFlags(docTransWaitDlg->windowFlags() & ~Qt::WindowCloseButtonHint);
+    docTransWaitDlg->setModal(true);
+    docTransWaitDlg->show();
+    });
+    connect(this, &DocsHandler::docForTransChoosed, parent->getTranslator(), &Translator::docTranslate);
+    connect(ui->DropWidget, &DragnDropWidget::documentDropped, this, &DocsHandler::docForTransChoosed);
+    connect(parent->getTranslator(),&Translator::docTranslated,this,&DocsHandler::showPostDocTransDlg);
+    connect(parent->getTranslator(), &Translator::docTranslateRejected,this,&DocsHandler::docTranslateFailed);
 }
 
-DocTranslate::~DocTranslate()
+DocsHandler::~DocsHandler()
 {
     delete ui;
 }
 
-void DocTranslate::on_browseBtn_clicked()
+void DocsHandler::on_browseBtn_clicked()
 {
     //FIXME: format names
     QString filePath = QFileDialog::getOpenFileName(this,tr("Choose document to translate"),
@@ -62,8 +74,9 @@ void DocTranslate::on_browseBtn_clicked()
     emit docForTransChoosed(filePath);
 }
 
-void DocTranslate::showPostDocTransDlg(QString trFilePath)
+void DocsHandler::showPostDocTransDlg(QString trFilePath)
 {
+    docTransWaitDlg->accept();
     auto btnDlg = new QMessageBox(this);
     btnDlg->setWindowTitle(tr("Translation finished"));
     btnDlg->setText(tr("Document has been successfully translated."));
@@ -90,4 +103,9 @@ void DocTranslate::showPostDocTransDlg(QString trFilePath)
     btnDlg->setModal(true);
     btnDlg->exec();
 }
-
+void DocsHandler::docTranslateFailed()
+{
+    docTransWaitDlg->reject();
+    QMessageBox box;
+    box.critical(this,tr("Document has not been translated"),tr("An error occured during the translation of this file."));
+}

@@ -24,7 +24,6 @@ INCLUDEPATH += \
     ChooseDialog
 
 SOURCES += \
-    GUI/apertiumgui.cpp \
     GUI/headbutton.cpp \
     GUI/inputtextedit.cpp \
     GUI/langdelegate.cpp \
@@ -37,14 +36,14 @@ SOURCES += \
     initializer.cpp \
     main.cpp \
     Installer/managerhelper.cpp \
-    GUI/doctranslate.cpp \
     GUI/dragndropwidget.cpp \
     GUI/settingsdialog.cpp \
     GUI/traywidget.cpp \
-    GUI/trayinputtextedit.cpp
+    GUI/trayinputtextedit.cpp \
+    GUI/gpmainwindow.cpp \
+    GUI/docshandler.cpp
 
 HEADERS  += \
-    GUI/apertiumgui.h \
     GUI/headbutton.h \
     GUI/inputtextedit.h \
     GUI/langdelegate.h \
@@ -56,19 +55,20 @@ HEADERS  += \
     Installer/installerdelegate.h \
     initializer.h \
     Installer/managerhelper.h \
-    GUI/doctranslate.h \
     GUI/dragndropwidget.h \
     GUI/settingsdialog.h \
     GUI/traywidget.h \
-    GUI/trayinputtextedit.h
+    GUI/trayinputtextedit.h \
+    GUI/gpmainwindow.h \
+    GUI/docshandler.h
 
 
 FORMS    += \
-    GUI/apertiumgui.ui \
     Installer/downloadwindow.ui \
-    GUI/doctranslate.ui \
     GUI/settingsdialog.ui \
-    GUI/traywidget.ui
+    GUI/traywidget.ui \
+    GUI/gpmainwindow.ui \
+    GUI/docshandler.ui
 
 
 QMAKE_CXXFLAGS += -std=c++11

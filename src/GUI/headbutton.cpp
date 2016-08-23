@@ -21,16 +21,14 @@
 #include <QPaintEvent>
 #include <QFontMetrics>
 
-HeadButton::HeadButton(QWidget* parent):QPushButton(parent)
+HeadButton::HeadButton(QWidget* parent)
+    : QPushButton(parent)
 {
     setFocusPolicy(Qt::NoFocus);
     setCheckable(true);
     setFixedSize(102,27);
-    QFont font(this->font());
-    font.setPointSize(11);
-    setFont(font);
-    wasClicked=false;
-    once=true;
+    wasClicked = false;
+    once = true;
     //FIXME: is it needed?
     connect(this,&HeadButton::pressed,this,&HeadButton::denySameButtonClick2);
     connect(this,&HeadButton::toggled,this,&HeadButton::denySameButtonClick);

@@ -18,7 +18,7 @@
 */
 
 #include "dragndropwidget.h"
-#include "doctranslate.h"
+#include "docshandler.h"
 #include <QDragMoveEvent>
 #include <QMimeData>
 #include <QDrag>
@@ -43,7 +43,7 @@ void DragnDropWidget::dragEnterEvent(QDragEnterEvent *event)
 #elif defined(Q_OS_LINUX)
     QFileInfo fileInfo(QUrl::fromPercentEncoding(event->mimeData()->data("text/uri-list").trimmed()).remove("file:"));
 #endif
-    if (fileInfo.fileName().contains(QRegExp("("+DocTranslate::fileTypes.join('|')+")")))
+    if (fileInfo.fileName().contains(QRegExp("("+DocsHandler::fileTypes.join('|')+")")))
         event->acceptProposedAction();
 }
 

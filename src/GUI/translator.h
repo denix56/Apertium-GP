@@ -23,18 +23,18 @@
 #include <QNetworkRequest>
 #include <QFileInfo>
 #include <QProgressDialog>
-class ApertiumGui;
+class GpMainWindow;
 //thread for nonlinuxtranslation
 class Translator : public QObject
 {
     Q_OBJECT
 public:
-    Translator(ApertiumGui* parent = 0);
+    Translator(GpMainWindow* parent = 0);
 
-    inline const QProgressDialog* getWaitDlg() const
-    {
-        return static_cast<const QProgressDialog*>(docTransWaitDlg);
-    }
+//    inline QProgressDialog *const getWaitDlg() const
+//    {
+//        return docTransWaitDlg;
+//    }
 
 signals:
     void resultReady(const QString &result);
@@ -56,9 +56,8 @@ public slots:
     void linuxTranslate(QNetworkRequest &request);
 
 private:
-    ApertiumGui *parent;
+    GpMainWindow *parent;
     QString notLinuxTranslate(QString text);
-    QProgressDialog *docTransWaitDlg;
 
 #ifndef Q_OS_LINUX
     //TODO: create one function for translating due to similar code

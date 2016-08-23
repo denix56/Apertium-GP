@@ -21,7 +21,7 @@
 #define SETTINGSDIALOG_H
 
 #include <QDialog>
-#include "apertiumgui.h"
+#include "gpmainwindow.h"
 
 namespace Ui {
 class SettingsDialog;

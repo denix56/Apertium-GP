@@ -69,7 +69,7 @@ void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)
     auto stdBtn = ui->buttonBox->standardButton(button);
     if (stdBtn==QDialogButtonBox::Apply
             || stdBtn==QDialogButtonBox::Ok) {
-       ApertiumGui *parent = qobject_cast<ApertiumGui*>(this->parent());
+       GpMainWindow *parent = qobject_cast<GpMainWindow*>(this->parent());
        parent->setFontSize(ui->spinBox->value());
        parent->setTrayWidgetEnabled(ui->enableTrayWidget->isChecked());
     }

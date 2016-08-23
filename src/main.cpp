@@ -18,7 +18,7 @@
 */
 
 #include "initializer.h"
-#include "apertiumgui.h"
+#include "gpmainwindow.h"
 #include "choosedialog.h"
 #include "downloadwindow.h"
 #include <QApplication>
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         }
     }
 #endif
-    ApertiumGui w;
+    GpMainWindow w;
     if (!w.initialize())
         return 2;
     w.show();
