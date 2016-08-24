@@ -64,12 +64,12 @@ void TrayWidget::translationReceived(const QString &result)
     ui->textEdit_2->setTextCursor(cursor);
 }
 
-QComboBox *const TrayWidget::inputComboBox() const
+QComboBox* TrayWidget::inputComboBox() const
 {
     return ui->comboBox;
 }
 
-QComboBox *const TrayWidget::outputComboBox() const
+QComboBox* TrayWidget::outputComboBox() const
 {
     return ui->comboBox_2;
 }

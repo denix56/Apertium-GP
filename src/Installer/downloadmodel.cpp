@@ -27,33 +27,31 @@ DownloadModel::DownloadModel(QObject *parent)
 
 QVariant DownloadModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (orientation==Qt::Horizontal)
-            if (role == Qt::DisplayRole) {
-                auto c = static_cast<columns>(section);
-                switch(c) {
-                case NAME:
-                    return QVariant(tr("Name"));
-                case TYPE:
-                    return QVariant(tr("Type"));
-                case SIZE:
-                    return QVariant(tr("Size"));
-                case STATE:
-                    return QVariant(tr("Action"));
-                default:
-                    return QVariant();
-                }
-            }
-            else
-                return QVariant();
+    if (orientation==Qt::Horizontal && role == Qt::DisplayRole)
+        switch(section) {
+        case NAME:
+            return QVariant(tr("Name"));
+        case TYPE:
+            return QVariant(tr("Type"));
+        case SIZE:
+            return QVariant(tr("Size"));
+        case STATE:
+            return QVariant(tr("Action"));
+        default:
+            return QVariant();
+        }
+    return QVariant();
 }
 
 int DownloadModel::rowCount(const QModelIndex &parent) const
 {
+    Q_UNUSED(parent)
     return downList.size();
 }
 
 int DownloadModel::columnCount(const QModelIndex &parent) const
 {
+    Q_UNUSED(parent)
     return 4;
 }
 
@@ -91,8 +89,7 @@ bool DownloadModel::setData(const QModelIndex &index, const QVariant &value, int
 {
     if (data(index, role) != value) {
         int i = index.row();
-        auto c = static_cast<columns>(index.column());
-        switch(c) {
+        switch(index.column()) {
         case NAME:
             downList[i].name = value.toString();
             break;
@@ -143,7 +140,6 @@ Qt::ItemFlags DownloadModel::flags(const QModelIndex &index) const
 
 void DownloadModel::sort(int column, Qt::SortOrder order)
 {
-    auto c = static_cast<columns>(column);
     switch (column)
     {
     //sort by names

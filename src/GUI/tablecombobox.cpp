@@ -77,5 +77,5 @@ void TableComboBox::resizeT()
     view()->setMinimumHeight((model()->rowCount())*view()->rowHeight(0));
 }
 
-void TableComboBox::wheelEvent(QWheelEvent *e)
+void TableComboBox::wheelEvent(QWheelEvent *)
 {}

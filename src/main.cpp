@@ -19,7 +19,6 @@
 
 #include "initializer.h"
 #include "gpmainwindow.h"
-#include "choosedialog.h"
 #include "downloadwindow.h"
 #include <QApplication>
 #include <QProcess>
@@ -34,27 +33,17 @@ int main(int argc, char *argv[])
     if (!Initializer::initialize())
         return 4;
 #ifdef Q_OS_LINUX
-    if(!Initializer::conf->contains("path/langPath") ||
-            Initializer::conf->value("path/langPath").toString().isEmpty())
-        Initializer::conf->setValue("path/langPath", QVariant("/usr/share/apertium"));
-
-    if(!QFile(Initializer::conf->value("path/serverPath").toString()+"/servlet.py").exists())
-    {
-        if(QDir("/usr/share/apertium-apy").exists())
-            Initializer::conf->setValue("path/serverPath",
-                                        QVariant("/usr/share/apertium-apy"));
-        else {
-            QMessageBox box;
-            if(box.critical(nullptr,QObject::tr("Server not installed."),
-                            QObject::tr("The program cannot find Apertium-APY. Please, press Ok and install it."),
-                            QMessageBox::Ok,QMessageBox::Abort)==QMessageBox::Abort)
-                return 0;
-            auto dlg = new DownloadWindow;
-            if (dlg->getData(false))
-                qDebug() << dlg->exec();
-            else
-                return 5;
-        }
+    if(!QDir("/usr/share/apertium-apy").exists()) {
+        QMessageBox box;
+        if(box.critical(nullptr,QObject::tr("Server not installed."),
+                        QObject::tr("The program cannot find Apertium-APY. Please, press Ok and install it."),
+                        QMessageBox::Ok,QMessageBox::Abort)==QMessageBox::Abort)
+            return 0;
+        auto dlg = new DownloadWindow;
+        if (dlg->getData(false))
+            qDebug() << dlg->exec();
+        else
+            return 5;
     }
 #endif
     GpMainWindow w;

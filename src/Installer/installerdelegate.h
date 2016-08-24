@@ -27,7 +27,7 @@ class InstallerDelegate : public QStyledItemDelegate
 public:
     InstallerDelegate(QObject *parent=0);
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-    bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index);
+    bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &, const QModelIndex &index);
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const;
 signals:
     void stateChanged(int);

@@ -243,6 +243,7 @@ void DownloadWindow::chooseAction(int row)
             toInstall.erase(toInstall.begin()+pos);
         toUninstall.push_back(model->item(row)->name);
         model->setData(model->index(row,STATE),INSTALL);
+    default:
         break;
 #endif
     }

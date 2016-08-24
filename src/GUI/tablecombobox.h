@@ -35,7 +35,7 @@ public:
     void setModel(languageTableModel *view);
 
 protected:
-    void wheelEvent(QWheelEvent *e);
+    void wheelEvent(QWheelEvent *);
 
 private slots:
     void resizeT();

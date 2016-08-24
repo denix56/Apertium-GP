@@ -65,7 +65,7 @@ void DragnDropWidget::dropEvent(QDropEvent *event)
 
 }
 
-void DragnDropWidget::dragLeaveEvent(QDragLeaveEvent *event)
+void DragnDropWidget::dragLeaveEvent(QDragLeaveEvent *)
 {
     QPalette Pal(palette());
     // устанавливаем цвет фона

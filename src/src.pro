@@ -88,6 +88,8 @@ policy.files = policy/org.apertium.apertium-gp.policy
 policy.path = /usr/share/polkit-1/actions
 
 INSTALLS += req policy
+
+QMAKE_INSTALL_FILE = install -m 744 -p -o root -g root
 }
 
 DISTFILES += \

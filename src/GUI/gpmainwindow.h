@@ -50,7 +50,9 @@ class GpMainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit GpMainWindow(QWidget *parent = 0);
+    explicit GpMainWindow(QWidget *parent = nullptr);
+
+    ~GpMainWindow();
 
     bool initialize();
 
@@ -60,14 +62,12 @@ public:
 
     void setTrayWidgetEnabled(bool b);
 
-    ~GpMainWindow();
-
-    inline Translator *const getTranslator() const
+    inline Translator* getTranslator() const
     {
         return translator;
     }
 
-    inline QNetworkAccessManager *const getManager() const
+    inline QNetworkAccessManager* getManager() const
     {
         return requestSender;
     }
@@ -126,7 +126,7 @@ private slots:
     //NOT FOR LINUX
     void translateReceived(const QString &result);
 
-    void on_boxInput_currentCharFormatChanged(const QTextCharFormat &format);
+    void on_boxInput_currentCharFormatChanged(const QTextCharFormat &);
 
     void dlAction_triggered();
 
@@ -145,8 +145,6 @@ private:
     QNetworkAccessManager *requestSender;
     HeadButton *currentSButton;
     QDialog* selectPathes;
-    QString serverPath;
-    QString langPairsPath;
     QProcess *apy;
     QDialog *fSizeBox;
     QTextDocument outputDoc;
@@ -168,8 +166,8 @@ private:
     bool checked = false;
     bool initRes = true;
     const QString FONTSIZE = "interface/fontsize";
-    const QString SERVERPATH = "path/serverPath";
-    const QString LANGPATH = "path/langPath";
+    const QString SERVERPATH = "/usr/share/apertium-apy";
+    //const QString LANGPATH = "/usr/share/apertium";
     const QString idLangText = tr("Identify language...");
     const QString url = "http://localhost:2737";
 

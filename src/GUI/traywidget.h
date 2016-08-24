@@ -33,9 +33,9 @@ class TrayWidget : public QWidget
 public:
     explicit TrayWidget(QWidget *parent = 0);
 
-    QComboBox *const inputComboBox() const;
+    QComboBox* inputComboBox() const;
 
-    QComboBox *const outputComboBox() const;
+    QComboBox* outputComboBox() const;
 
     ~TrayWidget();
 

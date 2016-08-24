@@ -31,7 +31,7 @@ public:
 protected:
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
-    void dragLeaveEvent(QDragLeaveEvent *event);
+    void dragLeaveEvent(QDragLeaveEvent*);
     void paintEvent(QPaintEvent *event);
 signals:
     void documentDropped(QString path);

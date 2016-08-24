@@ -31,7 +31,7 @@ void LangDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     QItemDelegate::paint(painter,option,index);
 }
 
-void LangDelegate::drawFocus(QPainter *painter, const QStyleOptionViewItem &option, const QRect &rect) const
+void LangDelegate::drawFocus(QPainter *, const QStyleOptionViewItem &, const QRect &) const
 {
 }
 

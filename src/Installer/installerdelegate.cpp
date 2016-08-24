@@ -104,7 +104,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     painter->restore();
 }
 
-bool InstallerDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option,
+bool InstallerDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &,
                                     const QModelIndex &index)
 {
     auto mod = qobject_cast<const DownloadModel *>(model);

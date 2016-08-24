@@ -159,7 +159,7 @@ bool GpMainWindow::initialize()
     requestSender = new QNetworkAccessManager(this);
     QNetworkRequest request;
     apy = new QProcess;
-    if(!QFile(serverPath+"/servlet.py").exists()) {
+    if(!QFile(SERVERPATH+"/servlet.py").exists()) {
         QMessageBox box;
         box.critical(this,tr("Path error"),tr("Incorrect server directory"));
         close();
@@ -897,8 +897,6 @@ void GpMainWindow::getReplyFromAPY(QNetworkReply *reply)
 void GpMainWindow::loadConf()
 {
     //Save entered pathes to Server and langpairs
-    serverPath = Initializer::conf->value(SERVERPATH).toString();
-    langPairsPath = Initializer::conf->value(LANGPATH).toString();
     QFont font(ui->boxInput->font());
     if (!Initializer::conf->contains(FONTSIZE))
         Initializer::conf->setValue(FONTSIZE,QVariant(14));
@@ -939,7 +937,7 @@ void GpMainWindow::translateReceived(const QString &result)
     ui->boxOutput->verticalScrollBar()->setValue(ui->boxInput->verticalScrollBar()->value());
 }
 
-void GpMainWindow::on_boxInput_currentCharFormatChanged(const QTextCharFormat &format)
+void GpMainWindow::on_boxInput_currentCharFormatChanged(const QTextCharFormat &)
 {
     ui->boxInput->setTextColor(Qt::black);
 }

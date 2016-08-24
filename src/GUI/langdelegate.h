@@ -25,7 +25,7 @@ class LangDelegate : public QItemDelegate
 public:
     LangDelegate(QObject *parent=0);
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-    void drawFocus(QPainter *painter, const QStyleOptionViewItem &option, const QRect &rect) const;
+    void drawFocus(QPainter *, const QStyleOptionViewItem &, const QRect &) const;
 };
 
 #endif // DELEGATE_H

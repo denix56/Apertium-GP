@@ -33,11 +33,13 @@ languageTableModel::languageTableModel(QStringList &list, QObject *parent)
 
 int languageTableModel::rowCount(const QModelIndex &parent) const
 {
-    return itemCount()<rowN ? list.size() : rowN;
+    Q_UNUSED(parent)
+    return itemCount() < rowN ? list.size() : rowN;
 }
 
 int languageTableModel::columnCount(const QModelIndex &parent) const
 {
+    Q_UNUSED(parent)
     if (list.size()==0)
         return 1;
     return list.size()/rowN + (list.size() % rowN == 0 ? 0 : 1);
@@ -57,6 +59,7 @@ QVariant languageTableModel::data(const QModelIndex &index, int role) const
 
 bool languageTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+    Q_UNUSED(role)
     int pos = index.column()*rowN+index.row();
     //if not in the end
     if (pos < list.size())

@@ -28,9 +28,9 @@
 #include <QDebug>
 const QStringList DocsHandler::fileTypes {"txt", "docx", "pptx", "html",
                                            "rtf", "odt", "xlsx", "xtg"};
-DocsHandler::DocsHandler(GpMainWindow *parent) :
-    parent(parent),
-    ui(new Ui::DocsHandler)
+DocsHandler::DocsHandler(GpMainWindow *parent)
+    : ui(new Ui::DocsHandler),
+      parent(parent)
 {
     ui->setupUi(this);
     QPalette Pal(palette());
@@ -42,9 +42,6 @@ DocsHandler::DocsHandler(GpMainWindow *parent) :
     connect(this, &DocsHandler::docForTransChoosed, [&]()
     {
         docTransWaitDlg = new QProgressDialog(tr("Translating document..."),"",0,0,this);
-#ifdef Q_OS_LINUX
-    docTransWaitDlg->setMaximum(100);
-#endif
     docTransWaitDlg->setCancelButton(nullptr);
     docTransWaitDlg->setWindowFlags(docTransWaitDlg->windowFlags() & ~Qt::WindowCloseButtonHint);
     docTransWaitDlg->setModal(true);

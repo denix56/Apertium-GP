@@ -45,6 +45,7 @@ signals:
 
     void docTranslateRejected();
 public slots:
+
     //translate on other OS
     void boxTranslate();
 

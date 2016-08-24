@@ -30,6 +30,7 @@
 #include <QHttpMultiPart>
 #include <QDebug>
 #include <QApplication>
+
 Translator::Translator(GpMainWindow* parent)
 {
     this->parent = parent;
@@ -95,9 +96,7 @@ void Translator::translateDocx(QString filePath, QDir &docDir)
     QTemporaryDir dir(docDir.absoluteFilePath(fileInfo.baseName()+".XXXXXX"));
     auto cmd = new QProcess(this);
     QDir exep (qApp->applicationDirPath());
-#ifndef Q_OS_LINUX
     cmd->start(exep.absoluteFilePath("7z"), QStringList() << "t" << fileInfo.absoluteFilePath());
-#endif
     cmd->waitForReadyRead();
     if (cmd->readAllStandardOutput().contains("ERROR")) {
         emit docTranslateRejected();
@@ -471,26 +470,14 @@ void Translator::docTranslate(QString filePath)
     query.addQueryItem("langpair",parent->getCurrentSourceLang()+"|"+parent->getCurrentTargetLang());
     QUrl url("http://localhost:2737/translateDoc?");
     QNetworkRequest request(QUrl(url.url()+query.query()));
-    docTransWaitDlg->setValue(1);
     QNetworkAccessManager mngr;
     QEventLoop loop;
     QNetworkReply *reply = mngr.post(request,multiPart);
-    connect(reply,&QNetworkReply::uploadProgress,[&](qint64 bytesSent, qint64 bytesTotal)
-    {
-        docTransWaitDlg->setValue((int)(33.*bytesSent/bytesTotal));
-    });
-    connect(reply,&QNetworkReply::downloadProgress,[&](qint64 bytesSent, qint64 bytesTotal)
-    {
-        //progress for translation
-        if (docTransWaitDlg->value()==34)
-            docTransWaitDlg->setValue(67);
-        docTransWaitDlg->setValue(67+(int)(23.*bytesSent/bytesTotal));
-    });
     connect(reply,&QNetworkReply::finished,[&](){
         loop.exit();
         if (reply->error()!=QNetworkReply::NoError) {
             qDebug() << reply->errorString();
-            docTransWaitDlg->reject();
+            emit docTranslateRejected();
             return;
         }
         QFile outDoc(outputDocDir.absoluteFilePath(fileInfo.baseName()+"_"+parent->getCurrentSourceLang()
@@ -502,7 +489,6 @@ void Translator::docTranslate(QString filePath)
             }
         outDoc.write(reply->readAll());
         outDoc.close();
-        docTransWaitDlg->setValue(100);
         emit docTranslated(outDoc.fileName());
         reply->deleteLater();
     });
