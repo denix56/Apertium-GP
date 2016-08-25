@@ -30,6 +30,7 @@
 #else
     #define DATALOCATION QStandardPaths::writableLocation(QStandardPaths::DataLocation)
 #endif
+const QString scriptPath = "/usr/share/apertium-gp/apertium-gp-helper.sh";
 
 class Initializer
 {

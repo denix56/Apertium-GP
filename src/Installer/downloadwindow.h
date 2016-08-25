@@ -22,7 +22,9 @@
 
 #include "downloadmodel.h"
 #include "installerdelegate.h"
+#ifdef Q_OS_LINUX
 #include "managerhelper.h"
+#endif
 #include <QDialog>
 #include <QNetworkAccessManager>
 #include <QProgressDialog>
@@ -58,15 +60,15 @@ private:
     QProgressDialog *wait;
     DownloadModel *model;
     InstallerDelegate *delegate;
-    ManagerHelper *mngr;
 
 #ifndef Q_OS_LINUX
     void installpkg(int row);
     void removepkg(int row);
 #else
+    ManagerHelper *mngr;
+
     //cancel changes
     void revert();
-
     QVector <QString> toInstall, toUninstall;
 #endif
     int actionCnt;

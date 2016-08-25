@@ -82,7 +82,7 @@ RC_FILE = GUI/apertium.rc
 unix:!macx {
 req.files = \
     langNames.db \
-    scripts/serverCmds.sh
+    scripts/apertium-gp-helper.sh
 req.path = /usr/share/apertium-gp
 policy.files = policy/org.apertium.apertium-gp.policy
 policy.path = /usr/share/polkit-1/actions
@@ -97,4 +97,3 @@ DISTFILES += \
     ../COPYING \
     ../Apertium-GP.desktop \
     ../apertium.ico \
-

@@ -165,7 +165,7 @@ bool GpMainWindow::initialize()
         close();
         return false;
     }
-    apy->execute("pkexec", QStringList() << "/usr/share/apertium-gp/serverCmds.sh" << "-s");
+    apy->execute("pkexec", QStringList() << scriptPath << "-s");
 
     //wait while server starts
     while(true) {
@@ -289,7 +289,7 @@ GpMainWindow::~GpMainWindow()
 {
 #ifdef Q_OS_LINUX
     QProcess apy;
-    apy.execute("pkexec", QStringList() << "/usr/share/apertium-gp/serverCmds.sh");
+    apy.execute("pkexec", QStringList() << scriptPath << "-t");
 #endif
     thread.quit();
     thread.wait();
