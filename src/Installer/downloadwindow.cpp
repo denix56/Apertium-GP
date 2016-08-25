@@ -328,7 +328,6 @@ bool DownloadWindow::applyChanges()
         while(cmd.state()==QProcess::Running)
             qApp->processEvents();
         cmd.waitForFinished();
-        script.remove();
         toInstall.clear();
         toUninstall.clear();
     }
