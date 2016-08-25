@@ -298,7 +298,7 @@ bool DownloadWindow::applyChanges()
 //        if((pos = toInstall.indexOf("apertium-apy"))!=-1) {
 //            toInstall.erase(toInstall.begin()+pos);
 //        }
-    int row;
+    int row = 0;
     if(!toInstall.isEmpty()) {
         QStringList pkgs;
 
@@ -320,14 +320,14 @@ bool DownloadWindow::applyChanges()
         }
         args << "-r" << "\"" + mngr->remove(pkgs) + "\"";
     }
-    if(!toInstall.isEmpty() || !toUninstall.isEmpty() || pos!=-1)
-    {
+    if(!toInstall.isEmpty() || !toUninstall.isEmpty() || pos != -1) {
         QProcess cmd(this);
         cmd.start("pkexec", args);
         cmd.waitForStarted();
         while(cmd.state()==QProcess::Running)
             qApp->processEvents();
         cmd.waitForFinished();
+
         toInstall.clear();
         toUninstall.clear();
     }

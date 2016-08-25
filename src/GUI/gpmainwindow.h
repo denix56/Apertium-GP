@@ -165,6 +165,7 @@ private:
     //apt-get update completed
     bool checked = false;
     bool initRes = true;
+    bool serverStarted;
     const QString FONTSIZE = "interface/fontsize";
     const QString SERVERPATH = "/usr/share/apertium-apy";
     //const QString LANGPATH = "/usr/share/apertium";

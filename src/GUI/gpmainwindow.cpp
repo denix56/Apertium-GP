@@ -165,7 +165,9 @@ bool GpMainWindow::initialize()
         close();
         return false;
     }
-    apy->execute("pkexec", QStringList() << scriptPath << "-s");
+    serverStarted = !apy->execute("pkexec", QStringList() << scriptPath << "-s");
+    if(!serverStarted)
+        return false;
 
     //wait while server starts
     while(true) {
@@ -289,7 +291,8 @@ GpMainWindow::~GpMainWindow()
 {
 #ifdef Q_OS_LINUX
     QProcess apy;
-    apy.execute("pkexec", QStringList() << scriptPath << "-t");
+    if (serverStarted)
+        apy.execute("pkexec", QStringList() << scriptPath << "-t");
 #endif
     thread.quit();
     thread.wait();
