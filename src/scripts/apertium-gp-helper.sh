@@ -17,7 +17,7 @@ fi
 while getopts "i:r:u:st" opt; do
 	case $opt in
 		i|r)
-      	$OPTARG
+      	${OPTARG//\"}
       	PKGMOD=true
       	;;
    	u)

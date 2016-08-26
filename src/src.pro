@@ -97,3 +97,9 @@ DISTFILES += \
     ../COPYING \
     ../Apertium-GP.desktop \
     ../apertium.ico \
+
+
+unix:!macx:contains(QT_VERSION, ^5\\.[0-4]\\..*) {
+warning("There may be some problems with tray icon. Please, use Qt version >= 5.5.\
+Your version Qt $${QT_VERSION}")
+}

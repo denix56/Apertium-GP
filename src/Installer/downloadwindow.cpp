@@ -279,7 +279,7 @@ bool DownloadWindow::applyChanges()
     dlg.show();
     QStringList args;
     args << scriptPath;
-    int pos;
+    int pos = 0;
 //    if((pos = toUninstall.indexOf("apertium-apy"))!=-1){
 //        QMessageBox box;
 //        if(box.critical(this, tr("Uninstalling server."),
@@ -298,7 +298,7 @@ bool DownloadWindow::applyChanges()
 //        if((pos = toInstall.indexOf("apertium-apy"))!=-1) {
 //            toInstall.erase(toInstall.begin()+pos);
 //        }
-    int row = 0;
+    int row;
     if(!toInstall.isEmpty()) {
         QStringList pkgs;
 
