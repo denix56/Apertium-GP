@@ -21,21 +21,26 @@
 #define MANAGERHELPER_H
 #include <QStringList>
 #include <QObject>
+#include <QProcess>
 class ManagerHelper : public QObject
 {
     Q_OBJECT
 public:
     ManagerHelper(QObject* parent=0);
-     //find out current package manager
-    void chooseManager();
-    QString getManager() const;
-    QString install(QStringList packages) const;
-    QString remove(QStringList packages) const;
-    QString update() const;
-    QString search(QString package) const;
+
+    int installRemove(const QStringList &packagesInstall, const QStringList &packagesRemove) const;
+
+    int update() const;
+
+    QString search(const QString &package) const;
+
     unsigned long long getSize(const QString &package) const;
+
+signals:
+    void canceled();
+
 private:
-    QString mngr;
+    QProcess *cmd;
 };
 
 #endif // MANAGERHELPER_H

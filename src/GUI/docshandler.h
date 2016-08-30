@@ -32,13 +32,19 @@ class DocsHandler : public QWidget
 
 public:
     explicit DocsHandler(GpMainWindow *parent = 0);
+
     ~DocsHandler();
+
     static const QStringList fileTypes;
+
 signals:
     void docForTransChoosed(QString filePath);
+
 private slots:
     void on_browseBtn_clicked();
+
     void showPostDocTransDlg(QString trFilePath);
+
     void docTranslateFailed();
 
 private:

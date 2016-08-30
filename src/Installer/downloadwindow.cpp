@@ -17,9 +17,6 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "downloadwindow.h"
-#include "ui_downloadwindow.h"
-#include "initializer.h"
 #include <QNetworkReply>
 #include <QMessageBox>
 #include <QEventLoop>
@@ -30,6 +27,12 @@
 #include <QDir>
 #include <QAbstractButton>
 #include <QPushButton>
+
+#include "initializer.h"
+
+#include "downloadwindow.h"
+#include "ui_downloadwindow.h"
+
 DownloadWindow::DownloadWindow(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DownloadWindow)
@@ -156,24 +159,13 @@ bool DownloadWindow::getData(bool checked)
                     tr("Please, install Required Core tools (they are highlighted red) to make translation work"));
     }
 #else
-    mngr->chooseManager();
-    QProcess cmd(this);
     if(!checked){
-        connect(&wait, &QProgressDialog::canceled, [&](){ cmd.terminate();});
-        cmd.start("pkexec", QStringList() << scriptPath << "-u"
-                  << "\""+mngr->update()+"\"");
-        cmd.waitForStarted();
-        while(cmd.state()==QProcess::Running)
-            qApp->processEvents();
+        connect(&wait, &QProgressDialog::canceled, mngr, &ManagerHelper::canceled);
+        mngr->update();
     }
-    cmd.start(mngr->search("apertium"));
-    cmd.waitForStarted();
-    while(cmd.state()==QProcess::Running)
-        qApp->processEvents();
-    if(cmd.exitCode())
+    QString output = mngr->search("apertium");
+    if (output.isEmpty())
         return false;
-    cmd.waitForReadyRead();
-    auto output = cmd.readAllStandardOutput();
     QRegularExpression reg("apertium(-[a-z]{2,3}){2} ");
     auto it = reg.globalMatch(output);
     while(it.hasNext()) {
@@ -183,7 +175,7 @@ bool DownloadWindow::getData(bool checked)
         name = name.left(name.length()-1);
         if(name.contains("apertium-all-dev"))
             continue;
-        auto state = INSTALL;
+        auto state = States::INSTALL;
         QRegularExpression lang("-[a-z]{2,3}");
         auto lit = lang.globalMatch(name);
         QString l1, l2;
@@ -191,18 +183,18 @@ bool DownloadWindow::getData(bool checked)
         l2 = lit.next().captured();
         if (QDir("/usr/share/apertium/apertium"+l1+l2).exists() ||
                 QDir("/usr/share/apertium/apertium"+l2+l1).exists())
-            state = UNINSTALL;
-        model->addItem(file(name,LANGPAIRS, mngr->getSize(name), QUrl(),state, ""));
+            state = States::UNINSTALL;
+        model->addItem(PkgInfo(name, Types::LANGPAIRS, mngr->getSize(name), QUrl(),state, ""));
     }
 
-//    auto state = INSTALL;
-//    if(QDir("/usr/share/apertium-apy").exists())
-//        state = UNINSTALL;
-//    model->addItem(file("apertium-apy",TOOLS, mngr->getSize("apertium-apy"),
-//                        QUrl(), state,"",true));
+    auto state = States::INSTALL;
+    if(QDir("/usr/share/apertium-apy").exists() || QDir("/usr/share/apertium-gp/apertium-apy").exists())
+        state = States::UNINSTALL;
+    model->addItem(PkgInfo("apertium-apy", Types::TOOLS, mngr->getSize("apertium-apy"),
+                        QUrl(), state, QString(), true));
     ui->view->resizeColumnsToContents();
     ui->view->setSortingEnabled(true);
-    ui->view->sortByColumn(TYPE,Qt::AscendingOrder);
+    ui->view->sortByColumn(static_cast<int>(Columns::TYPE), Qt::DescendingOrder);
     wait.close();
 #endif
     return true;
@@ -213,27 +205,29 @@ void DownloadWindow::chooseAction(int row)
     int pos;
     switch (model->item(row)->state) {
 #ifndef Q_OS_LINUX
-    case INSTALL:
-    case UPDATE:
+    case States::INSTALL:
+    case States::UPDATE:
         installpkg(row);
         break;
-    case UNINSTALL:
+
+    case States::UNINSTALL:
         removepkg(row);
         break;
 #else
-    case INSTALL:
+    case States::INSTALL:
         pos = toUninstall.indexOf(model->item(row)->name);
         if(pos!=-1)
             toUninstall.erase(toUninstall.begin()+pos);
         toInstall.push_back(model->item(row)->name);
-        model->setData(model->index(row,STATE),UNINSTALL);
+        model->setData(model->index(row, static_cast<int>(Columns::STATE)), QVariant::fromValue(States::UNINSTALL));
         break;
-    case UNINSTALL:
+
+    case States::UNINSTALL:
         pos = toInstall.indexOf(model->item(row)->name);
         if(pos!=-1)
             toInstall.erase(toInstall.begin()+pos);
         toUninstall.push_back(model->item(row)->name);
-        model->setData(model->index(row,STATE),INSTALL);
+        model->setData(model->index(row, static_cast<int>(Columns::STATE)), QVariant::fromValue(States::INSTALL));
     default:
         break;
 #endif
@@ -245,12 +239,12 @@ void DownloadWindow::revert()
     int row;
     for (auto name : toInstall){
         row = model->find(name);
-        model->setData(model->index(row,3),INSTALL);
+        model->setData(model->index(row,3), QVariant::fromValue(States::INSTALL));
     }
     toInstall.clear();
     for (auto name : toUninstall) {
         row = model->find(name);
-        model->setData(model->index(row,3),UNINSTALL);
+        model->setData(model->index(row,3), QVariant::fromValue(States::UNINSTALL));
     }
     toUninstall.clear();
 }
@@ -280,54 +274,48 @@ bool DownloadWindow::applyChanges()
     QStringList args;
     args << scriptPath;
     int pos = 0;
-//    if((pos = toUninstall.indexOf("apertium-apy"))!=-1){
-//        QMessageBox box;
-//        if(box.critical(this, tr("Uninstalling server."),
-//                        tr("You are going to remove Apertium-APY. "
-//                           "After that this program may stop working. Are you sure?"),
-//                        QMessageBox::Ok,QMessageBox::Abort)==QMessageBox::Ok) {
-//            toUninstall.erase(toUninstall.begin()+pos);
-//        }
-//        else{
-//            script.close();
-//            reject();
-//            return false;
-//        }
-//    }
-//    else
-//        if((pos = toInstall.indexOf("apertium-apy"))!=-1) {
-//            toInstall.erase(toInstall.begin()+pos);
-//        }
+    if((pos = toUninstall.indexOf("apertium-apy"))!=-1){
+        QMessageBox box;
+        if(box.critical(this, tr("Uninstalling server."),
+                        tr("You are going to remove Apertium-APY. "
+                           "After that this program may stop working. Are you sure?"),
+                        QMessageBox::Ok,QMessageBox::Abort)==QMessageBox::Ok) {
+            toUninstall.erase(toUninstall.begin()+pos);
+        }
+        else{
+            reject();
+            return false;
+        }
+    }
+    else
+        if((pos = toInstall.indexOf("apertium-apy"))!=-1) {
+            toInstall.erase(toInstall.begin()+pos);
+        }
     int row;
-    if(!toInstall.isEmpty()) {
-        QStringList pkgs;
+    QStringList pkgsIn;
 
+    if(!toInstall.isEmpty()) {
         for(auto name : toInstall) {
             qApp->processEvents();
             row = model->find(name);
-            pkgs << model->item(row)->name;
-            model->setData(model->index(row,STATE),UNINSTALL);
+            pkgsIn << model->item(row)->name;
+            model->setData(model->index(row,static_cast<int>(Columns::STATE)),
+                           QVariant::fromValue(States::UNINSTALL));
         }
-        args << "-i" << "\"" + mngr->install(pkgs) + "\"";
     }
+
+    QStringList pkgsRm;
     if(!toUninstall.isEmpty()) {
-        QStringList pkgs;
         for(auto name : toUninstall) {
             qApp->processEvents();
             row = model->find(name);
-            pkgs << model->item(row)->name;
-            model->setData(model->index(row,STATE),INSTALL);
+            pkgsRm << model->item(row)->name;
+            model->setData(model->index(row, static_cast<int>(Columns::STATE)),
+                           QVariant::fromValue(States::INSTALL));
         }
-        args << "-r" << "\"" + mngr->remove(pkgs) + "\"";
     }
     if(!toInstall.isEmpty() || !toUninstall.isEmpty() || pos != -1) {
-        QProcess cmd(this);
-        cmd.start("pkexec", args);
-        cmd.waitForStarted();
-        while(cmd.state()==QProcess::Running)
-            qApp->processEvents();
-        cmd.waitForFinished();
-
+        mngr->installRemove(pkgsIn, pkgsRm);
         toInstall.clear();
         toUninstall.clear();
     }
@@ -506,7 +494,6 @@ void DownloadWindow::accept()
             revert();
     }
 #endif
-
     QDialog::accept();
 
 }

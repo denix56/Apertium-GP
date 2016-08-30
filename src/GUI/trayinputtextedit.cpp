@@ -17,10 +17,12 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "trayinputtextedit.h"
 #include <QKeyEvent>
 #include <QClipboard>
 #include <QApplication>
+
+#include "trayinputtextedit.h"
+
 TrayInputTextEdit::TrayInputTextEdit(QWidget* parent)
     :InputTextEdit(parent)
 {

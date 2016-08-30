@@ -17,11 +17,14 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "installerdelegate.h"
-#include "downloadmodel.h"
 #include <QApplication>
 #include <QDebug>
 #include <QPainter>
+
+#include "downloadmodel.h"
+
+#include "installerdelegate.h"
+
 InstallerDelegate::InstallerDelegate(QObject *parent)
     :QStyledItemDelegate(parent)
 {
@@ -32,7 +35,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     painter->save();
     auto model = qobject_cast<const DownloadModel *>(index.model());
 #ifndef Q_OS_LINUX
-    if (index.column() == 2 && model->item(index.row())->state>=DOWNLOADING){
+    if (index.column() == SIZE && model->item(index.row())->state>=DOWNLOADING){
         if (model->item(index.row())->state==DOWNLOADING) {
             int progress = model->item(index.row())->progress;
             QStyleOptionProgressBar progressBarOption;
@@ -65,7 +68,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     }
     else
 #endif
-        if (index.column()==3) {
+        if (static_cast<Columns>(index.column()) == Columns::STATE) {
 #ifndef Q_OS_LINUX
             QStyleOptionButton button;
             button.rect=option.rect;
@@ -85,7 +88,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
             //TODO: update from program
             checkBox.rect.setY(option.rect.y()+(option.rect.height()-checkBox.rect.height())/2);
             checkBox.rect.setX(option.rect.x()+option.rect.width()/2);
-            if (model->item(index.row())->state == UNINSTALL)
+            if (model->item(index.row())->state == States::UNINSTALL)
                 checkBox.state = QStyle::State_Enabled | QStyle::State_On;
             else
                 checkBox.state = QStyle::State_Enabled | QStyle::State_Off;
@@ -97,7 +100,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
             QTextOption text;
             text.setAlignment(Qt::AlignCenter);
 
-            if (index.column()==0 && model->item(index.row())->highlight)
+            if (static_cast<Columns>(index.column()) == Columns::NAME && model->item(index.row())->highlight)
                 painter->setPen(Qt::red);
             painter->drawText(option.rect,index.data().toString(),text);
         }
@@ -109,7 +112,7 @@ bool InstallerDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, co
 {
     auto mod = qobject_cast<const DownloadModel *>(model);
     if( event->type() == QEvent::MouseButtonRelease ) {
-        if (index.column()==3 && mod->item(index.row())->state != UNPACKING) {
+        if (static_cast<Columns>(index.column()) == Columns::STATE && mod->item(index.row())->state != States::UNPACKING) {
             emit stateChanged(index.row());
             return true;
         }
@@ -119,16 +122,15 @@ bool InstallerDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, co
 
 QSize InstallerDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    switch(index.column()) {
-    case 0:
+    switch(static_cast<Columns>(index.column())) {
+    case Columns::NAME:
         return QSize(160,option.rect.height());
-    case 1:
+    case Columns::TYPE:
         return QSize(70,option.rect.height());
-    case 2:
+    case Columns::SIZE:
         return QSize(150,option.rect.height());
-    case 3:
+    case Columns::STATE:
         return QSize(80,option.rect.height());
     }
     return QSize();
 }
-//void InstallerDelegate::drawFocus(QPainter *painter, const QStyleOptionViewItem &option, const QRect &rect) const;

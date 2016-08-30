@@ -30,9 +30,9 @@ public:
 
 signals:
     void printEnded();
+
 private:
     QTimer timer;
-
 };
 
 #endif // INPUTTEXTEDIT_H

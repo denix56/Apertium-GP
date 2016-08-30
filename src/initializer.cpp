@@ -17,7 +17,6 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "initializer.h"
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QMessageBox>
@@ -27,6 +26,8 @@
 #include <QProcess>
 #include <QDebug>
 #include <QApplication>
+
+#include "initializer.h"
 
 QMap<QString, QString> Initializer::langNamesMap;
 QSettings *Initializer::conf;

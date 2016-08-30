@@ -17,15 +17,19 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "docshandler.h"
-#include "ui_docshandler.h"
-#include "translator.h"
+
 #include <QFileDialog>
 #include <QStandardPaths>
 #include <QMessageBox>
 #include <QDesktopServices>
 #include <QProgressDialog>
 #include <QDebug>
+
+#include "translator.h"
+
+#include "docshandler.h"
+#include "ui_docshandler.h"
+
 const QStringList DocsHandler::fileTypes {"txt", "docx", "pptx", "html",
                                            "rtf", "odt", "xlsx", "xtg"};
 DocsHandler::DocsHandler(GpMainWindow *parent)

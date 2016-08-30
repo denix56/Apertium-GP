@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Copyright (C) 2016, Denys Senkin <denisx9.0c@gmail.com>
 *
 * This file is part of apertium-gp
@@ -22,46 +22,36 @@
 #include <QAbstractTableModel>
 #include <QMap>
 #include <QUrl>
+#include <QObject>
 
-enum states {INSTALL, UPDATE, UNINSTALL, DOWNLOADING, UNPACKING};
-enum types {LANGPAIRS, TOOLS};
-enum columns {NAME, TYPE, SIZE, STATE};
+enum class States {INSTALL, UPDATE, UNINSTALL, DOWNLOADING, UNPACKING};
 
-struct file
+enum class Types {LANGPAIRS, TOOLS};
+
+enum class Columns {NAME, TYPE, SIZE, STATE};
+
+Q_DECLARE_METATYPE(States)
+Q_DECLARE_METATYPE(Types)
+Q_DECLARE_METATYPE(Columns)
+
+struct PkgInfo
 {
     QString name;
+    Types type;
+    uint size;
     QUrl link;
-    uint size, progress;
-    QString lm;
-    states state;
-    types type;
+    States state;
+    QString lastModified;
+    uint progress;
     bool highlight;
-    file (QString name=QString(), types type=TOOLS, uint size=0, QUrl link=QUrl(),
-          states state=INSTALL, QString lm=QString(), bool highlight = false, int progress=0)
+
+    PkgInfo (const QString name = QString(), Types type = Types::TOOLS, uint size = 0, QUrl link = QUrl(),
+          States state = States::INSTALL, QString lastModified = QString(), bool highlight = false, int progress = 0)
+        : name(name), type(type), size(size), link(link), state(state),
+          lastModified(lastModified),  progress(progress), highlight(highlight)
     {
-        this->name = name;
-        this->type = type;
-        this->size = size;
-        this->link = link;
-        this->state = state;
-        this->lm = lm;
-        this->progress = progress;
-        this->highlight = highlight;
     }
 };
-
-inline QString formatBytes(double val) {
-    const char *suf = "B";
-    if (val >= 1024) {
-        val /= 1024;
-        suf = "KiB";
-    }
-    if (val >= 1024) {
-        val /= 1024;
-        suf = "MiB";
-    }
-    return QString("%1 %2").arg(val, 0, 'f', 2).arg(suf);
-}
 
 class DownloadModel : public QAbstractTableModel
 {
@@ -70,15 +60,21 @@ signals:
     void sorted();
 public:
     explicit DownloadModel(QObject *parent = 0);
+
     void reset();
+
     int find(const QString &name);
+
     int count() const;
+
     int countLangPairsInstalled() const;
+
     // Header:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
     // Basic functionality:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -89,20 +85,38 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex& index) const override;
 
-    bool addItem(const file &f);
-    const file *item(const int &row) const;
-    void sort(int column, Qt::SortOrder order);
-private:
-    QVector <file> downList;
+    bool addItem(const PkgInfo &f);
 
-    const QMap <states, QString> stateNames {
-        {INSTALL,tr("Install")}, {UPDATE,tr("Update")},
-        {UNINSTALL,tr("Uninstall")}, {DOWNLOADING,tr("Cancel")},
-        {UNPACKING,tr("Unpacking")}
+    const PkgInfo *item(const int &row) const;
+
+    void sort(int column, Qt::SortOrder order);
+
+private:
+    inline QString formatBytes(double val) const
+    {
+        QString suf = tr("B");
+        if (val >= 1024) {
+            val /= 1024;
+            suf = tr("KiB");
+        }
+        if (val >= 1024) {
+            val /= 1024;
+            suf = tr("MiB");
+        }
+        return QString("%1 %2").arg(val, 0, 'f', 2).arg(suf);
+    }
+
+    QVector <PkgInfo> downList;
+
+    const QMap <States, QString> stateNames {
+        { States::INSTALL, tr("Install") }, { States::UPDATE,tr("Update") },
+        { States::UNINSTALL,tr("Uninstall") }, { States::DOWNLOADING,tr("Cancel") },
+        { States::UNPACKING,tr("Unpacking") }
     };
-    const QMap <types, QString> typeNames {
-        {LANGPAIRS, tr("Langpairs")},
-        {TOOLS, tr("Tools")}
+
+    const QMap <Types, QString> typeNames {
+        { Types::LANGPAIRS, tr("Langpairs") },
+        { Types::TOOLS, tr("Tools") }
     };
 };
 

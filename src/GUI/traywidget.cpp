@@ -17,10 +17,12 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "traywidget.h"
-#include "ui_traywidget.h"
+
 #include <QDesktopWidget>
 #include <QDebug>
+
+#include "traywidget.h"
+#include "ui_traywidget.h"
 
 TrayWidget::TrayWidget(QWidget *parent) :
     QWidget(parent, Qt::Dialog | Qt::FramelessWindowHint),

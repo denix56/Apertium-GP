@@ -17,8 +17,10 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "langdelegate.h"
 #include <QPainter>
+
+#include "langdelegate.h"
+
 LangDelegate::LangDelegate(QObject *parent)
     : QItemDelegate(parent)
 {

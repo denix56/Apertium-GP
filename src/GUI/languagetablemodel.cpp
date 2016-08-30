@@ -17,18 +17,19 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "languagetablemodel.h"
 #include <QStringList>
 #include <QDebug>
+
+#include "languagetablemodel.h"
+
 languageTableModel::languageTableModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
 }
 
 languageTableModel::languageTableModel(QStringList &list, QObject *parent)
-    : QAbstractTableModel(parent)
+    : QAbstractTableModel(parent), list(list)
 {
-    this->list = list;
 }
 
 int languageTableModel::rowCount(const QModelIndex &parent) const
@@ -60,19 +61,19 @@ QVariant languageTableModel::data(const QModelIndex &index, int role) const
 bool languageTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     Q_UNUSED(role)
-    int pos = index.column()*rowN+index.row();
+    int pos = index.column()*rowN + index.row();
     //if not in the end
     if (pos < list.size())
         list.replace(pos,value.toString());
     else
     {
         if(list.size() >= rowN) {
-        if (index.row()==0)
+        if (index.row() == 0)
             beginInsertColumns(QModelIndex(),columnCount(),columnCount());
         list << value.toString();
         for (int i = index.row()+1; i<rowCount();i++)
             list << "";
-        if (index.row()==0)
+        if (index.row() == 0)
             endInsertColumns();
         }
         else {

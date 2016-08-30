@@ -29,9 +29,13 @@ class TableComboBox : public QComboBox
     Q_OBJECT
 public:
     TableComboBox(QWidget *parent=nullptr);
+
     languageTableModel *model() const;
+
     QTableView *view() const;
+
     void setView(QTableView *view);
+
     void setModel(languageTableModel *view);
 
 protected:

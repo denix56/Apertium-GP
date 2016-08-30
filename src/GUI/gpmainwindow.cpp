@@ -17,14 +17,6 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "gpmainwindow.h"
-#include "translator.h"
-#include "ui_gpmainwindow.h"
-#include "docshandler.h"
-#include "tablecombobox.h"
-#include "downloadwindow.h"
-#include "initializer.h"
-#include "settingsdialog.h"
 #include <QUrlQuery>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -51,13 +43,23 @@
 #include <QWidget>
 #include <QDebug>
 
+#include "translator.h"
+#include "docshandler.h"
+#include "tablecombobox.h"
+#include "downloadwindow.h"
+#include "initializer.h"
+#include "settingsdialog.h"
+
+#include "gpmainwindow.h"
+#include "ui_gpmainwindow.h"
+
 //TODO: choose language of app
 GpMainWindow::GpMainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::GpMainWindow)
 {
     ui->setupUi(this);
-
+    ui->horizontalSpacer_2->changeSize(36,30);
 }
 
 struct GpMainWindow::langpairUsed
@@ -78,7 +80,6 @@ struct GpMainWindow::langpairUsed
 
 bool GpMainWindow::initialize()
 {
-    setWindowTitle("Apertium-GP");
     setAttribute(Qt::WA_AlwaysShowToolTips);
     setContextMenuPolicy(Qt::NoContextMenu);
 #ifdef Q_OS_LINUX
@@ -159,16 +160,22 @@ bool GpMainWindow::initialize()
     requestSender = new QNetworkAccessManager(this);
     QNetworkRequest request;
     apy = new QProcess;
-    if(!QFile(SERVERPATH+"/servlet.py").exists()) {
+    if(!QFile("/usr/share/apertium-apy/servlet.py").exists()
+            && !QFile("/usr/share/apertium-gp/apertium-apy/apertium-apy/servlet.py").exists()) {
         QMessageBox box;
         box.critical(this,tr("Path error"),tr("Incorrect server directory"));
         close();
         return false;
     }
-    serverStarted = !apy->execute("pkexec", QStringList() << scriptPath << "-s");
-    if(!serverStarted)
-        return false;
-
+    serverStartedExitCode = apy->execute("pkexec", QStringList() << scriptPath << "-s");
+    if(serverStartedExitCode) {
+        if (serverStartedExitCode == 2) {
+            apy->start("/usr/share/apertium-gp/apertium-apy/apertium-apy/servlet.py /usr/share/apertium");
+            apy->waitForStarted();
+        }
+        else
+            return false;
+    }
     //wait while server starts
     while(true) {
         QEventLoop loop;
@@ -182,7 +189,7 @@ bool GpMainWindow::initialize()
         reply->deleteLater();
     }
 
-    QAction *dlAction =  new QAction(style()->standardIcon(QStyle::SP_ArrowDown),
+    auto dlAction =  new QAction(style()->standardIcon(QStyle::SP_ArrowDown),
                                      tr("Install packages"),ui->toolBar);
     ui->toolBar->addAction(dlAction);
     //Installing new packages
@@ -290,13 +297,17 @@ void GpMainWindow::setTrayWidgetEnabled(bool b)
 GpMainWindow::~GpMainWindow()
 {
 #ifdef Q_OS_LINUX
-    QProcess apy;
-    if (serverStarted)
-        apy.execute("pkexec", QStringList() << scriptPath << "-t");
+    QProcess cmd;
+    if (!serverStartedExitCode)
+        cmd.execute("pkexec", QStringList() << scriptPath << "-t");
+    else
+        if (serverStartedExitCode==2)
+            apy->terminate();
 #endif
     thread.quit();
     thread.wait();
     delete Initializer::conf;
+    delete apy;
     delete ui;
 }
 
@@ -305,6 +316,7 @@ void GpMainWindow::resizeEvent(QResizeEvent *e)
     ui->label->setPixmap(ui->label->pixmap()->
                          scaled(ui->label->pixmap()->width(),
                                 ui->label->pixmap()->height(),Qt::KeepAspectRatio));
+    ui->boxOutput->setMinimumWidth(ui->boxInput->width());
     QMainWindow::resizeEvent(e);
 }
 

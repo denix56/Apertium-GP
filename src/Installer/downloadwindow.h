@@ -20,14 +20,16 @@
 #ifndef DownloadWindow_H
 #define DownloadWindow_H
 
+#include <QDialog>
+#include <QNetworkAccessManager>
+#include <QProgressDialog>
+
 #include "downloadmodel.h"
 #include "installerdelegate.h"
 #ifdef Q_OS_LINUX
 #include "managerhelper.h"
 #endif
-#include <QDialog>
-#include <QNetworkAccessManager>
-#include <QProgressDialog>
+
 namespace Ui {
 class DownloadWindow;
 }
@@ -40,13 +42,17 @@ signals:
     void closed();
 public:
     explicit DownloadWindow(QWidget *parent = 0);
+
     ~DownloadWindow();
 
 public slots:
     bool getData(bool checked = true);
+
     void accept();
+
 private slots:
     void chooseAction(int row);
+
 #ifdef Q_OS_LINUX
     bool applyChanges();
 #endif
@@ -56,13 +62,18 @@ protected:
     void closeEvent(QCloseEvent *);
 private:
     Ui::DownloadWindow *ui;
+
     QNetworkAccessManager *manager;
+
     QProgressDialog *wait;
+
     DownloadModel *model;
+
     InstallerDelegate *delegate;
 
 #ifndef Q_OS_LINUX
     void installpkg(int row);
+
     void removepkg(int row);
 #else
     ManagerHelper *mngr;

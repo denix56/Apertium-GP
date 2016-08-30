@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>304</width>
+    <width>284</width>
     <height>131</height>
    </rect>
   </property>
@@ -51,7 +51,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>150</width>
+       <width>140</width>
        <height>100</height>
       </size>
      </property>
@@ -72,7 +72,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>150</width>
+       <width>140</width>
        <height>100</height>
       </size>
      </property>
@@ -96,7 +96,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>150</width>
+       <width>140</width>
        <height>16777215</height>
       </size>
      </property>
@@ -106,7 +106,7 @@
     <widget class="QComboBox" name="comboBox_2">
      <property name="maximumSize">
       <size>
-       <width>150</width>
+       <width>140</width>
        <height>16777215</height>
       </size>
      </property>

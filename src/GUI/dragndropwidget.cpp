@@ -17,8 +17,7 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "dragndropwidget.h"
-#include "docshandler.h"
+
 #include <QDragMoveEvent>
 #include <QMimeData>
 #include <QDrag>
@@ -26,6 +25,11 @@
 #include <QPainter>
 #include <QRect>
 #include <QDebug>
+
+#include "docshandler.h"
+
+#include "dragndropwidget.h"
+
 DragnDropWidget::DragnDropWidget(QWidget *parent) : QWidget(parent)
 {
     setAcceptDrops(true);

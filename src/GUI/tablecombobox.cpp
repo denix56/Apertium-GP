@@ -17,10 +17,14 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "tablecombobox.h"
-#include "langdelegate.h"
+
 #include <QHeaderView>
 #include <QDebug>
+
+#include "langdelegate.h"
+
+#include "tablecombobox.h"
+
 TableComboBox::TableComboBox(QWidget *parent)
     : QComboBox(parent)
 {

@@ -17,10 +17,13 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "downloadmodel.h"
-#include "initializer.h"
 #include <QDebug>
 #include <QSize>
+
+#include "initializer.h"
+
+#include "downloadmodel.h"
+
 DownloadModel::DownloadModel(QObject *parent)
     : QAbstractTableModel(parent)
 {}
@@ -28,15 +31,15 @@ DownloadModel::DownloadModel(QObject *parent)
 QVariant DownloadModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (orientation==Qt::Horizontal && role == Qt::DisplayRole)
-        switch(section) {
-        case NAME:
-            return QVariant(tr("Name"));
-        case TYPE:
-            return QVariant(tr("Type"));
-        case SIZE:
-            return QVariant(tr("Size"));
-        case STATE:
-            return QVariant(tr("Action"));
+        switch(static_cast<Columns>(section)) {
+        case Columns::NAME:
+            return tr("Name");
+        case Columns::TYPE:
+            return tr("Type");
+        case Columns::SIZE:
+            return tr("Size");
+        case Columns::STATE:
+            return tr("Action");
         default:
             return QVariant();
         }
@@ -61,18 +64,22 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole) {
         int i = index.row();
-        switch(index.column()) {
-        case 0:
-            if (downList[i].type == LANGPAIRS)
-                return QVariant(nameToFull(downList[i].name));
+        switch(static_cast<Columns>(index.column())) {
+
+        case Columns::NAME:
+            if (downList[i].type == Types::LANGPAIRS)
+                return nameToFull(downList[i].name);
             else
-                return QVariant(downList[i].name);
-        case 1:
-            return QVariant(typeNames[downList[i].type]);
-        case 2:
-            return QVariant(formatBytes(downList[i].size));
-        case 3:
-            return QVariant(stateNames[downList[i].state]);
+                return downList[i].name;
+
+        case Columns::TYPE:
+            return typeNames[downList[i].type];
+
+        case Columns::SIZE:
+            return this->formatBytes(downList[i].size);
+
+        case Columns::STATE:
+            return stateNames[downList[i].state];
         }
     }
     return QVariant();
@@ -89,21 +96,21 @@ bool DownloadModel::setData(const QModelIndex &index, const QVariant &value, int
 {
     if (data(index, role) != value) {
         int i = index.row();
-        switch(index.column()) {
-        case NAME:
+        switch(static_cast<Columns>(index.column())) {
+        case Columns::NAME:
             downList[i].name = value.toString();
             break;
-        case TYPE:
-            downList[i].type = static_cast<types>(value.toUInt());
+        case Columns::TYPE:
+            downList[i].type = value.value<Types>();
             break;
-        case SIZE:
-            if (downList[i].state==DOWNLOADING)
-                downList[i].progress = value.toUInt();
+        case Columns::SIZE:
+            if (downList[i].state == States::DOWNLOADING)
+                downList[i].progress = value.toInt();
             else
                 downList[i].size = value.toUInt();
             break;
-        case STATE:
-            downList[i].state = static_cast<states>(value.toUInt());
+        case Columns::STATE:
+            downList[i].state = value.value<States>();
             break;
         }
         emit dataChanged(index, index, QVector<int>() << role);
@@ -112,17 +119,18 @@ bool DownloadModel::setData(const QModelIndex &index, const QVariant &value, int
     return false;
 }
 
-bool DownloadModel::addItem(const file &f)
+bool DownloadModel::addItem(const PkgInfo &f)
 {
     beginInsertRows(QModelIndex(),rowCount(),rowCount());
     downList.push_back(f);
     endInsertRows();
+
     emit dataChanged(createIndex(rowCount()-1,0),createIndex(rowCount()-1,columnCount()-1),
                      QVector<int>() << Qt::EditRole);
     return true;
 }
 
-const file *DownloadModel::item(const int &row) const
+const PkgInfo *DownloadModel::item(const int &row) const
 {
     if (row<downList.size())
         return &downList[row];
@@ -140,11 +148,11 @@ Qt::ItemFlags DownloadModel::flags(const QModelIndex &index) const
 
 void DownloadModel::sort(int column, Qt::SortOrder order)
 {
-    switch (column)
+    switch (static_cast<Columns>(column))
     {
     //sort by names
-    case NAME:
-        qSort(downList.begin(),downList.end(),[&order](const file &a,const file &b)
+    case Columns::NAME:
+        qSort(downList.begin(),downList.end(),[&order](const PkgInfo &a,const PkgInfo &b)
         {
             auto an = nameToFull(a.name);
             auto bn = nameToFull(b.name);
@@ -153,19 +161,19 @@ void DownloadModel::sort(int column, Qt::SortOrder order)
         break;
 
         //sort by types
-    case TYPE:
-        qSort(downList.begin(),downList.end(),[&order](const file &a,const file &b)
+    case Columns::TYPE:
+        qSort(downList.begin(),downList.end(),[&order](const PkgInfo &a,const PkgInfo &b)
         { return order == Qt::AscendingOrder ? a.type < b.type
                                             : a.type > b.type; });
-        types lastType;
+        Types lastType;
         //TODO: maybe replace lasttype
         for(int i = 0,first=0;i < downList.size();i++)
         {
             if (!i)
                 lastType = downList[0].type;
             else {
-                if(lastType!=downList[i].type || i==downList.size()-1){
-                    qSort(downList.begin()+first,downList.begin()+i-1,[](const file &a,const file &b) {
+                if(lastType != downList[i].type || i == downList.size()-1){
+                    qSort(downList.begin()+first,downList.begin()+i-1,[](const PkgInfo &a,const PkgInfo &b) {
                         auto an = nameToFull(a.name);
                         auto bn = nameToFull(b.name);
                         return an.localeAwareCompare(bn) < 0;});
@@ -178,15 +186,15 @@ void DownloadModel::sort(int column, Qt::SortOrder order)
         break;
 
         //sort by size
-    case SIZE:
-        qSort(downList.begin(),downList.end(),[&order](const file &a,const file &b)
+    case Columns::SIZE:
+        qSort(downList.begin(),downList.end(),[&order](const PkgInfo &a,const PkgInfo &b)
         {return order == Qt::AscendingOrder ? a.size < b.size
                                             : a.size > b.size;});
         break;
 
         //sort by state
-    case STATE:
-        qSort(downList.begin(),downList.end(),[&order](const file &a, const file &b)
+    case Columns::STATE:
+        qSort(downList.begin(),downList.end(),[&order](const PkgInfo &a, const PkgInfo &b)
         {return order == Qt::AscendingOrder ? a.state < b.state
                                             :a.state > b.state;});
         break;
@@ -213,7 +221,7 @@ int DownloadModel::countLangPairsInstalled() const
 {
     int cnt = 0;
     for(int i=0;i<downList.size();++i)
-        if(downList[i].type==LANGPAIRS && downList[i].state==UNINSTALL)
+        if(downList[i].type == Types::LANGPAIRS && downList[i].state == States::UNINSTALL)
             cnt++;
     return cnt;
 }

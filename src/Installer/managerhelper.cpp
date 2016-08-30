@@ -17,97 +17,88 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "managerhelper.h"
-#include <QProcess>
 #include <QMessageBox>
 #include <QApplication>
-#include <QRegularExpression>
 #include <QDebug>
+
+#include "initializer.h"
+
+#include "managerhelper.h"
+
 ManagerHelper::ManagerHelper(QObject* parent)
     : QObject(parent)
 {
-    
+    cmd = new QProcess(this);
+    connect(this, &ManagerHelper::canceled, cmd, &QProcess::terminate);
 }
- //find out current package manager
-void ManagerHelper::chooseManager()
+// //find out current package manager
+//void ManagerHelper::chooseManager()
+//{
+//
+//    cmd->start("which", QStringList() << "apt-get"
+//              << "aptitude" << "yum" << "packman" << "zypper" << "emerge");
+//    cmd->waitForStarted();
+//    while(cmd->state()==QProcess::Running)
+//        qApp->processEvents();
+//    QString answer = cmd->readAllStandardOutput();
+//    if (!answer.isEmpty()) {
+//        QString tmp = answer.split('\n')[0];
+//        mngr = tmp.mid(tmp.lastIndexOf('/')+1);
+//    }
+//    else {
+//        QMessageBox box;
+//        box.critical(nullptr,tr("No package manager"), tr("The program cannot find any supportted package manager. "
+//                                                       "Please install packages manually or contact developer "
+//                                                       "for adding support of your package manager. The program "
+//                                                       "will be closed now."));
+//        qApp->exit(3);
+//    }
+//}
+
+int ManagerHelper::installRemove(const QStringList &packagesInstall, const QStringList &packagesRemove) const
 {
-    QProcess cmd;
-    cmd.start("which", QStringList() << "apt-get"
-              << "aptitude" << "yum" << "packman" << "zypper" << "emerge");
-    cmd.waitForStarted();
-    while(cmd.state()==QProcess::Running)
+    QStringList args;
+    args << scriptPath;
+    if (!packagesInstall.isEmpty())
+        args << "-i" << "\"" + packagesInstall.join(' ') + "\"";
+
+    if (!packagesRemove.isEmpty())
+        args << "-r" << "\"" + packagesRemove.join(' ') + "\"";
+    cmd->start("pkexec "+args.join(' '));
+    cmd->waitForStarted();
+    while(cmd->state()==QProcess::Running)
         qApp->processEvents();
-    QString answer = cmd.readAllStandardOutput();
-    if (!answer.isEmpty()) {
-        QString tmp = answer.split('\n')[0];
-        mngr = tmp.mid(tmp.lastIndexOf('/')+1);
-    }
-    else {
-        QMessageBox box;
-        box.critical(nullptr,tr("No package manager"), tr("The program cannot find any supportted package manager. "
-                                                       "Please install packages manually or contact developer "
-                                                       "for adding support of your package manager. The program "
-                                                       "will be closed now."));
-        qApp->exit(3);      
-    }
+    cmd->waitForFinished();
+    return cmd->exitCode();
+}
+//int ManagerHelper::remove(QStringList packages) const
+//{
+//    cmd->start("pkexec", QStringList() << scriptPath << "-r" << "\""+packages.join(' ')+"\"");
+//    cmd->waitForStarted();
+//    while(cmd->state()==QProcess::Running)
+//        qApp->processEvents();
+//    cmd->waitForFinished();
+//    return cmd->exitCode();
+//}
+
+int ManagerHelper::update() const
+{  
+    cmd->start("pkexec", QStringList() << scriptPath << "-u");
+    cmd->waitForStarted();
+    while(cmd->state()==QProcess::Running)
+        qApp->processEvents();
+    cmd->waitForFinished();
+    return cmd->exitCode();
 }
 
-QString ManagerHelper::install(QStringList packages) const
+QString ManagerHelper::search(const QString &package) const
 {
-    QStringList args;
-    args << mngr;
-    if (mngr == "apt-get" || mngr == "aptitude")
-        args << "-y";
-    else
-        if (mngr == "zypper")
-            args << "--non-interactive";
-    else
-           if (mngr == "yum" || mngr == "dnf")
-               args << "--y";
-    args << "install" << packages;
-    return args.join(' ');
-}
-QString ManagerHelper::remove(QStringList packages) const
-{
-    QStringList args;
-    args << mngr;
-    if (mngr == "apt-get" || mngr == "aptitude")
-        args << "-y";
-    else
-        if (mngr == "zypper")
-            args << "--non-interactive";
-    else
-           if (mngr == "yum" || mngr == "dnf")
-               args << "--y";
-    args << "remove" << packages;
-    return args.join(' ');
-}
-
-QString ManagerHelper::update() const
-{
-    QStringList args;
-    args << mngr;
-    if (mngr == "apt-get" || mngr == "aptitude")
-        args << "update";
-    else
-        if (mngr == "zypper")
-            args << "refresh";
-        else
-            if (mngr == "yum" || mngr == "dnf")
-                args << "check-update";
-    return args.join(' ');
-}
-
-QString ManagerHelper::search(QString package) const
-{
-    QStringList args;
-    args << (mngr=="apt-get" ? "apt-cache" : mngr) << "search" << package;
-    return args.join(' ');
-}
-
-QString ManagerHelper::getManager() const
-{
-    return mngr;
+    cmd->start("pkexec", QStringList() << scriptPath << "-S" << package);
+    cmd->waitForStarted();
+    while(cmd->state()==QProcess::Running)
+        qApp->processEvents();
+    cmd->waitForFinished();
+    return cmd->readAllStandardOutput();
 }
 
 //QStringList ManagerHelper::info(QString package) const
@@ -126,54 +117,14 @@ QString ManagerHelper::getManager() const
 //TODO: optimize for asking info about multiple packages
 unsigned long long ManagerHelper::getSize(const QString &package) const
 {
-    QStringList args;
-    args << (mngr=="apt-get" ? "apt-cache" : mngr);
-    QProcess cmd;
-    unsigned long long size = 0;
-    if (mngr == "apt-get" || mngr == "aptitude") {
-        args << "show" << package;
-        cmd.start(args.join(' '));
-        cmd.waitForStarted();
-        while(cmd.state()==QProcess::Running)
-            qApp->processEvents();
-        if(cmd.exitCode())
-            return 0;
-        auto outpk = QString(cmd.readAllStandardOutput()).split('\n');
-        for(auto str: outpk) {
-            if(str.contains(QRegularExpression("^Size"))) {
-                QRegularExpression sizeReg("[0-9]+");
-                auto jt = sizeReg.match(str);
-                if(jt.hasMatch())
-                    size = jt.captured().toULongLong();
-            }
-        }
-    }
-    else
-        if (mngr == "zypper") {
-            args << "info" << package;
-            cmd.start(args.join(' '));
-            cmd.waitForStarted();
-            while(cmd.state()==QProcess::Running)
-                qApp->processEvents();
-            if(cmd.exitCode())
-                return 0;
-            auto outpk = QString(cmd.readAllStandardOutput()).split('\n');
-            for(auto str : outpk) {
-                if (str.contains(QRegularExpression("^Size"))) {
-                    QRegularExpression sizeReg("[0-9]+\\.?[0-9]+");
-                    unsigned long long size = 0;
-                    auto jt = sizeReg.match(str);
-                    if(jt.hasMatch()) {
-                        size = (unsigned long long)(jt.captured().toDouble() * 1024ULL);
-                        if(str.right(3)=="MiB")
-                            size *= 1024ULL;
-                    }
-                }
-            }
-        }
-        else
-            //TODO: finish
-            if (mngr == "yum" || mngr == "dnf")
-                args << "check-update";
-    return size;
+
+    cmd->start("pkexec", QStringList() << scriptPath << "-I" << package);
+    cmd->waitForStarted();
+    while(cmd->state()==QProcess::Running)
+        qApp->processEvents();
+    if(cmd->exitCode())
+        return 0;
+
+    QString x = cmd->readAllStandardOutput();
+    return (unsigned long long)x.left(x.indexOf('\n')).toDouble();
 }

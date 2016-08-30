@@ -17,16 +17,22 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "headbutton.h"
+
 #include <QPaintEvent>
 #include <QFontMetrics>
+#include <QPainter>
+#include <QStyle>
+#include <QStylePainter>
+#include <QStyleOptionButton>
+
+#include "headbutton.h"
 
 HeadButton::HeadButton(QWidget* parent)
     : QPushButton(parent)
 {
     setFocusPolicy(Qt::NoFocus);
     setCheckable(true);
-    setFixedSize(102,27);
+    setMinimumSize(112,27);
     wasClicked = false;
     once = true;
     //FIXME: is it needed?
@@ -58,13 +64,30 @@ void HeadButton::changeButtonColor(bool checked)
 }
 
 
-void HeadButton::paintEvent(QPaintEvent *e)
+void HeadButton::paintEvent(QPaintEvent *)
 {
-    if(fontMetrics().width(text()) != lastFontWidth) {
-        lastFontWidth = fontMetrics().width(text());
-        setFixedSize(qMax(lastFontWidth+10,102),27);
+//    if(fontMetrics().width(text()) != lastFontWidth) {
+//        lastFontWidth = fontMetrics().width(text());
+//        setFixedSize(qMax(lastFontWidth+10,102),27);
+//    }
+    QStyleOptionButton option;
+    initStyleOption(&option);;
+    QRect textRect;
+
+    QStyle* pStyle = style();
+    if (pStyle != NULL)
+    {
+        QRect elementRect = pStyle->subElementRect(QStyle::SE_PushButtonContents, &option, this);
+        int menuButtonSize = pStyle->pixelMetric(QStyle::PM_MenuButtonIndicator, &option, this);
+        textRect = elementRect.adjusted(0, 0, -menuButtonSize, 0);
     }
-    QPushButton::paintEvent(e);
+
+       QString mElidedText = fontMetrics().elidedText(text(), Qt::ElideRight, textRect.width(), Qt::TextShowMnemonic);
+
+    option.text = mElidedText;
+
+    QStylePainter p(this);
+ p.drawControl(QStyle::CE_PushButton, option);
 }
 
  void HeadButton::setText(const QString &text)

@@ -17,15 +17,17 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "initializer.h"
-#include "gpmainwindow.h"
-#include "downloadwindow.h"
 #include <QApplication>
 #include <QProcess>
 #include <QObject>
 #include <QFile>
 #include <QMessageBox>
 #include <QDebug>
+
+#include "initializer.h"
+#include "gpmainwindow.h"
+#include "downloadwindow.h"
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

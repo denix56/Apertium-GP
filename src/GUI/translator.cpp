@@ -17,9 +17,6 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "translator.h"
-#include "gpmainwindow.h"
-#include "initializer.h"
 #include <QDir>
 #include <QProcess>
 #include <QRegularExpression>
@@ -31,9 +28,14 @@
 #include <QDebug>
 #include <QApplication>
 
+#include "gpmainwindow.h"
+#include "initializer.h"
+
+#include "translator.h"
+
 Translator::Translator(GpMainWindow* parent)
+    : parent(parent)
 {
-    this->parent = parent;
 }
 
 void Translator::boxTranslate()

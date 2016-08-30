@@ -17,8 +17,10 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "inputtextedit.h"
 #include <QKeyEvent>
+
+#include "inputtextedit.h"
+
 InputTextEdit::InputTextEdit(QWidget* parent)
     : QTextEdit(parent)
 {
@@ -26,4 +28,3 @@ InputTextEdit::InputTextEdit(QWidget* parent)
     connect(this,&InputTextEdit::textChanged,[&](){timer.start(250);});
     timer.setSingleShot(true);
 }
-
