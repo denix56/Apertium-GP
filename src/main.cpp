@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     if (!Initializer::initialize())
         return 4;
 #ifdef Q_OS_LINUX
-    if(!QDir("/usr/share/apertium-apy").exists()) {
+    if(!QDir("/usr/share/apertium-apy").exists() && !QDir("/usr/share/apertium-gp/apertium-apy/apertium-apy").exists()) {
         QMessageBox box;
         if(box.critical(nullptr,QObject::tr("Server not installed."),
                         QObject::tr("The program cannot find Apertium-APY. Please, press Ok and install it."),
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
             return 0;
         auto dlg = new DownloadWindow;
         if (dlg->getData(false))
-            qDebug() << dlg->exec();
+            dlg->exec();
         else
             return 5;
     }
