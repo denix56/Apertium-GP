@@ -25,7 +25,7 @@
 #include "ui_traywidget.h"
 
 TrayWidget::TrayWidget(QWidget *parent) :
-    QWidget(parent, Qt::Dialog | Qt::FramelessWindowHint),
+    QWidget(parent, Qt::ToolTip | Qt::FramelessWindowHint),
     ui(new Ui::TrayWidget)
 {
     ui->setupUi(this);
@@ -35,7 +35,7 @@ TrayWidget::TrayWidget(QWidget *parent) :
                       desktop->availableGeometry().height()-height(),
                       width(),height());
 #else
-    setGeometry(desktop->availableGeometry().width(),
+    setGeometry(desktop->geometry().width()-width(),
                       desktop->availableGeometry().y()+1,
                       width(),height());
 #endif

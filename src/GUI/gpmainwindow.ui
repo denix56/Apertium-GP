@@ -17,7 +17,11 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Apertium-GP</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="application.qrc">
+    <normaloff>:/images/Apertium_box_white_small.png</normaloff>:/images/Apertium_box_white_small.png</iconset>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>

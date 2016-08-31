@@ -24,13 +24,20 @@
 #include <QMessageBox>
 #include <QDebug>
 
+#include "singleapplication.h"
 #include "initializer.h"
 #include "gpmainwindow.h"
 #include "downloadwindow.h"
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    SingleApplication a(argc, argv);
+
+    if(!a.lock()) {
+        QMessageBox box;
+        box.critical(nullptr, "Another instance is running", "Another instance of application is currently running.");
+        return -42;
+    }
     if (!Initializer::initialize())
         return 4;
 #ifdef Q_OS_LINUX

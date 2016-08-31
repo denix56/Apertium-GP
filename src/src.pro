@@ -41,7 +41,8 @@ SOURCES += \
     GUI/traywidget.cpp \
     GUI/trayinputtextedit.cpp \
     GUI/gpmainwindow.cpp \
-    GUI/docshandler.cpp
+    GUI/docshandler.cpp \
+    singleapplication.cpp
 
 HEADERS  += \
     GUI/headbutton.h \
@@ -60,7 +61,8 @@ HEADERS  += \
     GUI/traywidget.h \
     GUI/trayinputtextedit.h \
     GUI/gpmainwindow.h \
-    GUI/docshandler.h
+    GUI/docshandler.h \
+    singleapplication.h
 
 
 FORMS    += \
