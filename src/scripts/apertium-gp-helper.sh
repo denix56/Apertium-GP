@@ -21,17 +21,18 @@ function set_server_cmds() {
 
 function get_manager() {
 	mngr_array=( [1]=apt-get [2]=aptitude [3]=dnf [4]=yum [5]=zypper )
-	for MNGR in "${vopros[@]}"; do
-		which $MNGR
+	for MNGR in "${mngr_array[@]}"; do
+		which $MNGR >/dev/null
 		ret_code=$?
-		if [[  $ret_code -e 0 ]]; then
+		if [[  $ret_code -eq 0 ]]; then
 			break
+		fi
 	done
 	
 	readonly MNGR
 
 	case $MNGR in
-		"apt-get" | "aptitude" )
+	"apt-get" | "aptitude" )
 			INSTALL="$MNGR -y"
 			REMOVE=$INSTALL
 			readonly UPDATE="$MNGR update"
@@ -40,16 +41,16 @@ function get_manager() {
 			INFO="$MNGR show"
 			set_server_cmds
 			;;
-		"yum" | "dnf" )
+	"yum" | "dnf" )
 			INSTALL="$MNGR --y"
 			REMOVE=$INSTALL
 			readonly UPDATE="$MNGR check-update"
 			INFO="$MNGR info"
 			readonly SERVERINST="cd /usr/share/apertium-gp && $MNGR --non-interactive install python3-devel python3-pip zlib-devel subversion \
-&& pip3 install --upgrade tornado && svn co https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/apertium-apy"
+			&& pip3 install --upgrade tornado && svn co https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/apertium-apy"
 			readonly SERVERRM="$MNGR -y remove apertium-apy"
 			;;
-		"zypper" )
+	"zypper" )
 			INSTALL="$MNGR --non-interactive"
 			REMOVE=$INSTALL
 			readonly UPDATE="$MNGR refresh"
