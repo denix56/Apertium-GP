@@ -20,10 +20,16 @@ function set_server_cmds() {
 }
 
 function get_manager() {
-	MNGR=$(which apt-get aptitude yum zypper dnf)
-	MNGR=(${MNGR[@]})
-	readonly MNGR=${MNGR##*/}
+	mngr_array=( [1]=apt-get [2]=aptitude [3]=dnf [4]=yum [5]=zypper )
+	for MNGR in "${vopros[@]}"; do
+		which $MNGR
+		ret_code=$?
+		if [[  $ret_code -e 0 ]]; then
+			break
+	done
 	
+	readonly MNGR
+
 	case $MNGR in
 		"apt-get" | "aptitude" )
 			INSTALL="$MNGR -y"
