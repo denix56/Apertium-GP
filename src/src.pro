@@ -99,7 +99,7 @@ DISTFILES += \
     ../apertium.ico \
 
 
-unix:!macx:contains(QT_VERSION, ^5\\.[0-4]\\..*) {
-warning("There may be some problems with tray icon. Please, use Qt version >= 5.5.\
+unix:!macx:contains(QT_VERSION, ^5\\.[0-5]\\..*) {
+warning("There may be some problems with tray icon. Please, use Qt version >= 5.6.\
 Your version Qt $${QT_VERSION}")
 }
