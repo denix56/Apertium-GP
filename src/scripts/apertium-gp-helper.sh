@@ -20,7 +20,7 @@ function set_server_cmds() {
 }
 
 function get_manager() {
-	mngr_array=( [1]=apt-get [2]=aptitude [3]=dnf [4]=yum [5]=zypper )
+	mngr_array=( [1]=zypper [2]=dnf [3]=yum [4]=apt-get [5]=aptitude )
 	for MNGR in "${mngr_array[@]}"; do
 		which $MNGR >/dev/null
 		ret_code=$?
