@@ -24,6 +24,8 @@
 #include <QUrl>
 #include <QObject>
 
+#include "initializer.h"
+
 enum class States {INSTALL, UPDATE, UNINSTALL, DOWNLOADING, UNPACKING};
 
 enum class Types {LANGPAIRS, TOOLS};
@@ -63,7 +65,7 @@ public:
 
     void reset();
 
-    int find(const QString &name);
+    int find(const QString &name) const;
 
     int count() const;
 
@@ -104,6 +106,21 @@ private:
             suf = tr("MiB");
         }
         return QString("%1 %2").arg(val, 0, 'f', 2).arg(suf);
+    }
+
+    inline QString nameToFull(QString pair) const
+    {
+        pair.remove("apertium-");
+        int i = pair.indexOf('-');
+        QString sourceLang = pair.left(i);
+        QString targetLang = pair.mid(i+1);
+        if (Initializer::langNamesMap.contains(sourceLang))
+            sourceLang = Initializer::langNamesMap[sourceLang];
+
+        if (Initializer::langNamesMap.contains(targetLang))
+            targetLang = Initializer::langNamesMap[targetLang];
+
+        return sourceLang + " - " + targetLang;
     }
 
     QVector <PkgInfo> downList;

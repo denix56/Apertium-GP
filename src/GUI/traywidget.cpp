@@ -19,6 +19,7 @@
 
 
 #include <QDesktopWidget>
+#include <QSystemTrayIcon>
 #include <QDebug>
 
 #include "traywidget.h"
@@ -29,15 +30,19 @@ TrayWidget::TrayWidget(QWidget *parent) :
     ui(new Ui::TrayWidget)
 {
     ui->setupUi(this);
-    auto desktop = qApp->desktop();
+    QDesktopWidget *desktop = qApp->desktop();
 #ifdef Q_OS_WIN
     setGeometry(desktop->availableGeometry().width()-width(),
                       desktop->availableGeometry().height()-height(),
                       width(),height());
-#else
-    setGeometry(desktop->geometry().width()-width(),
-                      desktop->availableGeometry().y()+1,
-                      width(),height());
+#elif defined(Q_OS_LINUX)
+    QSystemTrayIcon icon;
+    if(icon.geometry().y() < desktop->height()/2)
+        setGeometry(desktop->screenGeometry().width()-width(),
+                        desktop->availableGeometry().y()+1, width(), height());
+    else
+        setGeometry(desktop->screenGeometry().width()-width(),
+                        desktop->availableGeometry().height()-height(), width(), height());
 #endif
     connect(ui->textEdit,&TrayInputTextEdit::printEnded,this,&TrayWidget::prindEnded);
 }

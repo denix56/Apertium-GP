@@ -29,61 +29,29 @@ ManagerHelper::ManagerHelper(QObject* parent)
     : QObject(parent)
 {
     cmd = new QProcess(this);
-    connect(this, &ManagerHelper::canceled, cmd, &QProcess::terminate);
+    connect(this, &ManagerHelper::canceled, cmd, &QProcess::kill);
 }
-// //find out current package manager
-//void ManagerHelper::chooseManager()
-//{
-//
-//    cmd->start("which", QStringList() << "apt-get"
-//              << "aptitude" << "yum" << "packman" << "zypper" << "emerge");
-//    cmd->waitForStarted();
-//    while(cmd->state()==QProcess::Running)
-//        qApp->processEvents();
-//    QString answer = cmd->readAllStandardOutput();
-//    if (!answer.isEmpty()) {
-//        QString tmp = answer.split('\n')[0];
-//        mngr = tmp.mid(tmp.lastIndexOf('/')+1);
-//    }
-//    else {
-//        QMessageBox box;
-//        box.critical(nullptr,tr("No package manager"), tr("The program cannot find any supportted package manager. "
-//                                                       "Please install packages manually or contact developer "
-//                                                       "for adding support of your package manager. The program "
-//                                                       "will be closed now."));
-//        qApp->exit(3);
-//    }
-//}
 
 int ManagerHelper::installRemove(const QStringList &packagesInstall, const QStringList &packagesRemove) const
 {
     QStringList args;
-    args << scriptPath;
+    args <<"pkexec" << scriptPath;
     if (!packagesInstall.isEmpty())
-        args << "-i" << "\"" + packagesInstall.join(' ') + "\"";
+        args << "--install" << packagesInstall;
 
     if (!packagesRemove.isEmpty())
-        args << "-r" << "\"" + packagesRemove.join(' ') + "\"";
-    cmd->start("pkexec "+args.join(' '));
+        args << "--remove" << packagesRemove;
+    cmd->start(args.join(' '));
     cmd->waitForStarted();
     while(cmd->state()==QProcess::Running)
         qApp->processEvents();
     cmd->waitForFinished();
     return cmd->exitCode();
 }
-//int ManagerHelper::remove(QStringList packages) const
-//{
-//    cmd->start("pkexec", QStringList() << scriptPath << "-r" << "\""+packages.join(' ')+"\"");
-//    cmd->waitForStarted();
-//    while(cmd->state()==QProcess::Running)
-//        qApp->processEvents();
-//    cmd->waitForFinished();
-//    return cmd->exitCode();
-//}
 
 int ManagerHelper::update() const
 {  
-    cmd->start("pkexec", QStringList() << scriptPath << "-u");
+    cmd->start("pkexec", QStringList() << scriptPath << "--update");
     cmd->waitForStarted();
     while(cmd->state()==QProcess::Running)
         qApp->processEvents();
@@ -93,7 +61,7 @@ int ManagerHelper::update() const
 
 QString ManagerHelper::search(const QString &package) const
 {
-    cmd->start("pkexec", QStringList() << scriptPath << "-S" << package);
+    cmd->start("pkexec", QStringList() << scriptPath << "--search" << package);
     cmd->waitForStarted();
     while(cmd->state()==QProcess::Running)
         qApp->processEvents();
@@ -101,30 +69,16 @@ QString ManagerHelper::search(const QString &package) const
     return cmd->readAllStandardOutput();
 }
 
-//QStringList ManagerHelper::info(QString package) const
-//{
-//    QStringList args;
-//    args << (mngr=="apt-get" ? "apt-cache" : mngr);
-//    if (mngr == "apt-get" || mngr == "aptitude") {
-//        args << "show" << package << " | grep \"Package|^Size\"";
-//    }
-//    else
-//        if (mngr == "zypper" || mngr == "yum" || mngr == "dnf")
-//            args << "info";
-//    return args.join(' ');
-//}
-
 //TODO: optimize for asking info about multiple packages
 unsigned long long ManagerHelper::getSize(const QString &package) const
 {
-
-    cmd->start("pkexec", QStringList() << scriptPath << "-I" << package);
+    cmd->start("pkexec", QStringList() << scriptPath << "--info" << package);
     cmd->waitForStarted();
     while(cmd->state()==QProcess::Running)
         qApp->processEvents();
+
     if(cmd->exitCode())
         return 0;
 
-    QString x = cmd->readAllStandardOutput();
-    return (unsigned long long)x.left(x.indexOf('\n')).toDouble();
+    return cmd->readAllStandardOutput().toULongLong();
 }

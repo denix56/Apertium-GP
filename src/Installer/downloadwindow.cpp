@@ -163,28 +163,16 @@ bool DownloadWindow::getData(bool checked)
         connect(&wait, &QProgressDialog::canceled, mngr, &ManagerHelper::canceled);
         mngr->update();
     }
-    QString output = mngr->search("apertium");
-    if (output.isEmpty())
-        return false;
-    QRegularExpression reg("apertium(-[a-z]{2,3}){2} ");
-    auto it = reg.globalMatch(output);
-    while(it.hasNext()) {
-        qApp->processEvents();
-        auto m = it.next();
-        auto name = m.captured();
-        name = name.left(name.length()-1);
-        if(name.contains("apertium-all-dev"))
-            continue;
+    for(QString pair : mngr->search("apertium").split(' ')) {
         auto state = States::INSTALL;
-        QRegularExpression lang("-[a-z]{2,3}");
-        auto lit = lang.globalMatch(name);
-        QString l1, l2;
-        l1 = lit.next().captured();
-        l2 = lit.next().captured();
-        if (QDir("/usr/share/apertium/apertium"+l1+l2).exists() ||
-                QDir("/usr/share/apertium/apertium"+l2+l1).exists())
+        int i = pair.indexOf('-');
+        QString l1 = pair.left(i);
+        QString l2 = pair.mid(i+1);
+        if (QDir("/usr/share/apertium/apertium-"+l1+"-"+l2).exists() ||
+                QDir("/usr/share/apertium/apertium-"+l2+"-"+l1).exists())
             state = States::UNINSTALL;
-        model->addItem(PkgInfo(name, Types::LANGPAIRS, mngr->getSize(name), QUrl(),state, ""));
+        pair = "apertium-"+pair;
+        model->addItem(PkgInfo(pair, Types::LANGPAIRS, mngr->getSize(pair), QUrl(), state, ""));
     }
 
     auto state = States::INSTALL;
@@ -268,7 +256,7 @@ bool DownloadWindow::applyChanges()
     QProgressDialog dlg(this);
     dlg.setModal(true);
     dlg.setLabelText("Applying changes");
-    dlg.setRange(0,0);
+    dlg.setRange(0, 0);
     dlg.setCancelButton(nullptr);
     dlg.show();
     QStringList args;
@@ -299,7 +287,7 @@ bool DownloadWindow::applyChanges()
             qApp->processEvents();
             row = model->find(name);
             pkgsIn << model->item(row)->name;
-            model->setData(model->index(row,static_cast<int>(Columns::STATE)),
+            model->setData(model->index(row, static_cast<int>(Columns::STATE)),
                            QVariant::fromValue(States::UNINSTALL));
         }
     }

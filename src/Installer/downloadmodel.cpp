@@ -20,8 +20,6 @@
 #include <QDebug>
 #include <QSize>
 
-#include "initializer.h"
-
 #include "downloadmodel.h"
 
 DownloadModel::DownloadModel(QObject *parent)
@@ -152,7 +150,7 @@ void DownloadModel::sort(int column, Qt::SortOrder order)
     {
     //sort by names
     case Columns::NAME:
-        qSort(downList.begin(),downList.end(),[&order](const PkgInfo &a,const PkgInfo &b)
+        qSort(downList.begin(),downList.end(),[&](const PkgInfo &a,const PkgInfo &b)
         {
             auto an = nameToFull(a.name);
             auto bn = nameToFull(b.name);
@@ -162,7 +160,7 @@ void DownloadModel::sort(int column, Qt::SortOrder order)
 
         //sort by types
     case Columns::TYPE:
-        qSort(downList.begin(),downList.end(),[&order](const PkgInfo &a,const PkgInfo &b)
+        qSort(downList.begin(),downList.end(),[&](const PkgInfo &a,const PkgInfo &b)
         { return order == Qt::AscendingOrder ? a.type < b.type
                                             : a.type > b.type; });
         Types lastType;
@@ -173,7 +171,7 @@ void DownloadModel::sort(int column, Qt::SortOrder order)
                 lastType = downList[0].type;
             else {
                 if(lastType != downList[i].type || i == downList.size()-1){
-                    qSort(downList.begin()+first,downList.begin()+i-1,[](const PkgInfo &a,const PkgInfo &b) {
+                    qSort(downList.begin()+first,downList.begin()+i-1,[&](const PkgInfo &a,const PkgInfo &b) {
                         auto an = nameToFull(a.name);
                         auto bn = nameToFull(b.name);
                         return an.localeAwareCompare(bn) < 0;});
@@ -187,14 +185,14 @@ void DownloadModel::sort(int column, Qt::SortOrder order)
 
         //sort by size
     case Columns::SIZE:
-        qSort(downList.begin(),downList.end(),[&order](const PkgInfo &a,const PkgInfo &b)
+        qSort(downList.begin(),downList.end(),[&](const PkgInfo &a,const PkgInfo &b)
         {return order == Qt::AscendingOrder ? a.size < b.size
                                             : a.size > b.size;});
         break;
 
         //sort by state
     case Columns::STATE:
-        qSort(downList.begin(),downList.end(),[&order](const PkgInfo &a, const PkgInfo &b)
+        qSort(downList.begin(),downList.end(),[&](const PkgInfo &a, const PkgInfo &b)
         {return order == Qt::AscendingOrder ? a.state < b.state
                                             :a.state > b.state;});
         break;
@@ -204,7 +202,7 @@ void DownloadModel::sort(int column, Qt::SortOrder order)
     emit sorted();
 }
 
-int DownloadModel::find(const QString &name)
+int DownloadModel::find(const QString &name) const
 {
     for(int i=0;i<downList.size();i++)
         if(downList[i].name==name)

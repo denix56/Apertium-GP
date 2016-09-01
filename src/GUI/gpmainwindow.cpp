@@ -167,7 +167,7 @@ bool GpMainWindow::initialize()
         close();
         return false;
     }
-    serverStartedExitCode = apy->execute("pkexec", QStringList() << scriptPath << "-s");
+    serverStartedExitCode = apy->execute("pkexec", QStringList() << scriptPath << "--start");
     if(serverStartedExitCode) {
         if (serverStartedExitCode == 2) {
             apy->start("/usr/share/apertium-gp/apertium-apy/apertium-apy/servlet.py /usr/share/apertium");
@@ -299,10 +299,10 @@ GpMainWindow::~GpMainWindow()
 #ifdef Q_OS_LINUX
     QProcess cmd;
     if (!serverStartedExitCode)
-        cmd.execute("pkexec", QStringList() << scriptPath << "-t");
+        cmd.execute("pkexec", QStringList() << scriptPath << "--stop");
     else
         if (serverStartedExitCode==2)
-            apy->terminate();
+            apy->kill();
 #endif
     thread.quit();
     thread.wait();
@@ -806,7 +806,6 @@ void GpMainWindow::createRequests(QString text)
     Initializer::conf->setValue(langpair, QVariant(Initializer::conf->value
                                                    (langpair,QVariant(0ULL)).toULongLong() + 1ULL));
 }
-
 
 //parse json response
 void GpMainWindow::getReplyFromAPY(QNetworkReply *reply)
