@@ -8,5 +8,5 @@ Homepage: https://www.apertium.org/
 
 Package: apertium-gp
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}, apertium-apy
+Depends: ${misc:Depends}, ${shlibs:Depends}, perl (>= 5.18), apertium-apy
 Description: Apertium-GP is a GUI for Apertium translator.
