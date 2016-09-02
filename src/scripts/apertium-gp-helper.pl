@@ -117,26 +117,63 @@ sub set_manager_commands {
 }
 
 sub get_size {
+	my @args = @_;
+	my %package_sizes;
 	for ($Manager) {
 		when ("apt-get" || "aptitude") {
-			my @output = $get_info->(@_) =~ /\nSize:\s(\d+)\n/g;
-			print max(@output);
-		}
-		when ("zypper") {
-			my @output = $get_info->(@_) =~ /\s(\d+[,\.]?\d*)\s([KM])?i?B\n/g;
-			if ($2 eq "K"){
-				print int(max(@output)+0.5)*1024;
-			} elsif ($2 eq "M"){
-				print int(max(@output)+0.5)*1024*1024;
-			} else{
-				print int(max(@output)+0.5);
+			my @output = split /\n{2,}/, $get_info->($args[1]);
+			foreach (@output) {
+				my ($name, $size);
+				if ($_ =~ /Package:\s(.*)\n/){
+					$name = $1;
+				}
+				if ($_ =~ /\nSize:\s(\d+)\n/) {
+					$size = $1;
+				}
+				if(exists $package_sizes{$name}){ 
+				$package_sizes{$name} = max($size, $package_sizes{$name});
+				} else{
+					$package_sizes{$name} = $size;
+				}
 			}
 		}
+		when ("zypper") {
+			my @output = split /\n{2,}/, $get_info->($args[1]);
+			shift @output;
+			my $packages = $args[1];
+			$packages =~ s/\s/|/;
+			
+			foreach (@output) {
+				my ($name, $size);				
+				if ($_ =~ /($packages)/){
+					$name = $1;
+				}
+				
+				if ($_ =~ /\s(\d+[,\.]?\d*)\s(([KM]i)?B)\n/) {
+					$size = $1;		
+					if ($2 eq "MiB"){
+						$size =  int(($size + 0.5) * 1024 * 1024);
+					} elsif ($2 eq "KiB"){
+						$size = int(($size + 0.5) * 1024);
+					}
+				}
+				
+				if(exists $package_sizes{$name}){ 
+				$package_sizes{$name} = max($size, $package_sizes{$name});
+				} else{
+					$package_sizes{$name} = $size;
+				}
+			}	
+		}
 		when ("dnf" || "yum") {
-			my @output = $get_info->(@_) =~ /\nSize: (\d+)\n/g;
+		#FIXME: bug with args
+			my @output = $get_info->($args[1]) =~ /\nSize: (\d+)\n/g;
 			print max(@output);
 		}
 	}
+	foreach (keys %package_sizes){
+				print "$_ $package_sizes{$_}\n";
+			}
 }
 
 sub set_manager {
@@ -180,21 +217,22 @@ sub remove_handler {
 
 sub search_handler {
 my @args = @_;
-	my @output = $search_package->($args[1]) =~ /apertium-((?!all-dev)[a-z]{2,3}-[a-z]{2,3})\s/g;
+	my @output = $search_package->($args[1]) =~ /(apertium-(?!all-dev)[a-z]{2,3}-[a-z]{2,3})\s/g;
 	print join(' ', uniq @output);
 }
 
 set_manager();
 
-GetOptions ("install=s{1,}" => \&install_handler,
-			"remove=s{1,}" => \&remove_handler,
+GetOptions ("install=s" => \&install_handler,
+			"remove=s" => \&remove_handler,
 			"update" => $update,
 			"info=s" => \&get_size,
 			"search=s" => \&search_handler,
 			"start" => $start,
 			"stop" => $stop,
 			"restart" => $restart);
-
+			
 if ($Packages_Modified) {
 	$restart->();
 }
+

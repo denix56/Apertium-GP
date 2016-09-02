@@ -49,7 +49,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) :
     ui->view->setSortingEnabled(false);
     ui->view->viewport()->setAttribute(Qt::WA_Hover);
     connect(delegate,&InstallerDelegate::stateChanged,this,&DownloadWindow::chooseAction);
-    setFixedSize(size());
+    setFixedSize(547, 582);
     setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint | Qt::WindowMinimizeButtonHint
                    | Qt::WindowTitleHint);
 #ifdef Q_OS_LINUX
@@ -163,22 +163,25 @@ bool DownloadWindow::getData(bool checked)
         connect(&wait, &QProgressDialog::canceled, mngr, &ManagerHelper::canceled);
         mngr->update();
     }
-    for(QString pair : mngr->search("apertium").split(' ')) {
+    for(QString pair : mngr->getInfo(mngr->search("apertium")).split('\n')) {
+        if (pair.isEmpty())
+            continue;
         auto state = States::INSTALL;
-        int i = pair.indexOf('-');
-        QString l1 = pair.left(i);
-        QString l2 = pair.mid(i+1);
-        if (QDir("/usr/share/apertium/apertium-"+l1+"-"+l2).exists() ||
-                QDir("/usr/share/apertium/apertium-"+l2+"-"+l1).exists())
+        int i = pair.indexOf(' ');
+        QString name = pair.left(i).remove("apertium-");
+        int size = pair.mid(i+1).toInt();
+        i = name.indexOf('-');
+        QString lang1 = name.left(i);
+        QString lang2 = name.mid(i+1);
+        if (QDir("/usr/share/apertium/apertium-"+lang1+"-"+lang2).exists() ||
+                QDir("/usr/share/apertium/apertium-"+lang2+"-"+lang1).exists())
             state = States::UNINSTALL;
-        pair = "apertium-"+pair;
-        model->addItem(PkgInfo(pair, Types::LANGPAIRS, mngr->getSize(pair), QUrl(), state, ""));
+        model->addItem(PkgInfo(name, Types::LANGPAIRS, size, QUrl(), state, ""));
     }
-
     auto state = States::INSTALL;
     if(QDir("/usr/share/apertium-apy").exists() || QDir("/usr/share/apertium-gp/apertium-apy").exists())
         state = States::UNINSTALL;
-    model->addItem(PkgInfo("apertium-apy", Types::TOOLS, mngr->getSize("apertium-apy"),
+    model->addItem(PkgInfo("apertium-apy", Types::TOOLS, mngr->getInfo("apertium-apy").remove(QRegularExpression(".* ")).toInt(),
                         QUrl(), state, QString(), true));
     ui->view->resizeColumnsToContents();
     ui->view->setSortingEnabled(true);

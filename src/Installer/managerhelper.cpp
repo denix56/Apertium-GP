@@ -37,10 +37,10 @@ int ManagerHelper::installRemove(const QStringList &packagesInstall, const QStri
     QStringList args;
     args <<"pkexec" << scriptPath;
     if (!packagesInstall.isEmpty())
-        args << "--install" << packagesInstall;
+        args << "--install" << "\"" + packagesInstall.join(' ') + "\"";
 
     if (!packagesRemove.isEmpty())
-        args << "--remove" << packagesRemove;
+        args << "--remove" << "\"" + packagesRemove.join(' ') + "\"";
     cmd->start(args.join(' '));
     cmd->waitForStarted();
     while(cmd->state()==QProcess::Running)
@@ -59,9 +59,9 @@ int ManagerHelper::update() const
     return cmd->exitCode();
 }
 
-QString ManagerHelper::search(const QString &package) const
+QString ManagerHelper::search(const QString &name) const
 {
-    cmd->start("pkexec", QStringList() << scriptPath << "--search" << package);
+    cmd->start("pkexec", QStringList() << scriptPath << "--search" << name);
     cmd->waitForStarted();
     while(cmd->state()==QProcess::Running)
         qApp->processEvents();
@@ -70,15 +70,14 @@ QString ManagerHelper::search(const QString &package) const
 }
 
 //TODO: optimize for asking info about multiple packages
-unsigned long long ManagerHelper::getSize(const QString &package) const
+QString ManagerHelper::getInfo(const QString &packages) const
 {
-    cmd->start("pkexec", QStringList() << scriptPath << "--info" << package);
+    cmd->start("pkexec "+ scriptPath + " --info \"" + packages + "\"");
     cmd->waitForStarted();
     while(cmd->state()==QProcess::Running)
         qApp->processEvents();
 
     if(cmd->exitCode())
         return 0;
-
-    return cmd->readAllStandardOutput().toULongLong();
+    return cmd->readAllStandardOutput();
 }

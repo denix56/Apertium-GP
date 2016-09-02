@@ -16,6 +16,7 @@
 * You should have received a copy of the GNU General Public License
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <set>
 
 #include <QUrlQuery>
 #include <QJsonDocument>
@@ -28,7 +29,6 @@
 #include <QMenu>
 #include <QSpinBox>
 #include <QDialogButtonBox>
-#include <set>
 #include <QLocale>
 #include <QDir>
 #include <QTableView>
@@ -40,14 +40,13 @@
 #include <QStyle>
 #include <QFileDialog>
 #include <QDesktopServices>
-#include <QWidget>
+#include <QDesktopWidget>
 #include <QDebug>
 
 #include "translator.h"
 #include "docshandler.h"
 #include "tablecombobox.h"
 #include "downloadwindow.h"
-#include "initializer.h"
 #include "settingsdialog.h"
 
 #include "gpmainwindow.h"
@@ -88,8 +87,6 @@ bool GpMainWindow::initialize()
     dlg->show();
 #endif
     appdata  = new QDir(DATALOCATION);
-    //open file with Initializer::conf
-    loadConf();
 
     //initialize language selection buttons
     SourceLangBtns.resize(3);
@@ -138,12 +135,6 @@ bool GpMainWindow::initialize()
     connect(exitAction, &QAction::triggered, qApp, &QApplication::quit);
     trayMenu->addAction(exitAction);
     trayIcon->setContextMenu(trayMenu);
-    if (Initializer::conf->value("extra/traywidget").toBool()) {
-        trayIcon->show();
-        trayWidget->show();
-        qApp->setQuitOnLastWindowClosed(false);
-    }
-
     ui->SourceLangComboBox->setFixedHeight(ui->SourceLang1->height()-2);
     ui->TargetLangComboBox->setFixedHeight(ui->SourceLang1->height()-2);
     ui->boxInput->setTextColor(Qt::black);
@@ -273,7 +264,12 @@ bool GpMainWindow::initialize()
     {
         SettingsDialog dlg(this);
         dlg.exec();
+        loadConf();
     });
+
+    //read settings
+    loadConf();
+
     return initRes;
 }
 
@@ -914,9 +910,17 @@ void GpMainWindow::loadConf()
     QFont font(ui->boxInput->font());
     if (!Initializer::conf->contains(FONTSIZE))
         Initializer::conf->setValue(FONTSIZE,QVariant(14));
-    font.setPointSize(Initializer::conf->value(FONTSIZE,QVariant(14)).toInt());
+    font.setPointSize(Initializer::conf->value(FONTSIZE).toInt());
     ui->boxInput->setFont(font);
     ui->boxOutput->setFont(font);
+
+    if (!Initializer::conf->contains("extra/traywidget/position"))
+        Initializer::conf->setValue("extra/traywidget/position", QVariant::fromValue(BottomRight));
+    setTrayWidgetPosition(static_cast<Position>(Initializer::conf->value("extra/traywidget/position").toUInt()));
+    if (!Initializer::conf->contains("extra/traywidget/enabled"))
+        Initializer::conf->setValue("extra/traywidget/enabled", false);
+    setTrayWidgetEnabled(Initializer::conf->value("extra/traywidget/enabled").toBool());
+
 }
 
 void GpMainWindow::saveMru()
@@ -1058,3 +1062,17 @@ void GpMainWindow::setLangpair(QString source, QString target) {
     }
 }
 
+ void GpMainWindow::setTrayWidgetPosition(Position position)
+ {
+     QRect desktop = qApp->desktop()->availableGeometry();
+     QMap <Position, QRect> pos_coords {
+         { TopLeft, QRect(desktop.left(), desktop.top(),trayWidget->width(), trayWidget->height()) },
+         { TopRight, QRect(desktop.right()-trayWidget->width(),desktop.top(),
+                                     trayWidget->width(), trayWidget->height()) },
+         { BottomLeft, QRect(desktop.left(), desktop.bottom()-trayWidget->height(),
+                                       trayWidget->width(), trayWidget->height()) },
+         { BottomRight, QRect(desktop.right()-trayWidget->width(), desktop.bottom()-trayWidget->height(),
+                                        trayWidget->width(), trayWidget->height()) },
+     };
+     trayWidget->setGeometry(pos_coords[position]);
+ }

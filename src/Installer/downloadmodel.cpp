@@ -122,7 +122,6 @@ bool DownloadModel::addItem(const PkgInfo &f)
     beginInsertRows(QModelIndex(),rowCount(),rowCount());
     downList.push_back(f);
     endInsertRows();
-
     emit dataChanged(createIndex(rowCount()-1,0),createIndex(rowCount()-1,columnCount()-1),
                      QVector<int>() << Qt::EditRole);
     return true;

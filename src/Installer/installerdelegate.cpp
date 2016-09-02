@@ -94,15 +94,19 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
                 checkBox.state = QStyle::State_Enabled | QStyle::State_Off;
             QApplication::style()->drawControl( QStyle::CE_CheckBox, &checkBox, painter);
 #endif
-
         }
         else {
             QTextOption text;
             text.setAlignment(Qt::AlignCenter);
+            QRect rect = option.rect;
+            if (static_cast<Columns>(index.column()) == Columns::NAME) {
+                text.setWrapMode(QTextOption::WordWrap);
+                rect.setWidth(rect.width()-5);
 
-            if (static_cast<Columns>(index.column()) == Columns::NAME && model->item(index.row())->highlight)
-                painter->setPen(Qt::red);
-            painter->drawText(option.rect,index.data().toString(),text);
+                if (model->item(index.row())->highlight)
+                    painter->setPen(Qt::red);
+            }
+            painter->drawText(rect, index.data().toString(), text);
         }
     painter->restore();
 }
@@ -124,7 +128,7 @@ QSize InstallerDelegate::sizeHint(const QStyleOptionViewItem &option, const QMod
 {
     switch(static_cast<Columns>(index.column())) {
     case Columns::NAME:
-        return QSize(160,option.rect.height());
+        return QSize(205,option.rect.height());
     case Columns::TYPE:
         return QSize(70,option.rect.height());
     case Columns::SIZE:

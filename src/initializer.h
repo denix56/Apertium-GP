@@ -32,6 +32,9 @@
 #endif
 const QString scriptPath = "/usr/share/apertium-gp/apertium-gp-helper.pl";
 
+enum Position { TopLeft, TopRight, BottomLeft, BottomRight };
+Q_DECLARE_METATYPE(Position)
+
 class Initializer
 {
 public:

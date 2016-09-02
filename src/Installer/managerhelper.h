@@ -32,9 +32,9 @@ public:
 
     int update() const;
 
-    QString search(const QString &package) const;
+    QString search(const QString &name) const;
 
-    unsigned long long getSize(const QString &package) const;
+    QString getInfo(const QString &packages) const;
 
 signals:
     void canceled();

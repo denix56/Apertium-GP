@@ -21,6 +21,7 @@
 #define SETTINGSDIALOG_H
 
 #include <QDialog>
+#include <QCheckBox>
 #include "gpmainwindow.h"
 
 namespace Ui {
@@ -40,8 +41,12 @@ private slots:
 
     void changeFont(int size);
 
+    void recheck_checkboxes(Position pos);
+
 private:
     Ui::SettingsDialog *ui;
+
+    QMap <Position, QCheckBox*> *pos_checkbox;
 };
 
 #endif // SETTINGSDIALOG_H

@@ -19,9 +19,6 @@
 
 #ifndef GPMAINWINDOW_H
 #define GPMAINWINDOW_H
-#include "headbutton.h"
-#include "languagetablemodel.h"
-#include "traywidget.h"
 #include <QMainWindow>
 #include <QTextEdit>
 #include <QNetworkAccessManager>
@@ -36,6 +33,12 @@
 #include <QListWidgetItem>
 #include <QProgressDialog>
 #include <QSystemTrayIcon>
+
+#include "headbutton.h"
+#include "languagetablemodel.h"
+#include "traywidget.h"
+#include "initializer.h"
+
 namespace Ui {
 
 class DocsHandler;
@@ -60,7 +63,6 @@ public:
 
     QString getText() const;
 
-    void setTrayWidgetEnabled(bool b);
 
     inline Translator * getTranslator() const
     {
@@ -172,7 +174,12 @@ private:
     const QString url = "http://localhost:2737";
 
     void loadConf();
+
     void setLangpair(QString source, QString target = QString());
+
+    void setTrayWidgetPosition(Position position);
+
+    void setTrayWidgetEnabled(bool b);
 };
 
 #endif
