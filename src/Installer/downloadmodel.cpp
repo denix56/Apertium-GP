@@ -74,7 +74,7 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
             return typeNames[downList[i].type];
 
         case Columns::SIZE:
-            return this->formatBytes(downList[i].size);
+            return downList[i].size > 0 ? this->formatBytes(downList[i].size) : QString();
 
         case Columns::STATE:
             return stateNames[downList[i].state];

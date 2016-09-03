@@ -38,11 +38,11 @@ sub _upstart_restart{ system("restart apertium-apy"); };
 my ($start, $stop, $restart);
 
 sub set_server_cmds {
-	if (system("which systemctl >/dev/null") == 0) {
+	if (system("which systemctl &>/dev/null") == 0) {
 		$start = \&_systemctl_start;
 		$stop = \&_systemctl_stop;
 		$restart = \&_systemctl_restart;
-   	} elsif (system("which upstart >/dev/null") == 0) { 
+   	} elsif (system("which upstart &>/dev/null") == 0) { 
    		$start = \&_upstart_start;
 		$stop = \&_upstart_stop;
 		$restart = \&_upstart_restart;
@@ -135,16 +135,20 @@ sub set_manager_commands {
 sub get_size {
 	my @args = @_;
 	my %package_sizes;
+	my @output = split /\n{2,}/, $get_info->($args[1]);
 	for ($Manager) {
 		when ("apt-get" || "aptitude") {
-			my @output = split /\n{2,}/, $get_info->($args[1]);
 			foreach (@output) {
 				my ($name, $size);
 				if ($_ =~ /Package:\s(.*)\n/){
 					$name = $1;
+				} else {
+					next;
 				}
 				if ($_ =~ /\nSize:\s(\d+)\n/) {
 					$size = $1;
+				} else {
+					next;
 				}
 				if(exists $package_sizes{$name}){ 
 				$package_sizes{$name} = max($size, $package_sizes{$name});
@@ -154,20 +158,26 @@ sub get_size {
 			}
 		}
 		when ("zypper") {
-			my @output = split /\n{2,}/, $get_info->($args[1]);
 			shift @output;
 			foreach (@output) {
+				if (not($_ =~ /noarch/)){
+					next;
+				}
 				my ($name, $size);
 				if ($_ =~ /(apertium-[a-z]{2,3}-[a-z]{2,3})\n/){
 					$name = $1;
+				} else {
+					next;
 				}
 				if ($_ =~ /\s(\d+[,\.]?\d*)\s(([KM]i)?B)\n/) {
 					$size = $1;		
 					if ($2 eq "MiB"){
-						$size =  int(($size + 0.5) * 1024 * 1024);
+						$size =  int($size * 1024 * 1024 + 0.5);
 					} elsif ($2 eq "KiB"){
-						$size = int(($size + 0.5) * 1024);
+						$size = int($size * 1024 + 0.5);
 					}
+				} else{
+					next;
 				}
 				
 				if(exists $package_sizes{$name}){ 
@@ -178,9 +188,33 @@ sub get_size {
 			}	
 		}
 		when ("dnf" || "yum") {
-		#FIXME: bug with args
-			my @output = $get_info->($args[1]) =~ /\nSize: (\d+)\n/g;
-			print max(@output);
+			foreach (@output) {
+				if (not($_ =~ /noarch/)){
+					next;
+				}
+				my ($name, $size);
+				if ($_ =~ /(apertium-[a-z]{2,3}-[a-z]{2,3})\n/){
+					$name = $1;
+				} else {
+					next;
+				}
+				if ($_ =~ /\s(\d+[,\.]?\d*)\s([KMB])\n/) {
+					$size = $1;		
+					if ($2 eq "M"){
+						$size =  int($size * 1024 * 1024 + 0.5);
+					} elsif ($2 eq "K"){
+						$size = int($size * 1024 + 0.5);
+					}
+				} else {
+					next;
+				}
+				
+				if(exists $package_sizes{$name}){ 
+				$package_sizes{$name} = max($size, $package_sizes{$name});
+				} else{
+					$package_sizes{$name} = $size;
+				}
+			}	
 		}
 	}
 	foreach (keys %package_sizes){
@@ -191,7 +225,7 @@ sub get_size {
 sub set_manager {
 	my @manager_array = qw/zypper dnf yum apt-get aptitude/;
 	foreach my $temp_manager (@manager_array) {
-		if(system("which $temp_manager >/dev/null") == 0){
+		if(system("which $temp_manager &>/dev/null") == 0){
 			$Manager = $temp_manager;
 			set_manager_commands();
 			return;
@@ -229,7 +263,7 @@ sub remove_handler {
 
 sub search_handler {
 my @args = @_;
-	my @output = $search_package->($args[1]) =~ /(apertium-(?!all-dev)[a-z]{2,3}-[a-z]{2,3})\s/g;
+	my @output = $search_package->($args[1]) =~ /(apertium-(?!all-dev)[a-z]{2,3}-[a-z]{2,3})[\s\n]/g;
 	print join(' ', uniq @output);
 }
 
