@@ -161,8 +161,7 @@ bool GpMainWindow::initialize()
     serverStartedExitCode = apy->execute("pkexec", QStringList() << scriptPath << "--start");
     if(serverStartedExitCode) {
         if (serverStartedExitCode == 2) {
-            apy->setProgram("/usr/share/apertium-gp/apertium-apy/apertium-apy/servlet.py /usr/share/apertium");
-            apy->start();
+            apy->start("/usr/share/apertium-gp/apertium-apy/apertium-apy/servlet.py /usr/share/apertium");
             apy->waitForStarted();
         }
         else
@@ -971,7 +970,7 @@ void GpMainWindow::dlAction_triggered()
         checked = true;
         dlWindow.exec();
         apy->kill();
-        apy->start();
+        apy->start("/usr/share/apertium-gp/apertium-apy/apertium-apy/servlet.py /usr/share/apertium");
         //wait while server starts
         while(true) {
             QEventLoop loop;
