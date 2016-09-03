@@ -34,7 +34,6 @@ TrayWidget::TrayWidget(QWidget *parent) :
 }
 
 
-
 void TrayWidget::translationReceived(const QString &result)
 {
     ui->textEdit_2->clear();

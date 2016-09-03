@@ -1,6 +1,22 @@
 #!/usr/bin/perl
 
-#script for executing all sudo commands required by Apertium-GP
+# Copyright (C) 2016, Denys Senkin <denisx9.0c@gmail.com>
+#
+# This file is part of apertium-gp
+# apertium-gp is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# apertium-gp is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
+# 
+# script for executing all sudo commands required by Apertium-GP
 
 use v5.18;
 use strict;
@@ -140,15 +156,11 @@ sub get_size {
 		when ("zypper") {
 			my @output = split /\n{2,}/, $get_info->($args[1]);
 			shift @output;
-			my $packages = $args[1];
-			$packages =~ s/\s/|/;
-			
 			foreach (@output) {
-				my ($name, $size);				
-				if ($_ =~ /($packages)/){
+				my ($name, $size);
+				if ($_ =~ /(apertium-[a-z]{2,3}-[a-z]{2,3})\n/){
 					$name = $1;
 				}
-				
 				if ($_ =~ /\s(\d+[,\.]?\d*)\s(([KM]i)?B)\n/) {
 					$size = $1;		
 					if ($2 eq "MiB"){
