@@ -99,7 +99,8 @@ DISTFILES += \
     ../COPYING \
     ../Apertium-GP.desktop \
     ../apertium.ico \
-    scripts/apertium-gp-helper.pl
+    scripts/apertium-gp-helper.pl \
+    GUI/apertium.rc
 
 
 unix:!macx:contains(QT_VERSION, ^5\\.[0-5]\\..*) {

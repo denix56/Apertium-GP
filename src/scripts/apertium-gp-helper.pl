@@ -63,19 +63,17 @@ sub _apt_search_package{ return `apt-cache search @_` };
 sub _apt_get_info{ return `apt-cache show @_` };
 sub _aptitude_get_info{ return `$Manager show @_` };
 
-sub _dnf_yum_install{ return system("$Manager --y install @_") };
-sub _dnf_yum_remove{ return system("$Manager --y remove @_") };
+sub _dnf_yum_install{ return system("$Manager -y install @_") };
+sub _dnf_yum_remove{ return system("$Manager -y remove @_") };
 sub _dnf_yum_update{ return system("$Manager check-update") };
-sub _dnf_yum_install_server{ return system("cd /usr/share/apertium-gp && $Manager --y install python3-devel python3-pip zlib-devel subversion \
-	&& pip3 install --upgrade tornado && svn co https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/apertium-apy") };
+sub _dnf_yum_install_server{ return system("cd /usr/share/apertium-gp && $Manager -y install python3-devel python3-pip zlib-devel subversion && pip3 install --upgrade tornado && svn co https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/apertium-apy") };
 sub _dnf_yum_remove_server{ return remove_tree('/usr/share/apertium-gp/apertium-apy') };
 sub _dnf_yum_get_info{ return `$Manager info @_` };
 
 sub _zypper_install{ return system("$Manager --non-interactive install @_") };
 sub _zypper_remove{ return system("$Manager --non-interactive remove @_") };
 sub _zypper_update{ return system("$Manager refresh") };
-sub _zypper_install_server{ return system("cd /usr/share/apertium-gp && $Manager --non-interactive install python3-devel python3-pip zlib-devel subversion \
-	&& pip3 install --upgrade tornado && svn co https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/apertium-apy") };
+sub _zypper_install_server{ return system("cd /usr/share/apertium-gp && $Manager --non-interactive install python3-devel python3-pip zlib-devel subversion && pip3 install --upgrade tornado && svn co https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/apertium-apy") };
 sub _zypper_remove_server{ return remove_tree('/usr/share/apertium-gp/apertium-apy') };
 sub _zypper_get_info{ return `$Manager info @_` };
 
@@ -160,7 +158,7 @@ sub get_size {
 		when ("zypper") {
 			shift @output;
 			foreach (@output) {
-				if (not($_ =~ /noarch/)){
+				if (not($_ =~ /(noarch)/)){
 					next;
 				}
 				my ($name, $size);
@@ -189,7 +187,7 @@ sub get_size {
 		}
 		when ("dnf" || "yum") {
 			foreach (@output) {
-				if (not($_ =~ /noarch/)){
+				if (not($_ =~ /(noarch)/)){
 					next;
 				}
 				my ($name, $size);

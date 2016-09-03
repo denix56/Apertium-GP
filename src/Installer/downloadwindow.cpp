@@ -50,7 +50,7 @@ DownloadWindow::DownloadWindow(QWidget *parent) :
     ui->view->viewport()->setAttribute(Qt::WA_Hover);
     connect(delegate,&InstallerDelegate::stateChanged,this,&DownloadWindow::chooseAction);
     setFixedSize(547, 582);
-    setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint | Qt::WindowMinimizeButtonHint
+    setWindowFlags(Qt::WindowCloseButtonHint | Qt::WindowMinimizeButtonHint
                    | Qt::WindowTitleHint);
 #ifdef Q_OS_LINUX
     auto applyButton = new QPushButton(tr("Apply"),this);
@@ -176,7 +176,7 @@ bool DownloadWindow::getData(bool checked)
         if (QDir("/usr/share/apertium/apertium-"+lang1+"-"+lang2).exists() ||
                 QDir("/usr/share/apertium/apertium-"+lang2+"-"+lang1).exists())
             state = States::UNINSTALL;
-        model->addItem(PkgInfo(name, Types::LANGPAIRS, size, QUrl(), state, ""));
+        model->addItem(PkgInfo("apertium-" + name, Types::LANGPAIRS, size, QUrl(), state, ""));
     }
     auto state = States::INSTALL;
     if(QDir("/usr/share/apertium-apy").exists() || QDir("/usr/share/apertium-gp/apertium-apy").exists())
