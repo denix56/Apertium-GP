@@ -160,6 +160,9 @@ p, li { white-space: pre-wrap; }
            <property name="styleSheet">
             <string notr="true">#screenWidget{
 border: 1px solid dark-grey;
+}
+QCheckBox{
+background: transparent;
 }</string>
            </property>
            <widget class="QWidget" name="gridLayoutWidget">
@@ -174,6 +177,9 @@ border: 1px solid dark-grey;
             <layout class="QGridLayout" name="gridLayout_7">
              <item row="0" column="0" alignment="Qt::AlignLeft|Qt::AlignTop">
               <widget class="QCheckBox" name="Topleft">
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
                <property name="text">
                 <string>Top left</string>
                </property>
@@ -184,6 +190,9 @@ border: 1px solid dark-grey;
              </item>
              <item row="0" column="1" alignment="Qt::AlignRight|Qt::AlignTop">
               <widget class="QCheckBox" name="TopRight">
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
                <property name="text">
                 <string>Top right</string>
                </property>
@@ -191,6 +200,12 @@ border: 1px solid dark-grey;
              </item>
              <item row="2" column="1" alignment="Qt::AlignRight|Qt::AlignBottom">
               <widget class="QCheckBox" name="BottomRight">
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
+               <property name="autoFillBackground">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Bottom right</string>
                </property>
@@ -198,6 +213,12 @@ border: 1px solid dark-grey;
              </item>
              <item row="2" column="0" alignment="Qt::AlignLeft|Qt::AlignBottom">
               <widget class="QCheckBox" name="BottomLeft">
+               <property name="mouseTracking">
+                <bool>true</bool>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
                <property name="text">
                 <string>Bottom left</string>
                </property>
