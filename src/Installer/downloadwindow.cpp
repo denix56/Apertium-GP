@@ -50,8 +50,8 @@ DownloadWindow::DownloadWindow(QWidget *parent) :
     ui->view->viewport()->setAttribute(Qt::WA_Hover);
     connect(delegate,&InstallerDelegate::stateChanged,this,&DownloadWindow::chooseAction);
     setFixedSize(547, 582);
-    setWindowFlags(Qt::WindowCloseButtonHint | Qt::WindowMinimizeButtonHint
-                   | Qt::WindowTitleHint);
+//    setWindowFlags(Qt Qt::WindowCloseButtonHint | Qt::WindowMinimizeButtonHint
+//                   | Qt::WindowTitleHint);
 #ifdef Q_OS_LINUX
     auto applyButton = new QPushButton(tr("Apply"),this);
     connect(applyButton, &QPushButton::clicked,this, &DownloadWindow::applyChanges);
