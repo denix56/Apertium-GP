@@ -971,6 +971,7 @@ void GpMainWindow::dlAction_triggered()
         dlWindow.exec();
         if (serverStartedExitCode == 2) {
             apy->kill();
+            apy->waitForFinished();
             apy->start(SERVERSTARTCMD);
         }
         //wait while server starts
