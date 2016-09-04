@@ -158,7 +158,7 @@ p, li { white-space: pre-wrap; }
             </sizepolicy>
            </property>
            <property name="styleSheet">
-            <string notr="true">.QWidget{
+            <string notr="true">#screenWidget{
 border: 1px solid dark-grey;
 }</string>
            </property>
