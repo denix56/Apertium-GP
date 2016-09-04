@@ -161,7 +161,7 @@ bool GpMainWindow::initialize()
     serverStartedExitCode = apy->execute("pkexec", QStringList() << scriptPath << "--start");
     if(serverStartedExitCode) {
         if (serverStartedExitCode == 2) {
-            apy->start("/usr/share/apertium-gp/apertium-apy/apertium-apy/servlet.py /usr/share/apertium");
+            apy->start(SERVERSTARTCMD);
             apy->waitForStarted();
         }
         else
@@ -170,7 +170,7 @@ bool GpMainWindow::initialize()
     //wait while server starts
     while(true) {
         QEventLoop loop;
-        auto reply = requestSender->get(QNetworkRequest(url+"/stats"));
+        auto reply = requestSender->get(QNetworkRequest(URL+"/stats"));
         connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
         loop.exec();
         if (reply->error()== QNetworkReply::NoError) {
@@ -186,7 +186,7 @@ bool GpMainWindow::initialize()
     //Installing new packages
     connect(dlAction, &QAction::triggered,this,&GpMainWindow::dlAction_triggered);
 
-    request.setUrl(url+"/listPairs");
+    request.setUrl(URL+"/listPairs");
     QEventLoop loop;
     auto reply = requestSender->get(request);
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
@@ -243,11 +243,11 @@ bool GpMainWindow::initialize()
     {
         if(!text.isEmpty()) {
 #ifdef Q_OS_LINUX
-            if (trayWidget->inputComboBox()->findText(idLangText)==-1) {
+            if (trayWidget->inputComboBox()->findText(IDLANGTEXT)==-1) {
                 trayWidget->inputComboBox()->blockSignals(true);
                 trayWidget->inputComboBox()->removeItem(trayWidget->inputComboBox()->findText(
-                                                            idLangText, Qt::MatchStartsWith | Qt::MatchCaseSensitive));
-                trayWidget->inputComboBox()->addItem(idLangText);
+                                                            IDLANGTEXT, Qt::MatchStartsWith | Qt::MatchCaseSensitive));
+                trayWidget->inputComboBox()->addItem(IDLANGTEXT);
                 trayWidget->inputComboBox()->setCurrentText(text);
                 trayWidget->inputComboBox()->blockSignals(false);
             }
@@ -400,8 +400,8 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
             ui->mru->addItem(item);
         }
 
-        ui->SourceLangComboBox->model()->addItem(idLangText);
-        trayWidget->inputComboBox()->addItem(idLangText);
+        ui->SourceLangComboBox->model()->addItem(IDLANGTEXT);
+        trayWidget->inputComboBox()->addItem(IDLANGTEXT);
         trayWidget->inputComboBox()->blockSignals(false);
     }
     // Error occured
@@ -465,9 +465,9 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
         ui->SourceLangComboBox->model()->removeItem(0,0);
 
 #ifdef Q_OS_LINUX
-    if (SourceLangBtns[0]->text().contains(idLangText)) {
+    if (SourceLangBtns[0]->text().contains(IDLANGTEXT)) {
         SourceLangBtns[0]->setText(SourceLangBtns[2]->text());
-        SourceLangBtns[2]->setText(idLangText);
+        SourceLangBtns[2]->setText(IDLANGTEXT);
     }
 #endif
     ui->SourceLangComboBox->setCurrentIndex(-1);
@@ -511,8 +511,8 @@ void GpMainWindow::updateComboBox(QModelIndex index)
     //TODO: make replace the third button with the sourceLangComboBox
     ui->SourceLangComboBox->model()->removeItem(index.row(),index.column());
 #ifdef Q_OS_LINUX
-    if (SourceLangBtns[2]->text().contains(idLangText))
-        ui->SourceLangComboBox->model()->addItem(idLangText);
+    if (SourceLangBtns[2]->text().contains(IDLANGTEXT))
+        ui->SourceLangComboBox->model()->addItem(IDLANGTEXT);
     else
 #endif
         ui->SourceLangComboBox->model()->addItem(SourceLangBtns[2]->text());
@@ -523,8 +523,8 @@ void GpMainWindow::updateComboBox(QModelIndex index)
     trayWidget->outputComboBox()->clear();
 
 #ifdef Q_OS_LINUX
-    if (curr != idLangText) {
-    QNetworkRequest request(url+"/listPairs");
+    if (curr != IDLANGTEXT) {
+    QNetworkRequest request(URL+"/listPairs");
     QEventLoop loop;
     QNetworkAccessManager tmpN(this);
     if (tmpN.networkAccessible() != QNetworkAccessManager::Accessible) {
@@ -600,8 +600,8 @@ void GpMainWindow::clearOtherSButtons()
             btn->setEnabled(true);
             if(btn!=currentSButton) {
                 btn->setChecked(false);
-                if (btn->text().contains(idLangText))
-                    btn->setText(idLangText);
+                if (btn->text().contains(IDLANGTEXT))
+                    btn->setText(IDLANGTEXT);
             }
             else {
                 trayWidget->inputComboBox()->blockSignals(true);
@@ -609,8 +609,8 @@ void GpMainWindow::clearOtherSButtons()
                 trayWidget->inputComboBox()->blockSignals(false);
                 #ifdef Q_OS_LINUX
                 btn->setChecked(true);
-                if (btn->text()==idLangText) {
-                    currentSourceLang = idLangText;
+                if (btn->text()==IDLANGTEXT) {
+                    currentSourceLang = IDLANGTEXT;
                     for (HeadButton *btn : TargetLangBtns) {
                         btn->setText("");
                         btn->setEnabled(false);
@@ -629,7 +629,7 @@ void GpMainWindow::clearOtherSButtons()
     }
 #ifdef Q_OS_LINUX
     auto requestSenderTmp = new QNetworkAccessManager;
-    QNetworkRequest request(url+"/listPairs");
+    QNetworkRequest request(URL+"/listPairs");
     connect(requestSenderTmp,&QNetworkAccessManager::finished,this,
             &GpMainWindow::getResponseOfAvailLang);
     requestSenderTmp->get(request);
@@ -746,7 +746,7 @@ void GpMainWindow::getResponseOfAvailLang(QNetworkReply *reply)
 //send translation request for paragraph
 void GpMainWindow::createRequests(QString text)
 {
-    if (currentSButton->text().contains(idLangText)) {
+    if (currentSButton->text().contains(IDLANGTEXT)) {
 
         const QString mode = "/identifyLang?";
         QUrlQuery urlQ;
@@ -755,7 +755,7 @@ void GpMainWindow::createRequests(QString text)
             urlQ.addQueryItem("q", QUrl::toPercentEncoding(ui->boxInput->toPlainText().split("\n")[0]));
         else
             urlQ.addQueryItem("q", QUrl::toPercentEncoding(text));
-        QUrl u(url+mode);
+        QUrl u(URL+mode);
         u.setQuery(urlQ);
         QNetworkRequest request(u);
         translator->linuxTranslate(request);
@@ -767,7 +767,7 @@ void GpMainWindow::createRequests(QString text)
     if (text.isEmpty() && lastBlockCount!=ui->boxInput->document()->blockCount()) {
         ui->boxOutput->clear();
         outputDoc.clear();
-        QUrl u(url+mode);
+        QUrl u(URL+mode);
         for(auto paragraph : ui->boxInput->toPlainText().split("\n")) {
             urlQ.addQueryItem("q",QUrl::toPercentEncoding(paragraph));
             u.setQuery(urlQ);
@@ -790,7 +790,7 @@ void GpMainWindow::createRequests(QString text)
             urlQ.addQueryItem("q",QUrl::toPercentEncoding(text));
             request.setRawHeader("tray","yes");
         }
-        QUrl u(url+mode);
+        QUrl u(URL+mode);
         u.setQuery(urlQ);
         request.setUrl(u);
         request.setRawHeader("whole","no");
@@ -822,17 +822,17 @@ void GpMainWindow::getReplyFromAPY(QNetworkReply *reply)
             currentSourceLang = tmp;
             for (HeadButton *btn : SourceLangBtns)
                 if (btn->isChecked()) {
-                    btn->setText(idLangText+" ("+Initializer::langNamesMap[currentSourceLang]+")");
+                    btn->setText(IDLANGTEXT+" ("+Initializer::langNamesMap[currentSourceLang]+")");
                     trayWidget->inputComboBox()->blockSignals(true);
                     trayWidget->inputComboBox()->removeItem(trayWidget->inputComboBox()->findText(
-                                                                idLangText,Qt::MatchStartsWith | Qt::MatchCaseSensitive));
-                    trayWidget->inputComboBox()->addItem(idLangText+" ("+Initializer::langNamesMap[currentSourceLang]+")");
-                    trayWidget->inputComboBox()->setCurrentText(idLangText+" ("+Initializer::langNamesMap[currentSourceLang]+")");
+                                                                IDLANGTEXT,Qt::MatchStartsWith | Qt::MatchCaseSensitive));
+                    trayWidget->inputComboBox()->addItem(IDLANGTEXT+" ("+Initializer::langNamesMap[currentSourceLang]+")");
+                    trayWidget->inputComboBox()->setCurrentText(IDLANGTEXT+" ("+Initializer::langNamesMap[currentSourceLang]+")");
                     trayWidget->inputComboBox()->blockSignals(false);
                     break;
                 }
             auto requestSenderTmp = new QNetworkAccessManager;
-            QNetworkRequest request(url+"/listPairs");
+            QNetworkRequest request(URL+"/listPairs");
             QEventLoop loop;
             connect(requestSenderTmp,&QNetworkAccessManager::finished,this,
                     &GpMainWindow::getResponseOfAvailLang);
@@ -925,7 +925,7 @@ void GpMainWindow::loadConf()
 
 void GpMainWindow::saveMru()
 {
-    if (currentSourceLang==idLangText)
+    if (currentSourceLang==IDLANGTEXT)
         return;
     auto langpair = currentSourceLang+"-"+currentTargetLang;
     Initializer::conf->setValue(langpair, QVariant(Initializer::conf->value
@@ -969,12 +969,14 @@ void GpMainWindow::dlAction_triggered()
 #ifdef Q_OS_LINUX
         checked = true;
         dlWindow.exec();
-        apy->kill();
-        apy->start("/usr/share/apertium-gp/apertium-apy/apertium-apy/servlet.py /usr/share/apertium");
+        if (serverStartedExitCode == 2) {
+            apy->kill();
+            apy->start(SERVERSTARTCMD);
+        }
         //wait while server starts
         while(true) {
             QEventLoop loop;
-            auto reply = requestSender->get(QNetworkRequest(url+"/stats"));
+            auto reply = requestSender->get(QNetworkRequest(URL+"/stats"));
             connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
             loop.exec();
             if (reply->error()== QNetworkReply::NoError) {
@@ -985,7 +987,7 @@ void GpMainWindow::dlAction_triggered()
         }
         const QString mode = "/listPairs";
         QNetworkAccessManager tmp(this);
-        auto reply = tmp.get(QNetworkRequest(url+mode));
+        auto reply = tmp.get(QNetworkRequest(URL+mode));
         QEventLoop loop;
         connect(reply, &QNetworkReply::finished,&loop, &QEventLoop::quit);
         loop.exec();

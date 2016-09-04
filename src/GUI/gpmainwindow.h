@@ -170,8 +170,10 @@ private:
     int serverStartedExitCode;
 
     const QString FONTSIZE = "interface/fontsize";
-    const QString idLangText = tr("Identify language...");
-    const QString url = "http://localhost:2737";
+    const QString IDLANGTEXT = tr("Identify language...");
+    const QString URL = "http://localhost:2737";
+    const QString SERVERSTARTCMD = "/usr/share/apertium-gp/apertium-apy/apertium-apy/servlet.py "
+                                   "/usr/share/apertium/modes";
 
     void loadConf();
 
