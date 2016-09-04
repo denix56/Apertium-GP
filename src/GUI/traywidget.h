@@ -42,14 +42,25 @@ public:
 signals:
     void prindEnded(QString text);
 
+    void maximized();
+
 public slots:
     void translationReceived(const QString &result);
 
+    void setTitleBarEnabled(bool b);
+
+    void setTransparentEnabled(bool b);
+
 private:
+    void enterEvent(QEvent *e);
+
+    void leaveEvent(QEvent *e);
+
     Ui::TrayWidget *ui;
 
-    const int WIDTH = 250;
-    const int HEIGHT = 120;
+    const qreal HIDE = 0.4;
+    const qreal SHOW = 1.0;
+    bool transparentEnabled;
 };
 
 #endif // TRAYWIDGET_H

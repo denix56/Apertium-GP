@@ -110,7 +110,7 @@ p, li { white-space: pre-wrap; }
       <layout class="QGridLayout" name="gridLayout_5">
        <item row="0" column="0">
         <layout class="QGridLayout" name="gridLayout_4">
-         <item row="1" column="0">
+         <item row="2" column="0">
           <widget class="QCheckBox" name="enableTrayWidget">
            <property name="font">
             <font>
@@ -149,7 +149,7 @@ p, li { white-space: pre-wrap; }
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
+         <item row="5" column="0">
           <widget class="QWidget" name="screenWidget" native="true">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -171,11 +171,11 @@ background: transparent;
               <x>0</x>
               <y>0</y>
               <width>370</width>
-              <height>311</height>
+              <height>251</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_7">
-             <item row="0" column="0" alignment="Qt::AlignLeft|Qt::AlignTop">
+             <item row="1" column="0" alignment="Qt::AlignLeft|Qt::AlignTop">
               <widget class="QCheckBox" name="Topleft">
                <property name="focusPolicy">
                 <enum>Qt::NoFocus</enum>
@@ -188,7 +188,7 @@ background: transparent;
                </property>
               </widget>
              </item>
-             <item row="0" column="1" alignment="Qt::AlignRight|Qt::AlignTop">
+             <item row="1" column="1" alignment="Qt::AlignRight|Qt::AlignTop">
               <widget class="QCheckBox" name="TopRight">
                <property name="focusPolicy">
                 <enum>Qt::NoFocus</enum>
@@ -198,7 +198,7 @@ background: transparent;
                </property>
               </widget>
              </item>
-             <item row="2" column="1" alignment="Qt::AlignRight|Qt::AlignBottom">
+             <item row="3" column="1" alignment="Qt::AlignRight|Qt::AlignBottom">
               <widget class="QCheckBox" name="BottomRight">
                <property name="focusPolicy">
                 <enum>Qt::NoFocus</enum>
@@ -211,7 +211,7 @@ background: transparent;
                </property>
               </widget>
              </item>
-             <item row="2" column="0" alignment="Qt::AlignLeft|Qt::AlignBottom">
+             <item row="3" column="0" alignment="Qt::AlignLeft|Qt::AlignBottom">
               <widget class="QCheckBox" name="BottomLeft">
                <property name="mouseTracking">
                 <bool>true</bool>
@@ -224,7 +224,7 @@ background: transparent;
                </property>
               </widget>
              </item>
-             <item row="1" column="0" colspan="2">
+             <item row="2" column="0" colspan="2">
               <widget class="QLabel" name="info">
                <property name="text">
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;Set widget position on the screen&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -236,6 +236,33 @@ background: transparent;
              </item>
             </layout>
            </widget>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QCheckBox" name="titleBarEnabled">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>Enable this option if you have problems with displaying tray icon</string>
+           </property>
+           <property name="text">
+            <string>Enable title bar</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QCheckBox" name="transparentEnabled">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Make transparent when inactive</string>
+           </property>
           </widget>
          </item>
         </layout>

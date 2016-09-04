@@ -18,19 +18,21 @@
 */
 
 
-#include <QDesktopWidget>
-#include <QSystemTrayIcon>
+#include <QFrame>
 #include <QDebug>
+
 
 #include "traywidget.h"
 #include "ui_traywidget.h"
 
 TrayWidget::TrayWidget(QWidget *parent) :
-    QWidget(parent, Qt::ToolTip | Qt::FramelessWindowHint),
+    QWidget(parent, Qt::ToolTip),
     ui(new Ui::TrayWidget)
 {
     ui->setupUi(this);
-    connect(ui->textEdit,&TrayInputTextEdit::printEnded,this,&TrayWidget::prindEnded);
+    connect(ui->textEdit, &TrayInputTextEdit::printEnded, this, &TrayWidget::prindEnded);
+    connect(ui->closeBtn_3, &QPushButton::clicked, qApp, &QApplication::exit);
+    connect(ui->maxBtn_3, &QPushButton::clicked, this, &TrayWidget::maximized);
 }
 
 
@@ -68,4 +70,38 @@ QComboBox* TrayWidget::outputComboBox() const
 TrayWidget::~TrayWidget()
 {
     delete ui;
+}
+
+void TrayWidget::setTitleBarEnabled(bool b)
+{
+    if (b) {
+        ui->closeBtn_3->show();
+        ui->maxBtn_3->show();
+        setFixedHeight(151);
+    }
+    else {
+        ui->closeBtn_3->hide();
+        ui->maxBtn_3->hide();
+        setFixedHeight(131);
+    }
+}
+
+void TrayWidget::setTransparentEnabled(bool b)
+{
+    transparentEnabled = b;
+    setWindowOpacity(b ? HIDE : SHOW);
+}
+
+void TrayWidget::enterEvent(QEvent *e)
+{
+    if(transparentEnabled)
+        setWindowOpacity(SHOW);
+    QWidget::enterEvent(e);
+}
+
+void TrayWidget::leaveEvent(QEvent *e)
+{
+    if(transparentEnabled)
+        setWindowOpacity(HIDE);
+    QWidget::leaveEvent(e);
 }

@@ -44,9 +44,13 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(ui->listWidget,&QListWidget::currentRowChanged,ui->stackedWidget,
             &QStackedWidget::setCurrentIndex);
     connect(ui->enableTrayWidget, &QCheckBox::toggled, ui->screenWidget, &QWidget::setEnabled);
+    connect(ui->enableTrayWidget, &QCheckBox::toggled, ui->titleBarEnabled, &QCheckBox::setEnabled);
+    connect(ui->enableTrayWidget, &QCheckBox::toggled, ui->transparentEnabled, &QCheckBox::setEnabled);
     ui->enableTrayWidget->setChecked(
                 Initializer::conf->value("extra/traywidget/enabled", false).toBool());
     ui->screenWidget->setEnabled(ui->enableTrayWidget->isChecked());
+    ui->titleBarEnabled->setEnabled(ui->enableTrayWidget->isChecked());
+    ui->transparentEnabled->setEnabled(ui->enableTrayWidget->isChecked());
 
      pos_checkbox = new QMap <Position, QCheckBox*> {
         { TopLeft, ui->Topleft },
@@ -63,6 +67,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(ui->TopRight, &QCheckBox::toggled, [&](bool b){ if(b) recheck_checkboxes(TopRight);});
     connect(ui->BottomLeft, &QCheckBox::toggled, [&](bool b){ if(b) recheck_checkboxes(BottomLeft);});
     connect(ui->BottomRight, &QCheckBox::toggled, [&](bool b){ if(b) recheck_checkboxes(BottomRight);});
+
+    ui->titleBarEnabled->setChecked(Initializer::conf->value("extra/traywidget/titlebar", false).toBool());
+
+    ui->transparentEnabled->setChecked(Initializer::conf->value("extra/traywidget/transparent", false).toBool());
     ui->listWidget->setCurrentRow(0);
 
 }
@@ -92,13 +100,14 @@ SettingsDialog::~SettingsDialog()
 void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)
 {
     auto stdBtn = ui->buttonBox->standardButton(button);
-    if (stdBtn==QDialogButtonBox::Apply
-            || stdBtn==QDialogButtonBox::Ok) {
-       Initializer::conf->setValue("interface/fontsize",ui->spinBox->value());
-       Initializer::conf->setValue("extra/traywidget/enabled",ui->enableTrayWidget->isChecked());
+    if (stdBtn==QDialogButtonBox::Apply || stdBtn==QDialogButtonBox::Ok) {
+       Initializer::conf->setValue("interface/fontsize", ui->spinBox->value());
+       Initializer::conf->setValue("extra/traywidget/enabled", ui->enableTrayWidget->isChecked());
        for(auto key : pos_checkbox->keys())
            if(pos_checkbox->value(key)->isChecked())
-               Initializer::conf->setValue("extra/traywidget/position",static_cast<unsigned>(key));
+               Initializer::conf->setValue("extra/traywidget/position", static_cast<unsigned>(key));
+       Initializer::conf->setValue("extra/traywidget/titlebar", ui->titleBarEnabled->isChecked());
+       Initializer::conf->setValue("extra/traywidget/transparent", ui->transparentEnabled->isChecked());
        }
     if (stdBtn==QDialogButtonBox::Ok)
         this->accept();

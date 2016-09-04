@@ -267,6 +267,10 @@ bool GpMainWindow::initialize()
         loadConf();
     });
 
+    connect(this, &GpMainWindow::trayTitleBarEnableChecked, trayWidget, &TrayWidget::setTitleBarEnabled);
+    connect(trayWidget, &TrayWidget::maximized, showFullAction, &QAction::trigger);
+    connect(this, &GpMainWindow::transparentChanged, trayWidget, &TrayWidget::setTransparentEnabled);
+
     //read settings
     loadConf();
 
@@ -285,6 +289,9 @@ QString GpMainWindow::getText() const
 
 void GpMainWindow::setTrayWidgetEnabled(bool b)
 {
+    emit trayTitleBarEnableChecked(Initializer::conf->value("extra/traywidget/titlebar").toBool());
+    emit transparentChanged(Initializer::conf->value("extra/traywidget/transparent").toBool());
+
     trayWidget->setVisible(b);
     trayIcon->setVisible(b);
     qApp->setQuitOnLastWindowClosed(!b);
@@ -916,11 +923,18 @@ void GpMainWindow::loadConf()
 
     if (!Initializer::conf->contains("extra/traywidget/position"))
         Initializer::conf->setValue("extra/traywidget/position", QVariant::fromValue(BottomRight));
-    setTrayWidgetPosition(static_cast<Position>(Initializer::conf->value("extra/traywidget/position").toUInt()));
+
     if (!Initializer::conf->contains("extra/traywidget/enabled"))
         Initializer::conf->setValue("extra/traywidget/enabled", false);
-    setTrayWidgetEnabled(Initializer::conf->value("extra/traywidget/enabled").toBool());
 
+    if (!Initializer::conf->contains("extra/traywidget/titlebar"))
+        Initializer::conf->setValue("extra/traywidget/titlebar", false);
+
+    if (!Initializer::conf->contains("extra/traywidget/transparent"))
+        Initializer::conf->setValue("extra/traywidget/transparent", false);
+
+    setTrayWidgetEnabled(Initializer::conf->value("extra/traywidget/enabled").toBool());
+    setTrayWidgetPosition(static_cast<Position>(Initializer::conf->value("extra/traywidget/position").toUInt()));
 }
 
 void GpMainWindow::saveMru()

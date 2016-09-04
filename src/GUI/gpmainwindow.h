@@ -94,6 +94,10 @@ signals:
 
     void failedToStart();
 
+    void trayTitleBarEnableChecked(bool b);
+
+    void transparentChanged(bool b);
+
 public slots:
     void setFontSize(int size);
 
