@@ -27,6 +27,7 @@
 #include <QDir>
 #include <QAbstractButton>
 #include <QPushButton>
+#include <QCloseEvent>
 
 #include "initializer.h"
 
@@ -69,6 +70,7 @@ DownloadWindow::~DownloadWindow()
 bool DownloadWindow::getData(bool checked)
 {
 #ifndef Q_OS_LINUX
+    Q_UNUSED(checked)
     if (manager->networkAccessible() != QNetworkAccessManager::Accessible)
     {
         QMessageBox::critical(this, tr("Network Inaccessible"),
@@ -110,13 +112,13 @@ bool DownloadWindow::getData(bool checked)
     loop.exec();
     QString lm = reply->rawHeader("Last-Modified");
     QString cl = reply->rawHeader("Content-Length");
-    auto state = INSTALL;
+    auto state = State::INSTALL;
     if (QDir(DATALOCATION+"/apertium-all-dev").exists()) {
-        state = UNINSTALL;
+        state = State::UNINSTALL;
         if (Initializer::conf->value("files/apertium-all-dev").toString() != lm)
-            state = UPDATE;
+            state = State::UPDATE;
     }
-    model->addItem(file("Required Core Tools",TOOLS, cl.toInt(),reply->request().url(),state,lm,true,0));
+    model->addItem(PkgInfo("Required Core Tools",Type::TOOLS, cl.toInt(),reply->request().url(),state,lm,true,0));
     wait.setValue(wait.maximum()/2);
     wait.setLabelText("Checking for new language pairs ...");
 
@@ -137,24 +139,23 @@ bool DownloadWindow::getData(bool checked)
         auto m = it.next();
 
         auto name = m.captured(1);
-        auto state = INSTALL;
+        auto state = State::INSTALL;
         if (QDir(DATALOCATION+"/usr/share/apertium/"+name).exists()) {
-            state = UNINSTALL;
+            state = State::UNINSTALL;
             if (Initializer::conf->value("files/"+name).toString() != m.captured(3))
-                state = UPDATE;
+                state = State::UPDATE;
         }
-        model->addItem(file(name,LANGPAIRS, m.captured(2).toUInt(),
+        model->addItem(PkgInfo(name, Type::LANGPAIRS, m.captured(2).toUInt(),
                             QUrl(QString("http://apertium.projectjj.com/" OS_PATH "/nightly/data.php?deb=")+name),
                             state, m.captured(3)));
     }
     ui->view->resizeColumnsToContents();
     ui->view->setSortingEnabled(true);
-    ui->view->sortByColumn(TYPE,Qt::DescendingOrder);
+    ui->view->sortByColumn(static_cast<int>(Column::TYPE), Qt::DescendingOrder);
     wait.close();
-    if (state == INSTALL)
+    if (state == State::INSTALL)
     {
-        QMessageBox box;
-        box.warning(this,tr("Required Core tools are not installed"),
+        QMessageBox::warning(this,tr("Required Core tools are not installed"),
                     tr("Please, install Required Core tools (they are highlighted red) to make translation work"));
     }
 #else
@@ -165,7 +166,7 @@ bool DownloadWindow::getData(bool checked)
     for(QString pair : mngr->getInfo(mngr->search("apertium")).split('\n')) {
         if (pair.isEmpty())
             continue;
-        auto state = States::INSTALL;
+        auto state = State::INSTALL;
         int i = pair.indexOf(' ');
         QString name = pair.left(i).remove("apertium-");
         int size = pair.mid(i+1).toInt();
@@ -174,17 +175,17 @@ bool DownloadWindow::getData(bool checked)
         QString lang2 = name.mid(i+1);
         if (QDir("/usr/share/apertium/apertium-"+lang1+"-"+lang2).exists() ||
                 QDir("/usr/share/apertium/apertium-"+lang2+"-"+lang1).exists())
-            state = States::UNINSTALL;
-        model->addItem(PkgInfo("apertium-" + name, Types::LANGPAIRS, size, QUrl(), state, ""));
+            state = State::UNINSTALL;
+        model->addItem(PkgInfo("apertium-" + name, Type::LANGPAIRS, size, QUrl(), state, ""));
     }
-    auto state = States::INSTALL;
+    auto state = State::INSTALL;
     if(QDir("/usr/share/apertium-apy").exists() || QDir("/usr/share/apertium-gp/apertium-apy").exists())
-        state = States::UNINSTALL;
-    model->addItem(PkgInfo("apertium-apy", Types::TOOLS, mngr->getInfo("apertium-apy").remove(QRegularExpression(".* ")).toInt(),
+        state = State::UNINSTALL;
+    model->addItem(PkgInfo("apertium-apy", Type::TOOLS, mngr->getInfo("apertium-apy").remove(QRegularExpression(".* ")).toInt(),
                         QUrl(), state, QString(), true));
     ui->view->resizeColumnsToContents();
     ui->view->setSortingEnabled(true);
-    ui->view->sortByColumn(static_cast<int>(Columns::TYPE), Qt::DescendingOrder);
+    ui->view->sortByColumn(static_cast<int>(Column::TYPE), Qt::DescendingOrder);
     wait.close();
 #endif
     return true;
@@ -192,35 +193,38 @@ bool DownloadWindow::getData(bool checked)
 
 void DownloadWindow::chooseAction(int row)
 {
+
+#ifdef Q_OS_LINUX
     int pos;
+#endif
     switch (model->item(row)->state) {
 #ifndef Q_OS_LINUX
-    case States::INSTALL:
-    case States::UPDATE:
-        installpkg(row);
+    case State::INSTALL:
+    case State::UPDATE:
+        installPkg(row);
         break;
 
-    case States::UNINSTALL:
-        removepkg(row);
+    case State::UNINSTALL:
+        removePkg(row);
         break;
 #else
-    case States::INSTALL:
+    case State::INSTALL:
         pos = toUninstall.indexOf(model->item(row)->name);
         if(pos!=-1)
             toUninstall.erase(toUninstall.begin()+pos);
         toInstall.push_back(model->item(row)->name);
-        model->setData(model->index(row, static_cast<int>(Columns::STATE)), QVariant::fromValue(States::UNINSTALL));
+        model->setData(model->index(row, static_cast<int>(Column::STATE)), QVariant::fromValue(State::UNINSTALL));
         break;
 
-    case States::UNINSTALL:
+    case State::UNINSTALL:
         pos = toInstall.indexOf(model->item(row)->name);
         if(pos!=-1)
             toInstall.erase(toInstall.begin()+pos);
         toUninstall.push_back(model->item(row)->name);
-        model->setData(model->index(row, static_cast<int>(Columns::STATE)), QVariant::fromValue(States::INSTALL));
+        model->setData(model->index(row, static_cast<int>(Column::STATE)), QVariant::fromValue(State::INSTALL));
+#endif
     default:
         break;
-#endif
     }
 }
 #ifdef Q_OS_LINUX
@@ -229,12 +233,12 @@ void DownloadWindow::revert()
     int row;
     for (auto name : toInstall){
         row = model->find(name);
-        model->setData(model->index(row,3), QVariant::fromValue(States::INSTALL));
+        model->setData(model->index(row,3), QVariant::fromValue(State::INSTALL));
     }
     toInstall.clear();
     for (auto name : toUninstall) {
         row = model->find(name);
-        model->setData(model->index(row,3), QVariant::fromValue(States::UNINSTALL));
+        model->setData(model->index(row,3), QVariant::fromValue(State::UNINSTALL));
     }
     toUninstall.clear();
 }
@@ -248,8 +252,7 @@ bool DownloadWindow::applyChanges()
     }
     if (model->countLangPairsInstalled() == 0)
     {
-        QMessageBox box;
-        box.critical(this, tr("Deleteing all lagpairs"),
+        QMessageBox::critical(this, tr("Deleteing all lagpairs"),
                      tr("The program cannot work without any language pairs. "
                         "Please, leave at least one language pair"));
         revert();
@@ -265,8 +268,7 @@ bool DownloadWindow::applyChanges()
     args << scriptPath;
     int pos = 0;
     if((pos = toUninstall.indexOf("apertium-apy"))!=-1){
-        QMessageBox box;
-        if(box.critical(this, tr("Uninstalling server."),
+        if(QMessageBox::critical(this, tr("Uninstalling server."),
                         tr("You are going to remove Apertium-APY. "
                            "After that this program may stop working. Are you sure?"),
                         QMessageBox::Ok,QMessageBox::Abort)==QMessageBox::Ok) {
@@ -289,8 +291,8 @@ bool DownloadWindow::applyChanges()
             qApp->processEvents();
             row = model->find(name);
             pkgsIn << model->item(row)->name;
-            model->setData(model->index(row, static_cast<int>(Columns::STATE)),
-                           QVariant::fromValue(States::UNINSTALL));
+            model->setData(model->index(row, static_cast<int>(Column::STATE)),
+                           QVariant::fromValue(State::UNINSTALL));
         }
     }
 
@@ -300,8 +302,8 @@ bool DownloadWindow::applyChanges()
             qApp->processEvents();
             row = model->find(name);
             pkgsRm << model->item(row)->name;
-            model->setData(model->index(row, static_cast<int>(Columns::STATE)),
-                           QVariant::fromValue(States::INSTALL));
+            model->setData(model->index(row, static_cast<int>(Column::STATE)),
+                           QVariant::fromValue(State::INSTALL));
         }
     }
     if(!toInstall.isEmpty() || !toUninstall.isEmpty() || pos != -1) {
@@ -315,36 +317,40 @@ bool DownloadWindow::applyChanges()
 
 }
 #else
-void DownloadWindow::installpkg(int row)
+void DownloadWindow::installPkg(int row)
 {
     bool disabled = !ui->refreshButton->isEnabled();
     if (!disabled)
         ui->refreshButton->setEnabled(false);
     actionCnt++;
     auto name = model->item(row)->name;
-    model->setData(model->index(row,STATE),DOWNLOADING);
+    model->setData(model->index(row, static_cast<int>(Column::STATE)), QVariant::fromValue(State::DOWNLOADING));
     QNetworkRequest request;
     request.setUrl(QUrl(model->item(row)->link.toString()));
     auto reply = manager->get(request);
     reply->setReadBufferSize(model->item(row)->size*2);
     QEventLoop loop;
+
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     auto sortConnection = connect(model, &DownloadModel::sorted, [&](){row = model->find(name);
         name = model->item(row)->name;});
     connect(reply, &QNetworkReply::downloadProgress, [&](qint64 bytesReceived,qint64)
     {model->setData(model->index(row,2),bytesReceived);});
     auto connection = connect(delegate, &InstallerDelegate::stateChanged,[&](int r)
-    {if (r==row) reply->abort(); });
+    { if (r == row) reply->abort(); });
     loop.exec();
+
     disconnect(connection);
     if (reply->error()!=QNetworkReply::NoError)
     {
-        model->setData(model->index(row,STATE),INSTALL);
+        model->setData(model->index(row, static_cast<int>(Column::STATE)), QVariant::fromValue(State::INSTALL));
         reply->deleteLater();
+        if (!disabled)
+            ui->refreshButton->setEnabled(true);
         return;
     }
-    model->setData(model->index(row,STATE),UNPACKING);
-    ui->view->update(model->index(row,SIZE));
+    model->setData(model->index(row, static_cast<int>(Column::STATE)), QVariant::fromValue(State::UNPACKING));
+    ui->view->update(model->index(row, static_cast<int>(Column::SIZE)));
     QString appdata_path = DATALOCATION;
     QDir().mkpath(appdata_path);
     QDir appdata(appdata_path);
@@ -396,12 +402,12 @@ void DownloadWindow::installpkg(int row)
 
     if (model->item(row)->link==QUrl("http://apertium.projectjj.com/"
                                      OS_PATH "/nightly/apertium-all-dev.7z"))
-        Initializer::conf->setValue("files/apertium-all-dev", model->item(row)->lm);
+        Initializer::conf->setValue("files/apertium-all-dev", model->item(row)->lastModified);
     else
-        Initializer::conf->setValue("files/"+name, model->item(row)->lm);
+        Initializer::conf->setValue("files/"+name, model->item(row)->lastModified);
     ui->view->repaint();
-    model->setData(model->index(row,STATE),UNINSTALL);
-    ui->view->update(model->index(row,SIZE));
+    model->setData(model->index(row, static_cast<int>(Column::STATE)), QVariant::fromValue(State::UNINSTALL));
+    ui->view->update(model->index(row, static_cast<int>(Column::SIZE)));
     actionCnt--;
     disconnect(sortConnection);
     if (!disabled)
@@ -409,60 +415,62 @@ void DownloadWindow::installpkg(int row)
     reply->deleteLater();
 }
 
-void DownloadWindow::removepkg(int row)
+void DownloadWindow::removePkg(int row)
 {
     auto name = model->item(row)->name;
     QDir dir;
     if(name == "Required Core Tools")
     {
-        QMessageBox box;
-        if (box.warning(this,tr("Deleting Core tools"),
-                        tr("After deleteing this package the translation stops working. Are you sure?"),
-                        QMessageBox::Ok, QMessageBox::Cancel)==QMessageBox::Cancel)
+        name = "apertium-all-dev";
+        if (QMessageBox::warning(this, tr("Deleting Core Tools"),
+                        tr("After deleteing this package the translation will stop working. Are you sure?"),
+                        QMessageBox::Ok, QMessageBox::Cancel) == QMessageBox::Cancel)
             return;
         dir.setPath(DATALOCATION+"/apertium-all-dev");
     }
     else
-        dir.setPath(DATALOCATION+"/usr/share/apertium/"+name);
-    if (dir.exists())
-        if (Initializer::conf->contains("files/"+name))
+        dir.setPath(DATALOCATION + "/usr/share/apertium/" + name);
+    if (dir.exists()) {
+        if (Initializer::conf->contains("files/" + name)) {
             if (dir.removeRecursively()) {
-                auto pair = model->item(row)->name.mid
-                        (model->item(row)->name.indexOf(QRegExp("(-[a-z]{2,3}){2}$"))).mid(1);
-                dir.setPath(DATALOCATION+"/usr/share/apertium/modes");
-                auto sourceLang = pair.left(pair.indexOf("-"));
-                auto targetLang = pair.mid(pair.indexOf("-")+1);
-                QRegExp expr(sourceLang+"|"+targetLang+"\\D*"+targetLang+"|"+sourceLang+"\\D*");
-                for (QString filename : dir.entryList())
-                    if (expr.indexIn(filename)!=-1)
-                        dir.remove(filename);
-                
-                model->setData(model->index(row,3),INSTALL);
+                if (name != "apertium-all-dev") {
+                    auto pair = model->item(row)->name.mid
+                            (model->item(row)->name.indexOf(QRegularExpression("(-[a-z]{2,3}){2}$"))).mid(1);
+                    dir.setPath(DATALOCATION+"/usr/share/apertium/modes");
+                    auto sourceLang = pair.left(pair.indexOf("-"));
+                    auto targetLang = pair.mid(pair.indexOf("-")+1);
+                    QRegExp expr(sourceLang+"|"+targetLang+"\\D*"+targetLang+"|"+sourceLang+"\\D*");
+                    for (QString filename : dir.entryList())
+                        if (expr.indexIn(filename)!=-1)
+                            dir.remove(filename);
+                }
+                model->setData(model->index(row, static_cast<int>(Column::STATE)),
+                               QVariant::fromValue(State::INSTALL).toUInt());
                 Initializer::conf->remove("files/"+name);
             }
             else {
-                QMessageBox box;
-                box.critical(this, tr("An error occurs while deleteing"),
+                QMessageBox::critical(this, tr("An error occurs while deleteing"),
                              tr("Cannot delete this package"));
             }
-        else
-            if (name == "Required Core Tools" &&
-                    Initializer::conf->contains("files/apertium-all-dev")) {
-                dir.setPath(DATALOCATION+"/apertium-all-dev");
-                dir.removeRecursively();
-                model->setData(model->index(row,3),INSTALL);
-                Initializer::conf->remove("files/apertium-all-dev");
-            }
-            else {
-                QMessageBox box;
-                box.critical(this,tr("An error occurs while deleteing"),
-                             tr("Cannot locate this package"));
-            }
+        }
+    }
+    else {
+        QMessageBox::critical(this,tr("An error occurs while deleteing"),
+                     tr("Cannot locate this package"));
+    }
 }
 #endif
-void DownloadWindow::closeEvent(QCloseEvent *)
+void DownloadWindow::closeEvent(QCloseEvent *e)
 {
-    accept();
+    //protect from closing during installation
+    if(ui->refreshButton->isEnabled())
+        accept();
+    else {
+        QMessageBox::warning(this, tr("Downloading in progress"),
+                             tr("The packages are downloading. Please, wait for "
+                                "download complete before closing."));
+        e->ignore();
+    }
 }
 
 void DownloadWindow::accept()

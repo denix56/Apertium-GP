@@ -42,7 +42,7 @@ signals:
     void documentDropped(QString path);
 
 private:
-    QString fileType;
+    QString fileTypes;
 };
 
 #endif // DRAGNDROPWIDGET_H

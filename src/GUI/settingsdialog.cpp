@@ -17,8 +17,6 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QStackedLayout>
-#include <QGridLayout>
 #include <QListWidget>
 
 #include "initializer.h"
@@ -31,7 +29,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui(new Ui::SettingsDialog)
 {
     ui->setupUi(this);
-    auto fontPref = new QListWidgetItem(tr("Font"),ui->listWidget);
+    auto fontPref = new QListWidgetItem(tr("Font"), ui->listWidget);
     QFont listFont(fontPref->font());
     listFont.setPointSize(14);
     fontPref->setFont(listFont);

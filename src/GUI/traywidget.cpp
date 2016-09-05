@@ -31,7 +31,7 @@ TrayWidget::TrayWidget(QWidget *parent) :
 {
     ui->setupUi(this);
     connect(ui->textEdit, &TrayInputTextEdit::printEnded, this, &TrayWidget::prindEnded);
-    connect(ui->closeBtn_3, &QPushButton::clicked, qApp, &QApplication::exit);
+    connect(ui->closeBtn_3, &QPushButton::clicked, qApp, &QApplication::quit);
     connect(ui->maxBtn_3, &QPushButton::clicked, this, &TrayWidget::maximized);
 }
 

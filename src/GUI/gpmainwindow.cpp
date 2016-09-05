@@ -150,11 +150,10 @@ bool GpMainWindow::initialize()
     //start server and get available language pairs
     requestSender = new QNetworkAccessManager(this);
     QNetworkRequest request;
-    apy = new QProcess;
+    apy = new QProcess(this);
     if(!QFile("/usr/share/apertium-apy/servlet.py").exists()
             && !QFile("/usr/share/apertium-gp/apertium-apy/apertium-apy/servlet.py").exists()) {
-        QMessageBox box;
-        box.critical(this,tr("Path error"),tr("Incorrect server directory"));
+         QMessageBox::critical(this,tr("Path error"),tr("Incorrect server directory"));
         close();
         return false;
     }
@@ -217,8 +216,7 @@ bool GpMainWindow::initialize()
     connect(trayWidget, &TrayWidget::prindEnded, translator, &Translator::winTrayTranslate);
     connect(translator, &Translator::trayResultReady, trayWidget, &TrayWidget::translationReceived);
     if (!QDir(DATALOCATION+"/usr/share/apertium/modes").exists() || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
-        QMessageBox box;
-        if(box.critical(this, "Required packages are not installed.",
+        if(QMessageBox::critical(this, "Required packages are not installed.",
                         "The program cannot find required core tools and/or even one language pair installed. "
                         "Please, install them.",QMessageBox::Ok, QMessageBox::Cancel)==QMessageBox::Ok)
             dlAction->trigger();
@@ -310,7 +308,6 @@ GpMainWindow::~GpMainWindow()
     thread.quit();
     thread.wait();
     delete Initializer::conf;
-    delete apy;
     delete ui;
 }
 
@@ -357,9 +354,7 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
         QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
         QJsonArray array = doc.object().value("responseData").toArray();
         if (array.isEmpty()) {
-            QMessageBox box;
-            box.setModal(true);
-            box.critical(this,tr("No langpairs found."),
+            QMessageBox::critical(this,tr("No langpairs found."),
                          tr("It seems, that no language pairs have been found."),
                          QMessageBox::Ok);
             initRes = false;
@@ -384,7 +379,7 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
             if (Initializer::conf->value(sourceLang + "-" + targetLang).toULongLong()>0ULL) {
                 langs.insert(langpairUsed(Initializer::langNamesMap[sourceLang]+
                                           " - " + Initializer::langNamesMap[targetLang],
-                                          Initializer::conf->value(sourceLang +
+                                          Initializer::conf->value("mru/" + sourceLang +
                                                                    "-" + targetLang).toULongLong()));
             }
             //unique languages
@@ -401,7 +396,7 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
         }
         int i = 0;
         //add to mru
-        for(auto it = langs.begin(); i < 3 && it != langs.end();++it, ++i) {
+        for(auto it = langs.begin(); i < 3 && it != langs.end(); ++it, ++i) {
             auto item = new QListWidgetItem(it->name);
             item->setTextAlignment(Qt::AlignCenter);
             ui->mru->addItem(item);
@@ -419,9 +414,9 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
         return;
     }
 #else
+    Q_UNUSED(reply)
     if (!QDir(DATALOCATION+"/usr/share/apertium/modes").exists() || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
-        QMessageBox box;
-        box.critical(this,tr("No installed langpairs."), tr("You have not installed any langpairs. The application will be closed."));
+        QMessageBox::critical(this,tr("No installed langpairs."), tr("You have not installed any langpairs. The application will be closed."));
         initRes = false;
         return;
     }
@@ -438,7 +433,7 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
         if (Initializer::conf->value(sourceLanguage + "-" + targetLanguage).toULongLong()>0ULL) {
             langs.insert(langpairUsed(Initializer::langNamesMap[sourceLanguage]+ " - "
                                       + Initializer::langNamesMap[targetLanguage],
-                                      Initializer::conf->value(sourceLanguage + "-" + targetLanguage).toULongLong()));
+                                      Initializer::conf->value("mru/" + sourceLanguage + "-" + targetLanguage).toULongLong()));
         }
 
         for(int j=0;j< ui->SourceLangComboBox->model()->columnCount();++j)
@@ -695,7 +690,7 @@ void GpMainWindow::clearOtherEButtons()
                 currentTargetLang = name;
 #else
             QDir path(DATALOCATION+"/usr/share/apertium/modes");
-            HeadButton *currentSourceButton;
+            HeadButton *currentSourceButton = nullptr;
             for (HeadButton *btn : SourceLangBtns)
                 if (btn->isChecked())
                     currentSourceButton = btn;
@@ -922,7 +917,7 @@ void GpMainWindow::loadConf()
     ui->boxOutput->setFont(font);
 
     if (!Initializer::conf->contains("extra/traywidget/position"))
-        Initializer::conf->setValue("extra/traywidget/position", QVariant::fromValue(BottomRight));
+        Initializer::conf->setValue("extra/traywidget/position", QVariant::fromValue(BottomRight).toUInt());
 
     if (!Initializer::conf->contains("extra/traywidget/enabled"))
         Initializer::conf->setValue("extra/traywidget/enabled", false);
@@ -942,8 +937,8 @@ void GpMainWindow::saveMru()
     if (currentSourceLang==IDLANGTEXT)
         return;
     auto langpair = currentSourceLang+"-"+currentTargetLang;
-    Initializer::conf->setValue(langpair, QVariant(Initializer::conf->value
-                                                   (langpair,QVariant(0ULL)).toULongLong() + 1ULL));
+    Initializer::conf->setValue("mru/" + langpair, QVariant(Initializer::conf->value
+                                                   (langpair, QVariant(0ULL)).toULongLong() + 1ULL));
 }
 
 void GpMainWindow::translateReceived(const QString &result)

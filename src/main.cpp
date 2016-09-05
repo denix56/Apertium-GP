@@ -34,16 +34,14 @@ int main(int argc, char *argv[])
     SingleApplication a(argc, argv);
 
     if(!a.lock()) {
-        QMessageBox box;
-        box.critical(nullptr, "Another instance is running", "Another instance of application is currently running.");
+        QMessageBox::critical(nullptr, QObject::tr("Another instance is running"), QObject::tr("Another instance of application is currently running."));
         return -42;
     }
     if (!Initializer::initialize())
         return 4;
 #ifdef Q_OS_LINUX
     if(!QDir("/usr/share/apertium-apy").exists() && !QDir("/usr/share/apertium-gp/apertium-apy/apertium-apy").exists()) {
-        QMessageBox box;
-        if(box.critical(nullptr,QObject::tr("Server not installed."),
+        if(QMessageBox::critical(nullptr,QObject::tr("Server not installed."),
                         QObject::tr("The program cannot find Apertium-APY. Please, press Ok and install it."),
                         QMessageBox::Ok,QMessageBox::Abort)==QMessageBox::Abort)
             return 0;

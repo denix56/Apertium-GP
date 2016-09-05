@@ -26,29 +26,29 @@
 
 #include "initializer.h"
 
-enum class States {INSTALL, UPDATE, UNINSTALL, DOWNLOADING, UNPACKING};
+enum class State {INSTALL, UPDATE, UNINSTALL, DOWNLOADING, UNPACKING};
 
-enum class Types {LANGPAIRS, TOOLS};
+enum class Type {LANGPAIRS, TOOLS};
 
-enum class Columns {NAME, TYPE, SIZE, STATE};
+enum class Column {NAME, TYPE, SIZE, STATE};
 
-Q_DECLARE_METATYPE(States)
-Q_DECLARE_METATYPE(Types)
-Q_DECLARE_METATYPE(Columns)
+Q_DECLARE_METATYPE(State)
+Q_DECLARE_METATYPE(Type)
+Q_DECLARE_METATYPE(Column)
 
 struct PkgInfo
 {
     QString name;
-    Types type;
+    Type type;
     uint size;
     QUrl link;
-    States state;
+    State state;
     QString lastModified;
     uint progress;
     bool highlight;
 
-    PkgInfo (const QString name = QString(), Types type = Types::TOOLS, uint size = 0, QUrl link = QUrl(),
-          States state = States::INSTALL, QString lastModified = QString(), bool highlight = false, int progress = 0)
+    PkgInfo (const QString name = QString(), Type type = Type::TOOLS, uint size = 0, QUrl link = QUrl(),
+          State state = State::INSTALL, QString lastModified = QString(), bool highlight = false, int progress = 0)
         : name(name), type(type), size(size), link(link), state(state),
           lastModified(lastModified),  progress(progress), highlight(highlight)
     {
@@ -62,6 +62,20 @@ signals:
     void sorted();
 public:
     explicit DownloadModel(QObject *parent = 0);
+
+    static inline QString formatBytes(double val)
+    {
+        QString suf = tr("B");
+        if (val >= 1024) {
+            val /= 1024;
+            suf = tr("KiB");
+        }
+        if (val >= 1024) {
+            val /= 1024;
+            suf = tr("MiB");
+        }
+        return QString("%1 %2").arg(val, 0, 'f', 2).arg(suf);
+    }
 
     void reset();
 
@@ -94,20 +108,6 @@ public:
     void sort(int column, Qt::SortOrder order);
 
 private:
-    inline QString formatBytes(double val) const
-    {
-        QString suf = tr("B");
-        if (val >= 1024) {
-            val /= 1024;
-            suf = tr("KiB");
-        }
-        if (val >= 1024) {
-            val /= 1024;
-            suf = tr("MiB");
-        }
-        return QString("%1 %2").arg(val, 0, 'f', 2).arg(suf);
-    }
-
     inline QString nameToFull(QString pair) const
     {
         pair.remove("apertium-");
@@ -125,15 +125,15 @@ private:
 
     QVector <PkgInfo> downList;
 
-    const QMap <States, QString> stateNames {
-        { States::INSTALL, tr("Install") }, { States::UPDATE,tr("Update") },
-        { States::UNINSTALL,tr("Uninstall") }, { States::DOWNLOADING,tr("Cancel") },
-        { States::UNPACKING,tr("Unpacking") }
+    const QMap <State, QString> stateNames {
+        { State::INSTALL, tr("Install") }, { State::UPDATE,tr("Update") },
+        { State::UNINSTALL,tr("Uninstall") }, { State::DOWNLOADING,tr("Cancel") },
+        { State::UNPACKING,tr("Unpacking") }
     };
 
-    const QMap <Types, QString> typeNames {
-        { Types::LANGPAIRS, tr("Langpairs") },
-        { Types::TOOLS, tr("Tools") }
+    const QMap <Type, QString> typeNames {
+        { Type::LANGPAIRS, tr("Langpairs") },
+        { Type::TOOLS, tr("Tools") }
     };
 };
 

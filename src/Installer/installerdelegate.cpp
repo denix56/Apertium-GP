@@ -35,8 +35,8 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     painter->save();
     auto model = qobject_cast<const DownloadModel *>(index.model());
 #ifndef Q_OS_LINUX
-    if (index.column() == SIZE && model->item(index.row())->state>=DOWNLOADING){
-        if (model->item(index.row())->state==DOWNLOADING) {
+    if (static_cast<Column>(index.column()) == Column::SIZE && model->item(index.row())->state >= State::DOWNLOADING){
+        if (model->item(index.row())->state == State::DOWNLOADING) {
             int progress = model->item(index.row())->progress;
             QStyleOptionProgressBar progressBarOption;
             progressBarOption.rect = option.rect;
@@ -47,7 +47,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
             progressBarOption.progress = progress;
             progressBarOption.textAlignment = Qt::AlignCenter;
 
-            auto fsize = formatBytes(progress);
+            auto fsize = DownloadModel::formatBytes(progress);
             fsize = fsize.left(fsize.lastIndexOf(' '));
             auto a = fsize.toDouble();
             auto b = index.data().toString().left(index.data().toString().lastIndexOf(' ')).toDouble();
@@ -59,7 +59,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
                                                &progressBarOption, painter);
         }
         else
-            if (model->item(index.row())->state==UNPACKING)
+            if (model->item(index.row())->state == State::UNPACKING)
             {
                 QTextOption text;
                 text.setAlignment(Qt::AlignCenter);
@@ -68,7 +68,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     }
     else
 #endif
-        if (static_cast<Columns>(index.column()) == Columns::STATE) {
+        if (static_cast<Column>(index.column()) == Column::STATE) {
 #ifndef Q_OS_LINUX
             QStyleOptionButton button;
             button.rect=option.rect;
@@ -76,11 +76,14 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
             button.rect.setY(option.rect.y()+(option.rect.height()-button.rect.height())/2);
             button.text = index.data().toString();
             button.features = QStyleOptionButton::DefaultButton;
-            if (model->item(index.row())->state != UNPACKING)
+
+            if (model->item(index.row())->state != State::UNPACKING) {
                 if (option.state & QStyle::State_Active)
-                    button.state = option.state ^ QStyle::State_Active | QStyle::State_Enabled;
+                    button.state = (option.state ^ QStyle::State_Active) | QStyle::State_Enabled;
                 else
                     button.state = option.state | QStyle::State_Enabled;
+            }
+
             QApplication::style()->drawControl( QStyle::CE_PushButton, &button, painter);
 #else
             QStyleOptionButton checkBox;
@@ -88,7 +91,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
             //TODO: update from program
             checkBox.rect.setY(option.rect.y()+(option.rect.height()-checkBox.rect.height())/2);
             checkBox.rect.setX(option.rect.x()+option.rect.width()/2);
-            if (model->item(index.row())->state == States::UNINSTALL)
+            if (model->item(index.row())->state == State::UNINSTALL)
                 checkBox.state = QStyle::State_Enabled | QStyle::State_On;
             else
                 checkBox.state = QStyle::State_Enabled | QStyle::State_Off;
@@ -99,7 +102,7 @@ void InstallerDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
             QTextOption text;
             text.setAlignment(Qt::AlignCenter);
             QRect rect = option.rect;
-            if (static_cast<Columns>(index.column()) == Columns::NAME) {
+            if (static_cast<Column>(index.column()) == Column::NAME) {
                 text.setWrapMode(QTextOption::WordWrap);
                 rect.setWidth(rect.width()-5);
 
@@ -116,7 +119,7 @@ bool InstallerDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, co
 {
     auto mod = qobject_cast<const DownloadModel *>(model);
     if( event->type() == QEvent::MouseButtonRelease ) {
-        if (static_cast<Columns>(index.column()) == Columns::STATE && mod->item(index.row())->state != States::UNPACKING) {
+        if (static_cast<Column>(index.column()) == Column::STATE && mod->item(index.row())->state != State::UNPACKING) {
             emit stateChanged(index.row());
             return true;
         }
@@ -126,14 +129,14 @@ bool InstallerDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, co
 
 QSize InstallerDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    switch(static_cast<Columns>(index.column())) {
-    case Columns::NAME:
+    switch(static_cast<Column>(index.column())) {
+    case Column::NAME:
         return QSize(205,option.rect.height());
-    case Columns::TYPE:
+    case Column::TYPE:
         return QSize(70,option.rect.height());
-    case Columns::SIZE:
+    case Column::SIZE:
         return QSize(150,option.rect.height());
-    case Columns::STATE:
+    case Column::STATE:
         return QSize(80,option.rect.height());
     }
     return QSize();

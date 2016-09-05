@@ -42,8 +42,7 @@ bool Initializer::initialize()
     auto db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(path.absoluteFilePath("langNames.db"));
     if (!db.open()) {
-        QMessageBox box;
-        box.critical(0,"Database Error", "Database is not open.");
+        QMessageBox::critical(0,"Database Error", "Database is not open.");
         return false;
     }
     QSqlQuery query;

@@ -107,6 +107,5 @@ void DocsHandler::showPostDocTransDlg(QString trFilePath)
 void DocsHandler::docTranslateFailed()
 {
     docTransWaitDlg->reject();
-    QMessageBox box;
-    box.critical(this,tr("Document has not been translated"),tr("An error occured during the translation of this file."));
+    QMessageBox::critical(this,tr("Document has not been translated"),tr("An error occured during the translation of this file."));
 }

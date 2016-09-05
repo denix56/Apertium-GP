@@ -59,7 +59,8 @@ private slots:
     void on_refreshButton_clicked();
 
 protected:
-    void closeEvent(QCloseEvent *);
+    void closeEvent(QCloseEvent *e);
+
 private:
     Ui::DownloadWindow *ui;
 
@@ -72,9 +73,9 @@ private:
     InstallerDelegate *delegate;
 
 #ifndef Q_OS_LINUX
-    void installpkg(int row);
+    void installPkg(int row);
 
-    void removepkg(int row);
+    void removePkg(int row);
 #else
     ManagerHelper *mngr;
 
