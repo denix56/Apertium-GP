@@ -58,7 +58,7 @@ private:
 
     Ui::TrayWidget *ui;
 
-    const qreal HIDE = 0.4;
+    const qreal HIDE = 0.3;
     const qreal SHOW = 1.0;
     bool transparentEnabled;
 };
