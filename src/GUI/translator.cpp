@@ -376,31 +376,18 @@ void Translator::translateRtf(QString filePath, QDir &docDir)
 //    QTemporaryFile tmpDoc(QDir(QDir::tempPath()).absoluteFilePath(fileInfo.baseName()));
 //    auto cmd = new QProcess(this);
 //#ifdef Q_OS_WIN
-//    cmd->setWorkingDirectory(parent->appdata->absoluteFilePath("apertium-all-dev/bin"));
+//    cmd->setWorkingDirectory(QDir(DATALOCATION).absoluteFilePath("apertium-all-dev/bin"));
 //#endif
 //    qApp->processEvents();
 //    //desrtf
-//    QEventLoop loop;
-
-//    //connect(cmd, &QProcess::readyReadStandardOutput, [&](){qDebug() << cmd->readAllStandardOutput();});
 //    QStringList args;
 //    cmd->setEnvironment( QProcess::systemEnvironment() );
-//    //cmd->setProcessChannelMode( QProcess:);
 //    #ifdef Q_OS_WIN
 //    //windows bug with backslash
 //    //use replace to fix windows bug
-//    args << "/c" << "type" << "\""+filePath.replace('/', QDir::separator())+"\"" << "|" <<"apertium-desrtf";
+//    args << "/u" << "/c" << "type" << "\""+filePath.replace('/', QDir::separator())+"\"" << "|" << "apertium-desrtf";
 //    cmd->setNativeArguments(args.join(' '));
-//    //args.clear();
-//    //cmd->setTextModeEnabled(true);
-//    //cmd->setStandardOutputFile("C:/Users/Denis/Documents/t.txt");
-//    //cmd->setArguments(args);
 //    cmd->start("cmd.exe");
-//    cmd->execute("cmd.exe /c type \""+filePath.replace('/', QDir::separator())+"\" | \""
-//                 +parent->appdata->absoluteFilePath("apertium-all-dev/bin").replace('/', QDir::separator())+"\\apertium-desrtf\"");
-//   // cmd->waitForFinished();
-//    //loop.exec();
-//    //cmd->waitForFinished();
 //    cmd->waitForReadyRead();
 //#endif
 //    if(!tmpDoc.open()) {
@@ -410,10 +397,8 @@ void Translator::translateRtf(QString filePath, QDir &docDir)
 //    }
 //    tmpDoc.setTextModeEnabled(true);
 //    cmd->waitForFinished();
-//    //qDebug() << cmd->readAllStandardError();
 //    QString out = cmd->readAllStandardOutput();
-//    //qDebug() << out;
-//    //qDebug() << notLinuxTranslate(out).toUtf8();
+//    qDebug() << out;
 //    tmpDoc.write(notLinuxTranslate(out).toUtf8());
 //    tmpDoc.close();
 //    //rertf
@@ -431,11 +416,12 @@ void Translator::translateRtf(QString filePath, QDir &docDir)
 //        cmd->deleteLater();
 //        return;
 //    }
+//    cmd->waitForFinished();
 //    QByteArray ar = cmd->readAllStandardOutput();
 //    qDebug() << ar;
 //    newDoc.write(ar);
 //    newDoc.close();
-//    cmd->waitForFinished();
+
 //    emit docTranslated(trFilePath);
 //    cmd->deleteLater();
 //    //#else
@@ -443,6 +429,7 @@ void Translator::translateRtf(QString filePath, QDir &docDir)
 //    //#endif
 }
 #endif
+
 void Translator::docTranslate(QString filePath)
 {
 
