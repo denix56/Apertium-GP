@@ -75,8 +75,6 @@ FORMS    += \
 
 QMAKE_CXXFLAGS += -std=c++11
 
-#DEFINES  += QT_NO_SSL
-
 QT_LOGGING_RULES=qt.network.ssl.warning=false
 
 RESOURCES += \

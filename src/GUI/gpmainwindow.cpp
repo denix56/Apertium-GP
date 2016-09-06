@@ -65,10 +65,9 @@ struct GpMainWindow::langpairUsed
     QString name;
     unsigned long long n;
     langpairUsed(QString _name, unsigned long long _n)
-    {
-        name = _name;
-        n = _n;
-    }
+        : name(_name), n(_n)
+    {}
+
     bool operator <(const langpairUsed &op) const
     {
         //reverse
