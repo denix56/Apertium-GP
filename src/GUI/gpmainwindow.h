@@ -85,8 +85,6 @@ public:
     }
 
 protected:
-    void resizeEvent(QResizeEvent*);
-
     void closeEvent(QCloseEvent *event);
 
 signals:
@@ -96,7 +94,7 @@ signals:
 
     void trayTitleBarEnableChecked(bool b);
 
-    void transparentChanged(bool b);
+    void transparentChecked(bool b);
 
 public slots:
     void setFontSize(int size);

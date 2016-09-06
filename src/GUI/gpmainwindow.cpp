@@ -58,7 +58,6 @@ GpMainWindow::GpMainWindow(QWidget *parent) :
     ui(new Ui::GpMainWindow)
 {
     ui->setupUi(this);
-    ui->horizontalSpacer_2->changeSize(36,30);
 }
 
 struct GpMainWindow::langpairUsed
@@ -114,6 +113,7 @@ bool GpMainWindow::initialize()
     trayIcon = new QSystemTrayIcon(QIcon(":/images/Apertium_box_white_small.png"),this);
     trayIcon->setToolTip(tr("Apertium-GP"));
     auto trayMenu = new QMenu(this);
+
     showFullAction = new QAction(this);
     if (!this->isVisible())
         showFullAction->setText(tr("Hide main window"));
@@ -267,7 +267,7 @@ bool GpMainWindow::initialize()
 
     connect(this, &GpMainWindow::trayTitleBarEnableChecked, trayWidget, &TrayWidget::setTitleBarEnabled);
     connect(trayWidget, &TrayWidget::maximized, showFullAction, &QAction::trigger);
-    connect(this, &GpMainWindow::transparentChanged, trayWidget, &TrayWidget::setTransparentEnabled);
+    connect(this, &GpMainWindow::transparentChecked, trayWidget, &TrayWidget::setTransparentEnabled);
 
     //read settings
     loadConf();
@@ -288,7 +288,7 @@ QString GpMainWindow::getText() const
 void GpMainWindow::setTrayWidgetEnabled(bool b)
 {
     emit trayTitleBarEnableChecked(Initializer::conf->value("extra/traywidget/titlebar").toBool());
-    emit transparentChanged(Initializer::conf->value("extra/traywidget/transparent").toBool());
+    emit transparentChecked(Initializer::conf->value("extra/traywidget/transparent").toBool());
 
     trayWidget->setVisible(b);
     trayIcon->setVisible(b);
@@ -309,15 +309,6 @@ GpMainWindow::~GpMainWindow()
     thread.wait();
     delete Initializer::conf;
     delete ui;
-}
-
-void GpMainWindow::resizeEvent(QResizeEvent *e)
-{
-    ui->label->setPixmap(ui->label->pixmap()->
-                         scaled(ui->label->pixmap()->width(),
-                                ui->label->pixmap()->height(),Qt::KeepAspectRatio));
-    ui->boxOutput->setMinimumWidth(ui->boxInput->width());
-    QMainWindow::resizeEvent(e);
 }
 
 void GpMainWindow::closeEvent(QCloseEvent *event)
