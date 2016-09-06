@@ -74,7 +74,10 @@ FORMS    += \
 
 
 QMAKE_CXXFLAGS += -std=c++11
-DEFINES  += QT_NO_SSL
+
+#DEFINES  += QT_NO_SSL
+
+QT_LOGGING_RULES=qt.network.ssl.warning=false
 
 RESOURCES += \
     GUI/application.qrc
@@ -102,8 +105,3 @@ DISTFILES += \
     scripts/apertium-gp-helper.pl \
     GUI/apertium.rc
 
-
-#unix:!macx:contains(QT_VERSION, ^5\\.[0-5]\\..*) {
-#warning("There may be some problems with tray icon. Please, use Qt version >= 5.6.\
-#Your version Qt $${QT_VERSION}")
-#}
