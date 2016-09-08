@@ -20,7 +20,7 @@
 /*!
   \class Translator
   \ingroup gui
-  \inmodule Aperrtium-GP
+  \inmodule Apertium-GP
   \brief This class provides translation of texts and docs.
 
   It is working in the separate thread, so it would not freeze the main thread.
