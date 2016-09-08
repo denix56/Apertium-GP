@@ -16,6 +16,15 @@
 * You should have received a copy of the GNU General Public License
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+/*!
+  \class GpMainWindow
+  \ingroup gui
+  \inmodule Apertium-GP
+  \brief This class provides main GUI window for Apertium-GP
+
+  It constructs main window, manages server and handles all translation requests.
+ */
 #include <set>
 
 #include <QUrlQuery>
@@ -53,6 +62,7 @@
 #include "ui_gpmainwindow.h"
 
 //TODO: choose language of app
+
 GpMainWindow::GpMainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::GpMainWindow)
@@ -60,6 +70,12 @@ GpMainWindow::GpMainWindow(QWidget *parent) :
     ui->setupUi(this);
 }
 
+/*!
+  \variable GpMainWindow::langpairUsed
+ * \brief The GpMainWindow::langpairUsed struct is used for creating mru list.
+ *
+ * The strcuture contains name of the langpair and how many times it was used.
+ */
 struct GpMainWindow::langpairUsed
 {
     QString name;
@@ -75,6 +91,17 @@ struct GpMainWindow::langpairUsed
     }
 };
 
+/*!
+ * \variable GpMainWindow::initRes
+ * This variable constains the result of the \l GpMainWindow::initialize()
+ */
+
+/*!
+ * \brief Initializes \l GpMainWindow.
+ * On Linux platforms it starts the server and sends the request for availiable language pairs.
+ * After that it loads configuration from \l {QSettings} file and do other required startup stuff.
+ * If the initialization was successful, return true.
+ */
 bool GpMainWindow::initialize()
 {
     setAttribute(Qt::WA_AlwaysShowToolTips);
@@ -274,15 +301,41 @@ bool GpMainWindow::initialize()
     return initRes;
 }
 
+/*!
+ * \brief Returns font size of the Input text box.
+ */
 int GpMainWindow::getFontSize() const
 {
     return ui->boxInput->fontInfo().pointSize();
 }
 
+/*!
+ * \brief Returns text that Input text box contains.
+ */
 QString GpMainWindow::getText() const
 {
     return ui->boxInput->toPlainText();
 }
+
+
+/*!
+ * \fn GpMainWindow::setTrayWidgetEnabled(bool b)
+ * \brief Sets tray widget visible.
+ * If \a b then tray widget becomes visible and \l QApplication::setQuitOnLastWindowClosed(bool quit)
+ * is set to true.
+ */
+
+/*!
+  * \fn GpMainWindow::trayTitleBarEnableChecked(bool b)
+  * This signal is emited when \l GpMainWindow::setTrayWidgetEnabled(bool b)
+  * is called.
+ */
+
+/*!
+  * \fn GpMainWindow::transparentChecked(bool b)
+  * This signal is emited when \l GpMainWindow::setTrayWidgetEnabled(bool b)
+  * is called.
+ */
 
 void GpMainWindow::setTrayWidgetEnabled(bool b)
 {
@@ -294,6 +347,11 @@ void GpMainWindow::setTrayWidgetEnabled(bool b)
     qApp->setQuitOnLastWindowClosed(!b);
 }
 
+/*!
+ * \brief Destroys \l GpMainWindow
+ * Stops the thread where \l Translator runs.
+ * If \l Q_OS_LINUX defined then Apertium-APY server is killed.
+ */
 GpMainWindow::~GpMainWindow()
 {
 #ifdef Q_OS_LINUX
@@ -310,12 +368,22 @@ GpMainWindow::~GpMainWindow()
     delete ui;
 }
 
+/*!
+ * \brief Triggers showFullAction before closing.
+ * Triggers showFullAction and calls
+ * \l QMainWindow::closeEvent(QCloseEvent *event) with
+ * parameter \a event
+ */
 void GpMainWindow::closeEvent(QCloseEvent *event)
 {
     emit showFullAction->triggered();
     QMainWindow::closeEvent(event);
 }
-
+/*!
+ * \brief This slot is executed when the program loads configuration.
+ * Sets font point size \a size for input and output boxes. After that,
+ * writes new value to \l QSettings file associated with this program.
+ */
 void GpMainWindow::setFontSize(int size)
 {
     QFont font(ui->boxInput->font());
@@ -325,7 +393,22 @@ void GpMainWindow::setFontSize(int size)
     Initializer::conf->setValue(FONTSIZE,size);
 }
 
-//get available language pairs
+/*!
+  * \fn GpMainWindow::listOfLangsSet()
+  * This signal is emitted when the program has created the list of availiable language pairs for translator.
+ */
+
+/*!
+ * \brief Startup initialization of language list.
+ *
+ * This slot is executed when the \l GpMainWindow::initialize() calls it.
+ * Creates list of availiable language pairs for translator.
+ * On Linux platforms it parses the response received from the server.
+ * On other platforms it parses directory where language pairs were installed.
+ * Also creates the list of the most recently used language pairs.
+ * In the end \l GpMainWindow::listOfLangsSet() is emitted and the result of the initialization is set to true.
+ *
+ */
 void GpMainWindow::createListOfLangs(QNetworkReply *reply)
 {
     std::multiset <langpairUsed> langs;
@@ -494,13 +577,18 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
     initRes = true;
 }
 
-//update ComboBoxes when new source language, that is choosed
+/*!
+ * \brief This slot is executed when the new source language has been choosed from combo box.
+ *
+ * The function removes the language with index \a index from combo box and puts it in the first button.
+ * It gets the target languages that are installed for this source language pair and sets them.
+ */
 void GpMainWindow::updateComboBox(QModelIndex index)
 {
     auto curr = index.data().toString();
     if (curr.isEmpty())
         return;
-    //TODO: make replace the third button with the sourceLangComboBox
+    //TODO: replace the third button with the sourceLangComboBox
     ui->SourceLangComboBox->model()->removeItem(index.row(),index.column());
 #ifdef Q_OS_LINUX
     if (SourceLangBtns[2]->text().contains(IDLANGTEXT))
@@ -537,6 +625,7 @@ void GpMainWindow::updateComboBox(QModelIndex index)
             ++it;
     }
     trayWidget->outputComboBox()->blockSignals(true);
+    //TODO: make function for parsing
     for (auto it : array)
         if(Initializer::langNamesMap[it.toObject().value("sourceLanguage").toString()]
                 ==SourceLangBtns[0]->text()) {
@@ -565,7 +654,12 @@ void GpMainWindow::updateComboBox(QModelIndex index)
     emit SourceLangBtns[0]->clicked(true);
 }
 
-//update ComboBox with Tatget Languages when the new one is choosed
+//update ComboBox with Target languages when the new one is choosed
+/*!
+ * \brief This slot is executed when the new target language pair has been choosed.
+ *
+ * The function removes the language with index \a index from combo box and puts it in the first button.
+ */
 void GpMainWindow::updateEndComboBox(QModelIndex index)
 {
     auto curr = index.data().toString();
@@ -580,7 +674,11 @@ void GpMainWindow::updateEndComboBox(QModelIndex index)
 }
 
 
-//Uncheck Other Source language buttons when the new one is checked
+/*!
+ * \brief This slot is executed when a source button has been clicked.
+ * It unchecks Other Source language buttons and sets currentSourceLang with iso3 name of the language.
+ * After thst it gets the list of availible target languages for the choosed source language.
+ */
 void GpMainWindow::clearOtherSButtons()
 {
     ui->boxOutput->clear();
@@ -611,7 +709,7 @@ void GpMainWindow::clearOtherSButtons()
                 else {
                     QString name = "";
                     for (auto tmp : Initializer::langNamesMap.keys(btn->text()))
-                        if(tmp.length()>name.length())
+                        if(tmp.length() > name.length())
                             name = tmp;
                     currentSourceLang = name;
                 }
@@ -657,6 +755,10 @@ void GpMainWindow::clearOtherSButtons()
 }
 
 //Uncheck Other Target language buttons when the new one is checked
+/*!
+ * \brief This slot is executed when a target button has been clicked.
+ * It unchecks Other target language buttons and sets currentTargetLang with iso3 name of the language.
+ */
 void GpMainWindow::clearOtherEButtons()
 {
     auto currentButton = qobject_cast<HeadButton*>(sender());
@@ -698,6 +800,11 @@ void GpMainWindow::clearOtherEButtons()
 }
 
 //update available Target languages
+/*!
+ * \brief This slot is executed when the program receives the response with availaible target language pairs from server.
+ * The function reads response from \a reply.
+ * After the setting of availible target languages \l GpMainWindow::listOfLangsSet() is emitted.
+ */
 void GpMainWindow::getResponseOfAvailLang(QNetworkReply *reply)
 {
     auto docAvailLang = QJsonDocument::fromJson(reply->readAll());
@@ -735,11 +842,15 @@ void GpMainWindow::getResponseOfAvailLang(QNetworkReply *reply)
     reply->deleteLater();
 }
 
-//send translation request for paragraph
+/*!
+ * \brief This slot is executed when the program sends translation requests
+ * \warning Works only on Linux.
+ * It gets text from \a text and sends it for translation. After each translation it increments the number of times
+ * current language pair has been used.
+ */
 void GpMainWindow::createRequests(QString text)
 {
     if (currentSButton->text().contains(IDLANGTEXT)) {
-
         const QString mode = "/identifyLang?";
         QUrlQuery urlQ;
         //only first paragraph
@@ -752,6 +863,7 @@ void GpMainWindow::createRequests(QString text)
         QNetworkRequest request(u);
         translator->linuxTranslate(request);
     }
+
     QNetworkRequest request;
     const QString mode = "/translate?";
     QUrlQuery urlQ;
@@ -759,7 +871,8 @@ void GpMainWindow::createRequests(QString text)
     if (text.isEmpty() && lastBlockCount!=ui->boxInput->document()->blockCount()) {
         ui->boxOutput->clear();
         outputDoc.clear();
-        QUrl u(URL+mode);
+        QUrl u(URL + mode);
+
         for(auto paragraph : ui->boxInput->toPlainText().split("\n")) {
             urlQ.addQueryItem("q",QUrl::toPercentEncoding(paragraph));
             u.setQuery(urlQ);
@@ -790,12 +903,16 @@ void GpMainWindow::createRequests(QString text)
 
     }
     lastBlockCount = ui->boxInput->document()->blockCount();
-    auto langpair = currentSourceLang+"-"+currentTargetLang;
-    Initializer::conf->setValue(langpair, QVariant(Initializer::conf->value
-                                                   (langpair,QVariant(0ULL)).toULongLong() + 1ULL));
+    auto langpair = currentSourceLang + "-" + currentTargetLang;
+    saveMru();
 }
 
 //parse json response
+/*!
+ * \brief This slot is executed when the program receives the response with the translated text.
+ * \warning Works only on Linux.
+ * It reads the response from \a reply and process it.
+ */
 void GpMainWindow::getReplyFromAPY(QNetworkReply *reply)
 {
     if (reply->error() == QNetworkReply::NoError) {
@@ -896,6 +1013,13 @@ void GpMainWindow::getReplyFromAPY(QNetworkReply *reply)
     reply->deleteLater();
 }
 
+/*!
+ * \brief Loads configuration from configuration file.
+ *
+ * Reads parameters from \l QSettings file and sets them.
+ * If the parameter could not be found in configuration file,
+ * sets it in configuration file with default value.
+ */
 void GpMainWindow::loadConf()
 {
     //Save entered pathes to Server and langpairs
@@ -922,6 +1046,10 @@ void GpMainWindow::loadConf()
     setTrayWidgetPosition(static_cast<Position>(Initializer::conf->value("extra/traywidget/position").toUInt()));
 }
 
+/*!
+ * \brief This slot is executed when the language pair translation has been sent.
+ * It saves how many times current language pair has been used.
+ */
 void GpMainWindow::saveMru()
 {
     if (currentSourceLang==IDLANGTEXT)
@@ -931,6 +1059,11 @@ void GpMainWindow::saveMru()
                                                    (langpair, QVariant(0ULL)).toULongLong() + 1ULL));
 }
 
+/*!
+ * \brief This slot is executed when the translator returns the translated text.
+ * \warning Works only on not Linux systems.
+ * Processes translated text \a result and sets it to output text box.
+ */
 void GpMainWindow::translateReceived(const QString &result)
 {
     ui->boxOutput->clear();
@@ -942,23 +1075,32 @@ void GpMainWindow::translateReceived(const QString &result)
     cursor.movePosition(QTextCursor::Start);
     while(!cursor.atEnd()) {
         auto cursor1 = cursor.document()->
-                find(QRegExp("[\\*#]\\w+\\W?"),cursor);
+                find(QRegularExpression("[\\*#]\\w+\\W?"), cursor);
         if (cursor1.isNull())
             break;
         cursor = cursor1;
         auto format = cursor.charFormat();
         format.setForeground(Qt::red);
-        cursor.insertText(cursor.selectedText().mid(1),format);
+        cursor.insertText(cursor.selectedText().mid(1), format);
     }
     ui->boxOutput->setTextCursor(cursor);
     ui->boxOutput->verticalScrollBar()->setValue(ui->boxInput->verticalScrollBar()->value());
 }
 
+/*!
+ * \brief Keeps text color black.
+ */
 void GpMainWindow::on_boxInput_currentCharFormatChanged(const QTextCharFormat &)
 {
     ui->boxInput->setTextColor(Qt::black);
 }
 
+/*!
+ * \brief This slot is executed when dlAction was triggered.
+ *
+ * Creates \l DownloadWindow, after its closing restarts server and
+ * resets availible language pairs.
+ */
 void GpMainWindow::dlAction_triggered()
 {
     DownloadWindow dlWindow(this);
@@ -1001,18 +1143,34 @@ void GpMainWindow::dlAction_triggered()
 #endif
 }
 
+/*!
+ * \brief This slot is executed when MRU item is clicked.
+ *
+ * Switches current langpair to choosed \a item.
+ */
 void GpMainWindow::on_mru_itemClicked(QListWidgetItem *item)
 {
     setLangpair(item->text().left(item->text().indexOf(' ')),
-                item->text().mid(item->text().indexOf("- ")+2));
+                item->text().mid(item->text().indexOf("- ") + 2));
 }
 
+/*!
+ * \brief This slot is executed when swapBtn is clicked.
+ *
+ * Swaps current langpair if availible.
+ */
 void GpMainWindow::on_swapBtn_clicked()
 {
     setLangpair(Initializer::langNamesMap[currentTargetLang],
                 Initializer::langNamesMap[currentSourceLang]);
 }
 
+/*!
+ * \fn GpMainWindow::on_docTranslateBtn_clicked()
+ * \brief This slot is executed when docTranslateBtn is clicked.
+ *
+ * Creates \l DocsHandler window.
+ */
 void GpMainWindow::on_docTranslateBtn_clicked()
 {
     auto DocTranslateWidget = new DocsHandler(this);
@@ -1023,6 +1181,11 @@ void GpMainWindow::on_docTranslateBtn_clicked()
     connect(DocTranslateWidget, &DocsHandler::destroyed, [&]() { ui->boxOutput->setEnabled(true);});
 }
 
+/*!
+ * \brief Switches current langpair to requested.
+ * The requested langpair is formed from \a source and \a target.
+ * If requested target language is unavialible it is set to the first availible target language.
+ */
 void GpMainWindow::setLangpair(QString source, QString target) {
     if (source.isEmpty() && target.isEmpty())
         qApp->exit(10);
@@ -1066,6 +1229,10 @@ void GpMainWindow::setLangpair(QString source, QString target) {
     }
 }
 
+/*!
+  * \brief Sets tray widget position on the screen.
+  * The coordinates are calculated using \l QApplication::desktop()
+  */
  void GpMainWindow::setTrayWidgetPosition(Position position)
  {
      QRect desktop = qApp->desktop()->availableGeometry();
@@ -1079,4 +1246,36 @@ void GpMainWindow::setLangpair(QString source, QString target) {
                                         trayWidget->width(), trayWidget->height()) },
      };
      trayWidget->setGeometry(pos_coords[position]);
+ }
+
+ /*!
+  * \brief get pointer to translator
+  */
+ Translator* GpMainWindow::getTranslator() const
+ {
+     return translator;
+ }
+
+ /*!
+  * \brief get pointer to Network Manager
+  */
+ QNetworkAccessManager* GpMainWindow::getManager() const
+ {
+     return requestSender;
+ }
+
+ /*!
+  * \brief get current source lang
+  */
+ QString GpMainWindow::getCurrentSourceLang() const
+ {
+     return currentSourceLang;
+ }
+
+ /*!
+  * \brief get current target lang
+  */
+ QString GpMainWindow::getCurrentTargetLang() const
+ {
+     return currentTargetLang;
  }

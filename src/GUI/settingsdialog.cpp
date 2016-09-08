@@ -17,6 +17,11 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*!
+  \class SettingsDialog
+  \ingroup gui
+  \inmodule Apertium-GP
+ */
 #include <QListWidget>
 
 #include "initializer.h"
@@ -24,6 +29,10 @@
 #include "settingsdialog.h"
 #include "ui_settingsdialog.h"
 
+/*!
+ * Constructs \l SettingsDialog and initializes fileds with vlaues from
+ * configuration file.
+ */
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SettingsDialog)
@@ -44,6 +53,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(ui->enableTrayWidget, &QCheckBox::toggled, ui->screenWidget, &QWidget::setEnabled);
     connect(ui->enableTrayWidget, &QCheckBox::toggled, ui->titleBarEnabled, &QCheckBox::setEnabled);
     connect(ui->enableTrayWidget, &QCheckBox::toggled, ui->transparentEnabled, &QCheckBox::setEnabled);
+
     ui->enableTrayWidget->setChecked(
                 Initializer::conf->value("extra/traywidget/enabled", false).toBool());
     ui->screenWidget->setEnabled(ui->enableTrayWidget->isChecked());
@@ -73,6 +83,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
 }
 
+/*!
+ * This slot is executed when the user choosed the new position
+ * for the tray widget.
+ */
 void SettingsDialog::recheck_checkboxes(Position pos)
 {
     for(auto key : pos_checkbox->keys())
@@ -82,6 +96,10 @@ void SettingsDialog::recheck_checkboxes(Position pos)
             pos_checkbox->value(key)->setChecked(false);
 }
 
+/*!
+ * This slot is executed when the user changed the font size for text boxes.
+ * This functiion shows user how the new font will look like.
+ */
 void SettingsDialog::changeFont(int size)
 {
     QFont font(ui->textEdit->font());
@@ -113,4 +131,3 @@ void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)
         if (stdBtn==QDialogButtonBox::Cancel)
             this->reject();
 }
-

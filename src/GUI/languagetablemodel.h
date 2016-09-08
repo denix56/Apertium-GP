@@ -22,14 +22,14 @@
 
 #include <QAbstractTableModel>
 
-class languageTableModel : public QAbstractTableModel
+class LanguageTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    explicit languageTableModel(QObject *parent = 0);
+    explicit LanguageTableModel(QObject *parent = 0);
 
-    explicit languageTableModel(QStringList &list, QObject *parent = 0);
+    explicit LanguageTableModel(QStringList &list, QObject *parent = 0);
 
     // Basic functionality:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;

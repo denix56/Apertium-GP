@@ -1,0 +1,59 @@
+project = Apertium-GP
+
+description = Apertium-GP is a cross-platform GUI program for Apertium Project
+
+outputdir = docs
+
+headerdirs = src
+
+sourcedirs = src
+
+sources += \
+    src/GUI/headbutton.cpp \
+    src/GUI/inputtextedit.cpp \
+    src/GUI/langdelegate.cpp \
+    src/GUI/languagetablemodel.cpp \
+    src/GUI/tablecombobox.cpp \
+    src/GUI/translator.cpp \
+    src/Installer/downloadmodel.cpp \
+    src/Installer/downloadwindow.cpp \
+    src/Installer/installerdelegate.cpp \
+    src/initializer.cpp \
+    src/main.cpp \
+    src/Installer/managerhelper.cpp \
+    src/GUI/dragndropwidget.cpp \
+    src/GUI/settingsdialog.cpp \
+    src/GUI/traywidget.cpp \
+    src/GUI/trayinputtextedit.cpp \
+    src/GUI/gpmainwindow.cpp \
+    src/GUI/docshandler.cpp \
+    src/singleapplication.cpp
+
+headers  += \
+    src/GUI/headbutton.h \
+    src/GUI/inputtextedit.h \
+    src/GUI/langdelegate.h \
+    src/GUI/languagetablemodel.h \
+    src/GUI/tablecombobox.h \
+    src/GUI/translator.h \
+    src/Installer/downloadmodel.h \
+    src/Installer/downloadwindow.h \
+    src/Installer/installerdelegate.h \
+    src/initializer.h \
+    src/Installer/managerhelper.h \
+    src/GUI/dragndropwidget.h \
+    src/GUI/settingsdialog.h \
+    src/GUI/traywidget.h \
+    src/GUI/trayinputtextedit.h \
+    src/GUI/gpmainwindow.h \
+    src/GUI/docshandler.h \
+    src/singleapplication.h
+    
+qhp.projects = ApertiumGP
+
+qhp.ApertiumGP.file                = apertiumgp.qhp
+qhp.ApertiumGP.namespace           = org.apertium.apertiumgp.1.0.0
+qhp.ApertiumGP.virtualFolder       = apertiumgp
+qhp.ApertiumGP.indexTitle          = ApertiumGP
+qhp.ApertiumGP.indexRoot           =
+

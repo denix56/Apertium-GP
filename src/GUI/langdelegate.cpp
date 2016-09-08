@@ -17,6 +17,12 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*!
+  \class LangDelegate
+  \ingroup gui
+  \inmodule Apertium-GP
+  \brief The delegate that is used for language combo boxes.
+  */
 #include <QPainter>
 
 #include "langdelegate.h"
@@ -25,15 +31,20 @@ LangDelegate::LangDelegate(QObject *parent)
     : QItemDelegate(parent)
 {
 }
+/*!
+ * \brief A reimplemented \l  {QItemDelegate::paint() const}, that paints focus rectangle for not empty vlaues.
+ */
 void LangDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     if (option.state & QStyle::State_HasFocus && !index.data().toString().isEmpty())
-        painter->fillRect(option.rect,QColor(220,220,220));
+        painter->fillRect(option.rect, QColor(220,220,220));
 
     QItemDelegate::paint(painter,option,index);
 }
 
+/*!
+ * \brief Removes standard focus rectangle.
+ */
 void LangDelegate::drawFocus(QPainter *, const QStyleOptionViewItem &, const QRect &) const
-{
-}
+{}
 

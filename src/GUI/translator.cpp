@@ -17,6 +17,14 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*!
+  \class Translator
+  \ingroup gui
+  \inmodule Aperrtium-GP
+  \brief This class provides translation of texts and docs.
+
+  It is working in the separate thread, so it would not freeze the main thread.
+ */
 #include <QDir>
 #include <QProcess>
 #include <QRegularExpression>
@@ -35,15 +43,20 @@
 
 Translator::Translator(GpMainWindow* parent)
     : parent(parent)
-{
-}
+{}
 
+/*!
+ * \brief Handling translation request from main window not on Linux.
+ */
 void Translator::boxTranslate()
 {
     QString result = notLinuxTranslate(parent->getText());
     emit resultReady(result.left(result.length()-2));
 }
 
+/*!
+ * \brief Handling translation request from tray widget not on Linux.
+ */
 void Translator::winTrayTranslate(QString text)
 {
     QString result = notLinuxTranslate(text);
@@ -51,6 +64,12 @@ void Translator::winTrayTranslate(QString text)
 }
 
 #ifndef Q_OS_LINUX
+/*!
+ * \brief Translating txt files not on Linux.
+ *
+ * \warning There are some problems with translating of documents
+ * on Windows platform. All document translation functions should be rewrited.
+ */
 void Translator::translateTxt(QString filePath, QDir &docDir)
 {
     QFile f(filePath);
@@ -430,6 +449,9 @@ void Translator::translateRtf(QString filePath, QDir &docDir)
 }
 #endif
 
+/*!
+ * \brief Handle doc translation
+ */
 void Translator::docTranslate(QString filePath)
 {
 
@@ -503,6 +525,9 @@ void Translator::docTranslate(QString filePath)
 #endif
 }
 
+/*!
+ * \brief Translates text on not Linux paltforms.
+ */
 QString Translator::notLinuxTranslate(QString text)
 {
     QString name = parent->getCurrentSourceLang() + "-" + parent->getCurrentTargetLang();
@@ -559,9 +584,15 @@ QString Translator::notLinuxTranslate(QString text)
     return QString::fromUtf8(run->readAll());
 }
 
+/*!
+ * \brief Waits for response from the server.
+ * On Linux it is used in a seperate thread, so the main
+ * thread would not be freezed during the waiting of
+ * the server repsonse.
+ */
 void Translator::linuxTranslate(QNetworkRequest &request)
 {
     QEventLoop loop;
-    connect(parent->getManager()->get(request),&QNetworkReply::finished,&loop, &QEventLoop::quit);
+    connect(parent->getManager()->get(request), &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
 }

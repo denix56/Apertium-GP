@@ -17,6 +17,16 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*!
+  \class DragnDropWidget
+  \ingroup gui
+  \inmodule Apertium-GP
+
+  \brief Class provides widget for Drag`n`Drop function
+
+  It allows drop documents on itself for user. After dropping it emmits signal
+  \l documentDropped(QString path) with path to dropped document.
+ */
 
 #include <QDragMoveEvent>
 #include <QMimeData>
@@ -30,31 +40,52 @@
 
 #include "dragndropwidget.h"
 
+/*!
+ * \brief Constructs \l DragnDropWidget with parent \a parent
+ *
+ * It also sets QWidget::acceptDrops() to true to enable Drag`n`Drop
+ */
 DragnDropWidget::DragnDropWidget(QWidget *parent) : QWidget(parent)
 {
     setAcceptDrops(true);
 }
 
+/*!
+ * \brief Handles dragging document event \a event on this widget and checks document format
+ * using \l DocsHandler::fileTypes. The color of the widget is changed.
+ */
 void DragnDropWidget::dragEnterEvent(QDragEnterEvent *event)
 {
     QPalette Pal(palette());
-    // устанавливаем цвет фона
+    // set background color
     Pal.setColor(QPalette::Background,QColor(20,187,229,20));
     setPalette(Pal);
 #ifdef Q_OS_WIN
     QFileInfo fileInfo(QString::fromUtf16((ushort*)event->mimeData()->
                                           data("application/x-qt-windows-mime;value=\"FileNameW\"").data()));
 #elif defined(Q_OS_LINUX)
-    QFileInfo fileInfo(QUrl::fromPercentEncoding(event->mimeData()->data("text/uri-list").trimmed()).remove("file:"));
+    QFileInfo fileInfo(QUrl::fromPercentEncoding(
+                           event->mimeData()->data("text/uri-list").trimmed()).remove("file:"));
 #endif
     if (fileInfo.fileName().contains(QRegExp("("+DocsHandler::fileTypes.join('|')+")")))
         event->acceptProposedAction();
 }
 
+/*!
+ * \fn DragnDropWidget::documentDropped(QString path)
+ *
+ * This signal is emiited when the \l DragnDropWidget::dropEvent(QDropEvent *event)
+ * finished successfully. It returns \a path to document that was dropped.
+ */
+
+/*!
+ * \brief Gets path of dropped document from \a event and emits \l documentDropped(QString path)
+ * The color of the widget is changed.
+ */
 void DragnDropWidget::dropEvent(QDropEvent *event)
 {
     QPalette Pal(palette());
-    // устанавливаем цвет фона
+    // set background color
     Pal.setColor(QPalette::Background,Qt::white);
     setPalette(Pal);
     event->acceptProposedAction();
@@ -63,20 +94,27 @@ void DragnDropWidget::dropEvent(QDropEvent *event)
     path = QString::fromUtf16((ushort*)event->mimeData()->
                               data("application/x-qt-windows-mime;value=\"FileNameW\"").data());
 #elif defined(Q_OS_LINUX)
-    path = QUrl::fromPercentEncoding(event->mimeData()->data("text/uri-list").trimmed()).remove("file:");
+    path = QUrl::fromPercentEncoding(
+                event->mimeData()->data("text/uri-list").trimmed()).remove("file:");
 #endif
     emit documentDropped(path);
 
 }
 
+/*!
+ * \brief Changes color to default if drag leaved this widget.
+ */
 void DragnDropWidget::dragLeaveEvent(QDragLeaveEvent *)
 {
     QPalette Pal(palette());
-    // устанавливаем цвет фона
-    Pal.setColor(QPalette::Background,Qt::white);
+    // set background color
+    Pal.setColor(QPalette::Background, Qt::white);
     setPalette(Pal);
 }
 
+/*!
+ * \brief Paint border around the widget and handles \a event.
+ */
 void DragnDropWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);

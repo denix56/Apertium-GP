@@ -30,19 +30,19 @@ class TableComboBox : public QComboBox
 public:
     TableComboBox(QWidget *parent=nullptr);
 
-    languageTableModel *model() const;
+    LanguageTableModel *model() const;
 
     QTableView *view() const;
 
     void setView(QTableView *view);
 
-    void setModel(languageTableModel *view);
+    void setModel(LanguageTableModel *view);
 
 protected:
     void wheelEvent(QWheelEvent *);
 
 private slots:
-    void resizeT();
+    void resizeTable();
 private:
     const int COLWIDTH = 100;
 };

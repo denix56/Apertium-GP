@@ -29,7 +29,7 @@ TableComboBox::TableComboBox(QWidget *parent)
     : QComboBox(parent)
 {
     setView(new QTableView(this));
-    setModel(new languageTableModel(view()));
+    setModel(new LanguageTableModel(view()));
     view()->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     view()->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);      //fine tuning of some options
     view()->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -45,8 +45,8 @@ TableComboBox::TableComboBox(QWidget *parent)
     QFont font(this->font());
     font.setPointSize(11);
     setFont(font);
-    connect(model(),&languageTableModel::dataChanged,
-            this,&TableComboBox::resizeT);
+    connect(model(),&LanguageTableModel::dataChanged,
+            this,&TableComboBox::resizeTable);
 }
 
 QTableView *TableComboBox::view() const
@@ -54,9 +54,9 @@ QTableView *TableComboBox::view() const
     return qobject_cast<QTableView*> (QComboBox::view());
 }
 
-languageTableModel *TableComboBox::model() const
+LanguageTableModel *TableComboBox::model() const
 {
-    return qobject_cast<languageTableModel*>(QComboBox::model());
+    return qobject_cast<LanguageTableModel*>(QComboBox::model());
 }
 
 void TableComboBox::setView(QTableView *view)
@@ -64,14 +64,13 @@ void TableComboBox::setView(QTableView *view)
     QComboBox::setView(view);
 }
 
-void TableComboBox::setModel(languageTableModel* model)
+void TableComboBox::setModel(LanguageTableModel* model)
 {
     QComboBox::setModel(model);
 }
 
-void TableComboBox::resizeT()
+void TableComboBox::resizeTable()
 {
-    //TODO: bug with no elements in model list
     if(model()->itemCount()==0)
         return;
     int colc = model()->columnCount();

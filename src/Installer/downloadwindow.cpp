@@ -17,6 +17,14 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*!
+  \class DownloadWindow
+  \ingroup Installer
+  \inmodule Apertium-GP
+  \brief This class provides window for installing packages
+
+  On Linux it uses \l ManagerHelper to install packages.
+ */
 #include <QNetworkReply>
 #include <QMessageBox>
 #include <QEventLoop>
@@ -67,6 +75,18 @@ DownloadWindow::~DownloadWindow()
     delete ui;
 }
 
+/*!
+ * \brief Get the list of all availible language pairs and tools.
+ *
+ * On Linux refreshes the repositories (if \a checked = true), searches
+ * for language pairs and parses the info about each package.
+ * These actions are handled with Perl script.
+ *
+ * On Windows it gets the info from the server.
+ *
+ * On Linux to avoid refreshing repositories \a checked is used.
+ * It checks automatically only at first launch of \l DownloadWindow.
+ */
 bool DownloadWindow::getData(bool checked)
 {
 #ifndef Q_OS_LINUX
@@ -169,12 +189,12 @@ bool DownloadWindow::getData(bool checked)
         auto state = State::INSTALL;
         int i = pair.indexOf(' ');
         QString name = pair.left(i).remove("apertium-");
-        int size = pair.mid(i+1).toInt();
+        int size = pair.mid(i + 1).toInt();
         i = name.indexOf('-');
         QString lang1 = name.left(i);
-        QString lang2 = name.mid(i+1);
-        if (QDir("/usr/share/apertium/apertium-"+lang1+"-"+lang2).exists() ||
-                QDir("/usr/share/apertium/apertium-"+lang2+"-"+lang1).exists())
+        QString lang2 = name.mid(i + 1);
+        if (QDir("/usr/share/apertium/apertium-" + lang1 + "-" + lang2).exists() ||
+                QDir("/usr/share/apertium/apertium-" + lang2 + "-" + lang1).exists())
             state = State::UNINSTALL;
         model->addItem(PkgInfo("apertium-" + name, Type::LANGPAIRS, size, QUrl(), state, ""));
     }
@@ -191,9 +211,13 @@ bool DownloadWindow::getData(bool checked)
     return true;
 }
 
+/*!
+ * \brief Chooses action to perform.
+ *
+ * PErforms the action for package in the \a row.
+ */
 void DownloadWindow::chooseAction(int row)
 {
-
 #ifdef Q_OS_LINUX
     int pos;
 #endif
@@ -227,7 +251,11 @@ void DownloadWindow::chooseAction(int row)
         break;
     }
 }
+
 #ifdef Q_OS_LINUX
+/*!
+  \brief Aborts changes.
+ */
 void DownloadWindow::revert()
 {
     int row;
@@ -243,7 +271,10 @@ void DownloadWindow::revert()
     toUninstall.clear();
 }
 
-
+/*!
+ * \brief Saves the changes performed by the user and run perl script.
+ * \warning For Linux.
+ */
 bool DownloadWindow::applyChanges()
 {
     if(toInstall.isEmpty() && toUninstall.isEmpty()) {
@@ -317,6 +348,12 @@ bool DownloadWindow::applyChanges()
 
 }
 #else
+/*!
+ * \brief Downloads and installs selected package.
+ *
+ * It was taken from Apertium Simpleton.
+ * \warning Not fo Linux.
+ */
 void DownloadWindow::installPkg(int row)
 {
     bool disabled = !ui->refreshButton->isEnabled();

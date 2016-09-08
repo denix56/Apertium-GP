@@ -17,6 +17,21 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*!
+  \class InputTextEdit
+  \ingroup gui
+  \inmodule Apertium-GP
+  \brief Class that provides special behavior for input text box.
+
+  The program waits until the user stopped printing input text, because
+  it is unnecessary to send translation each time.
+  It is using \l QTimer to wait after the user has stopped printing. If the user will not print anymore,
+  it will emit signal that the printing ended.
+  */
+/*!
+ * \fn InputTextEdit::printEnded()
+ * \brief This signal is emmited when the user stopped printing text for some time.
+ */
 #include <QKeyEvent>
 
 #include "inputtextedit.h"
@@ -25,6 +40,6 @@ InputTextEdit::InputTextEdit(QWidget* parent)
     : QTextEdit(parent)
 {
     connect(&timer,&QTimer::timeout,this,&InputTextEdit::printEnded);
-    connect(this,&InputTextEdit::textChanged,[&](){timer.start(250);});
+    connect(this,&InputTextEdit::textChanged,[&](){ timer.start(250); });
     timer.setSingleShot(true);
 }

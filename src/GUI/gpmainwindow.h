@@ -64,33 +64,20 @@ public:
     QString getText() const;
 
 
-    inline Translator * getTranslator() const
-    {
-        return translator;
-    }
+    Translator* getTranslator() const;
 
-    inline QNetworkAccessManager* getManager() const
-    {
-        return requestSender;
-    }
+    QNetworkAccessManager* getManager() const;
 
-    inline QString getCurrentSourceLang() const
-    {
-        return currentSourceLang;
-    }
+    QString getCurrentSourceLang() const;
 
-    inline QString getCurrentTargetLang() const
-    {
-        return currentTargetLang;
-    }
+
+    QString getCurrentTargetLang() const;
 
 protected:
     void closeEvent(QCloseEvent *event);
 
 signals:
     void listOfLangsSet();
-
-    void failedToStart();
 
     void trayTitleBarEnableChecked(bool b);
 

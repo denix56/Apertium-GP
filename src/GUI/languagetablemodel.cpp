@@ -17,28 +17,38 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*!
+  \class LanguageTableModel
+  \ingroup gui
+  \inmodule Apertium-GP
+  \brief This class provides a multi-column model for language combo boxes.
+
+  Due to that \l QComboBox does not support multi-column model, it is a custom implementation.
+ */
+
 #include <QStringList>
 #include <QDebug>
 
 #include "languagetablemodel.h"
 
-languageTableModel::languageTableModel(QObject *parent)
+LanguageTableModel::LanguageTableModel(QObject *parent)
     : QAbstractTableModel(parent)
-{
-}
+{}
 
-languageTableModel::languageTableModel(QStringList &list, QObject *parent)
+/*!
+  Constructs \l LanguageTableModel and fills it with \a list values
+ */
+LanguageTableModel::LanguageTableModel(QStringList &list, QObject *parent)
     : QAbstractTableModel(parent), list(list)
-{
-}
+{}
 
-int languageTableModel::rowCount(const QModelIndex &parent) const
+int LanguageTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
     return itemCount() < rowN ? list.size() : rowN;
 }
 
-int languageTableModel::columnCount(const QModelIndex &parent) const
+int LanguageTableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
     if (list.size()==0)
@@ -46,7 +56,7 @@ int languageTableModel::columnCount(const QModelIndex &parent) const
     return list.size()/rowN + (list.size() % rowN == 0 ? 0 : 1);
 }
 
-QVariant languageTableModel::data(const QModelIndex &index, int role) const
+QVariant LanguageTableModel::data(const QModelIndex &index, int role) const
 {
     int pos = index.column()*rowN+index.row();
     if (!index.isValid() || pos>=list.size())
@@ -58,7 +68,7 @@ QVariant languageTableModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-bool languageTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool LanguageTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     Q_UNUSED(role)
     int pos = index.column()*rowN + index.row();
@@ -93,7 +103,7 @@ bool languageTableModel::setData(const QModelIndex &index, const QVariant &value
     emit dataChanged(createIndex(0,0), createIndex(rowCount()-1,columnCount()-1), QVector<int>() << Qt::EditRole);
     return true;
 }
-int languageTableModel::currentColumnRowCount(const QModelIndex &index)
+int LanguageTableModel::currentColumnRowCount(const QModelIndex &index)
 {
     if (columnCount() > index.column() + 1)
         return rowN;
@@ -104,7 +114,7 @@ int languageTableModel::currentColumnRowCount(const QModelIndex &index)
     return 0;
 }
 
-bool languageTableModel::addItem(const QVariant &value)
+bool LanguageTableModel::addItem(const QVariant &value)
 {
     if (columnCount()>1 || list.size()==rowN) {
         int row = currentColumnRowCount(createIndex(0,columnCount()-1));
@@ -119,7 +129,7 @@ bool languageTableModel::addItem(const QVariant &value)
         return setData(createIndex(list.size(), 0), value);
 }
 
-bool languageTableModel::removeItem(const int &row, const int &column)
+bool LanguageTableModel::removeItem(const int &row, const int &column)
 {
     beginRemoveRows(QModelIndex(),row,row);
     list.removeAt(column*rowN + row);
@@ -144,7 +154,7 @@ bool languageTableModel::removeItem(const int &row, const int &column)
     return true;
 }
 
-Qt::ItemFlags languageTableModel::flags(const QModelIndex &index) const
+Qt::ItemFlags LanguageTableModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
         return Qt::NoItemFlags;
@@ -152,7 +162,7 @@ Qt::ItemFlags languageTableModel::flags(const QModelIndex &index) const
     return Qt::ItemIsEnabled;
 }
 
-bool languageTableModel::setNumberOfRows(int &n)
+bool LanguageTableModel::setNumberOfRows(int &n)
 {
     if (rowN<=0)
     {
@@ -163,7 +173,7 @@ bool languageTableModel::setNumberOfRows(int &n)
     return true;
 }
 
-void languageTableModel::clear()
+void LanguageTableModel::clear()
 {
     beginResetModel();
     list.clear();
@@ -171,14 +181,14 @@ void languageTableModel::clear()
     emit dataChanged(createIndex(0,0),createIndex(rowCount(), columnCount()), QVector<int>() << Qt::EditRole);
 }
 
-QModelIndex languageTableModel::findText(QString value) const
+QModelIndex LanguageTableModel::findText(QString value) const
 {
     int pos = list.indexOf(value);
     return pos != -1 ? createIndex(pos % rowN, pos / rowN)
                      : createIndex(-1,-1);
 }
 
-int languageTableModel::itemCount() const
+int LanguageTableModel::itemCount() const
 {
     int count = 0;
     for (int i = 0; i < list.size(); i++)
@@ -190,7 +200,7 @@ int languageTableModel::itemCount() const
     return count;
 }
 
-int languageTableModel::maxRowCount() const
+int LanguageTableModel::maxRowCount() const
 {
     return rowN;
 }

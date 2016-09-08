@@ -9,7 +9,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = apertium-gp
 TEMPLATE = app
-VERSION = 1.0.0
+VERSION = 1.0.1
 DESTDIR = ../bin
 MOC_DIR = ../build/moc
 RCC_DIR = ../build/rcc
@@ -75,7 +75,7 @@ FORMS    += \
 
 QMAKE_CXXFLAGS += -std=c++11
 
-QT_LOGGING_RULES=qt.network.ssl.warning=false
+QT_LOGGING_RULES = qt.network.ssl.warning = false
 
 RESOURCES += \
     GUI/application.qrc
@@ -83,14 +83,14 @@ RESOURCES += \
 RC_FILE = GUI/apertium.rc
 
 unix:!macx {
-req.files = \
+dep.files = \
     langNames.db \
-    scripts/apertium-gp-helper.sh
-req.path = /usr/share/apertium-gp
+    scripts/apertium-gp-helper.pl
+dep.path = /usr/share/apertium-gp
 policy.files = policy/org.apertium.apertium-gp.policy
 policy.path = /usr/share/polkit-1/actions
 
-INSTALLS += req policy
+INSTALLS += dep policy
 
 QMAKE_INSTALL_FILE = install -m 744 -p -o root -g root
 }
@@ -101,5 +101,6 @@ DISTFILES += \
     ../Apertium-GP.desktop \
     ../apertium.ico \
     scripts/apertium-gp-helper.pl \
-    GUI/apertium.rc
+    GUI/apertium.rc \
+    ../config.qdocconf
 

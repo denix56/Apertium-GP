@@ -17,6 +17,12 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*!
+  \class HeadButton
+  \ingroup gui
+  \inmodule Apertium-GP
+  \brief The class provides special behavior for buttons, that are used for selecting languages.
+  */
 
 #include <QPaintEvent>
 #include <QFontMetrics>
@@ -27,6 +33,9 @@
 
 #include "headbutton.h"
 
+/*!
+ * \brief HeadButton::HeadButton
+ */
 HeadButton::HeadButton(QWidget* parent)
     : QPushButton(parent)
 {
@@ -41,6 +50,9 @@ HeadButton::HeadButton(QWidget* parent)
     connect(this,&HeadButton::toggled,this,&HeadButton::changeButtonColor);
 }
 
+/*!
+ * \brief HeadButton::denySameButtonClick
+ */
 void HeadButton::denySameButtonClick()
 {
     if(once) {
@@ -52,24 +64,27 @@ void HeadButton::denySameButtonClick()
     }
     once=!once;
 }
-
+/*!
+ * \brief HeadButton::denySameButtonClick2
+ */
 void HeadButton::denySameButtonClick2()
 {
     if(wasClicked)
         setChecked(false);
 }
+/*!
+ * \brief HeadButton::changeButtonColor
+ */
 void HeadButton::changeButtonColor(bool checked)
 {
     setDefault(checked);
 }
 
-
+/*!
+ * \brief Elide text if it is too long.
+ */
 void HeadButton::paintEvent(QPaintEvent *)
 {
-//    if(fontMetrics().width(text()) != lastFontWidth) {
-//        lastFontWidth = fontMetrics().width(text());
-//        setFixedSize(qMax(lastFontWidth+10,102),27);
-//    }
     QStyleOptionButton option;
     initStyleOption(&option);;
     QRect textRect;
@@ -90,6 +105,9 @@ void HeadButton::paintEvent(QPaintEvent *)
  p.drawControl(QStyle::CE_PushButton, option);
 }
 
+/*!
+ * \brief Enable tooltip with full text
+ */
  void HeadButton::setText(const QString &text)
  {
      if (!text.isEmpty())
