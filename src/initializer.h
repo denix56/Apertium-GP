@@ -24,6 +24,8 @@
 #include <QSettings>
 #include <QDir>
 #include <QtGlobal>
+#include <QHash>
+#include <memory>
 
 #if QT_VERSION >= 0x050400
     #define DATALOCATION QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
@@ -38,8 +40,8 @@ Q_DECLARE_METATYPE(Position)
 class Initializer
 {
 public:
-    static QMap<QString, QString> langNamesMap;
-    static QSettings *conf;
+    static QHash<QString, QString> langNamesMap;
+    static std::unique_ptr<QSettings> conf;
     static bool initialize();
 };
 

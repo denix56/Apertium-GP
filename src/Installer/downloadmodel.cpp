@@ -65,7 +65,7 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
         switch(static_cast<Column>(index.column())) {
 
         case Column::NAME:
-            if (downList[i].type == Type::LANGPAIRS)
+            if (downList[i].type != Type::TOOLS)
                 return nameToFull(downList[i].name);
             else
                 return downList[i].name;

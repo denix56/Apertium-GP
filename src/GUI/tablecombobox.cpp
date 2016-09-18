@@ -74,7 +74,7 @@ void TableComboBox::resizeTable()
     if(model()->itemCount()==0)
         return;
     int colc = model()->columnCount();
-    for (int i=0; i < colc;i++)
+    for (int i=0; i < colc; i++)
         view()->setColumnWidth(i, COLWIDTH);
     view()->setMinimumWidth(COLWIDTH*(colc));
     view()->setMinimumHeight((model()->rowCount())*view()->rowHeight(0));

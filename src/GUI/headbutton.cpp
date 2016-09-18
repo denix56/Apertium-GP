@@ -58,9 +58,8 @@ void HeadButton::denySameButtonClick()
     if(once) {
         if(wasClicked && !this->isChecked())
             wasClicked=false;
-        else
-            if(!wasClicked && this->isChecked())
-                wasClicked=true;
+        else if(!wasClicked && this->isChecked())
+            wasClicked=true;
     }
     once=!once;
 }
@@ -97,20 +96,20 @@ void HeadButton::paintEvent(QPaintEvent *)
         textRect = elementRect.adjusted(0, 0, -menuButtonSize, 0);
     }
 
-       QString mElidedText = fontMetrics().elidedText(text(), Qt::ElideRight, textRect.width(), Qt::TextShowMnemonic);
+    QString mElidedText = fontMetrics().elidedText(text(), Qt::ElideRight, textRect.width(), Qt::TextShowMnemonic);
 
     option.text = mElidedText;
 
     QStylePainter p(this);
- p.drawControl(QStyle::CE_PushButton, option);
+    p.drawControl(QStyle::CE_PushButton, option);
 }
 
 /*!
  * \brief Enable tooltip with full text
  */
- void HeadButton::setText(const QString &text)
- {
-     if (!text.isEmpty())
+void HeadButton::setText(const QString &text)
+{
+    if (!text.isEmpty())
         setToolTip(text);
-     QPushButton::setText(text);
- }
+    QPushButton::setText(text);
+}

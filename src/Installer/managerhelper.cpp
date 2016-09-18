@@ -59,9 +59,9 @@ int ManagerHelper::update() const
     return cmd->exitCode();
 }
 
-QString ManagerHelper::search(const QString &name) const
+QString ManagerHelper::search(const QStringList &names) const
 {
-    cmd->start("pkexec", QStringList() << scriptPath << "--search" << name);
+    cmd->start("pkexec", QStringList() << scriptPath << "--search" << names.join('|'));
     cmd->waitForStarted();
     while(cmd->state()==QProcess::Running)
         qApp->processEvents();
@@ -69,7 +69,6 @@ QString ManagerHelper::search(const QString &name) const
     return cmd->readAllStandardOutput();
 }
 
-//TODO: optimize for asking info about multiple packages
 QString ManagerHelper::getInfo(const QString &packages) const
 {
     cmd->start("pkexec "+ scriptPath + " --info \"" + packages + "\"");

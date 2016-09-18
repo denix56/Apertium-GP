@@ -36,7 +36,6 @@
 #include <QRect>
 #include <QDebug>
 
-#include "docshandler.h"
 
 #include "dragndropwidget.h"
 
@@ -45,14 +44,16 @@
  *
  * It also sets QWidget::acceptDrops() to true to enable Drag`n`Drop
  */
-DragnDropWidget::DragnDropWidget(QWidget *parent) : QWidget(parent)
+DragnDropWidget::DragnDropWidget(QWidget *parent)
+    : QWidget(parent)
 {
+    this->parent = qobject_cast<FileDialog*>(parent);
     setAcceptDrops(true);
 }
 
 /*!
  * \brief Handles dragging document event \a event on this widget and checks document format
- * using \l DocsHandler::fileTypes. The color of the widget is changed.
+ * using \l FileDialog::fileTypes. The color of the widget is changed.
  */
 void DragnDropWidget::dragEnterEvent(QDragEnterEvent *event)
 {
@@ -67,7 +68,7 @@ void DragnDropWidget::dragEnterEvent(QDragEnterEvent *event)
     QFileInfo fileInfo(QUrl::fromPercentEncoding(
                            event->mimeData()->data("text/uri-list").trimmed()).remove("file:"));
 #endif
-    if (fileInfo.fileName().contains(QRegExp("("+DocsHandler::fileTypes.join('|')+")")))
+    if (fileInfo.fileName().contains(QRegExp("("+parent->getFileTypes().join('|')+")")))
         event->acceptProposedAction();
 }
 
@@ -95,10 +96,9 @@ void DragnDropWidget::dropEvent(QDropEvent *event)
                               data("application/x-qt-windows-mime;value=\"FileNameW\"").data());
 #elif defined(Q_OS_LINUX)
     path = QUrl::fromPercentEncoding(
-                event->mimeData()->data("text/uri-list").trimmed()).remove("file:");
+               event->mimeData()->data("text/uri-list").trimmed()).remove("file:");
 #endif
-    emit documentDropped(path);
-
+    emit fileDropped(path);
 }
 
 /*!

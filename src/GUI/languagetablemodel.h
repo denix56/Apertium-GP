@@ -17,8 +17,7 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LANGUAGETABLEMODEL_H
-#define LANGUAGETABLEMODEL_H
+#pragma once
 
 #include <QAbstractTableModel>
 
@@ -74,4 +73,3 @@ private:
     QStringList list;
 };
 
-#endif // LANGUAGETABLEMODEL_H

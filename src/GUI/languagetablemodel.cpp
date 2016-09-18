@@ -78,20 +78,20 @@ bool LanguageTableModel::setData(const QModelIndex &index, const QVariant &value
     else
     {
         if(list.size() >= rowN) {
-        if (index.row() == 0)
-            beginInsertColumns(QModelIndex(),columnCount(),columnCount());
-        list << value.toString();
-        for (int i = index.row()+1; i<rowCount();i++)
-            list << "";
-        if (index.row() == 0)
-            endInsertColumns();
+            if (index.row() == 0)
+                beginInsertColumns(QModelIndex(),columnCount(),columnCount());
+            list << value.toString();
+            for (int i = index.row()+1; i<rowCount(); i++)
+                list << "";
+            if (index.row() == 0)
+                endInsertColumns();
         }
         else {
             beginInsertRows(QModelIndex(),rowCount(),rowCount());
             list << value.toString();
             endInsertRows();
         }
-   }
+    }
     //Alphabethic sorting
     QString text = tr("Identify language...");
     int i = list.indexOf(text);
@@ -107,8 +107,8 @@ int LanguageTableModel::currentColumnRowCount(const QModelIndex &index)
 {
     if (columnCount() > index.column() + 1)
         return rowN;
-    else    
-        for (int i = 0;i<rowCount();++i)
+    else
+        for (int i = 0; i<rowCount(); ++i)
             if (list.at(rowN*index.column() + i)=="")
                 return i;
     return 0;
@@ -185,7 +185,7 @@ QModelIndex LanguageTableModel::findText(QString value) const
 {
     int pos = list.indexOf(value);
     return pos != -1 ? createIndex(pos % rowN, pos / rowN)
-                     : createIndex(-1,-1);
+           : createIndex(-1,-1);
 }
 
 int LanguageTableModel::itemCount() const

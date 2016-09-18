@@ -16,12 +16,11 @@
 * You should have received a copy of the GNU General Public License
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#ifndef DRAGNDROPWIDGET_H
-#define DRAGNDROPWIDGET_H
+#pragma once
 
 #include <QObject>
 #include <QWidget>
+#include "filedialog.h"
 
 class DragnDropWidget : public QWidget
 {
@@ -39,10 +38,8 @@ protected:
     void paintEvent(QPaintEvent *event);
 
 signals:
-    void documentDropped(QString path);
-
+    void fileDropped(QString path);
 private:
-    QString fileTypes;
+    FileDialog *parent;
 };
 
-#endif // DRAGNDROPWIDGET_H

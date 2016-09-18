@@ -23,12 +23,13 @@
 #include <QMap>
 #include <QUrl>
 #include <QObject>
+#include <QDebug>
 
 #include "initializer.h"
 
 enum class State {INSTALL, UPDATE, UNINSTALL, DOWNLOADING, UNPACKING};
 
-enum class Type {LANGPAIRS, TOOLS};
+enum class Type {OCR, LANGPAIRS, TOOLS};
 
 enum class Column {NAME, TYPE, SIZE, STATE};
 
@@ -108,19 +109,27 @@ public:
     void sort(int column, Qt::SortOrder order);
 
 private:
-    inline QString nameToFull(QString pair) const
+    inline QString nameToFull(QString name) const
     {
-        pair.remove("apertium-");
-        int i = pair.indexOf('-');
-        QString sourceLang = pair.left(i);
-        QString targetLang = pair.mid(i+1);
-        if (Initializer::langNamesMap.contains(sourceLang))
-            sourceLang = Initializer::langNamesMap[sourceLang];
-
-        if (Initializer::langNamesMap.contains(targetLang))
-            targetLang = Initializer::langNamesMap[targetLang];
-
-        return sourceLang + " - " + targetLang;
+        QString result;
+        if (name.contains("apertium")) {
+            name.remove("apertium-");
+            int i = name.indexOf('-');
+            QString sourceLang = name.left(i);
+            QString targetLang = name.mid(i+1);
+            sourceLang = Initializer::langNamesMap.value(sourceLang, sourceLang);
+            targetLang = Initializer::langNamesMap.value(targetLang, targetLang);
+            result = sourceLang + " - " + targetLang;
+        } else
+            if (name.contains("tesseract")) {
+                name.remove("tesseract-ocr-");
+                int i = name.indexOf('-');
+                QString extra = i > 0 ? " - " + name.mid(i+1) : "";
+                name = name.left(i);
+                result = "Tesseract (" + Initializer::langNamesMap.value(name, name)
+                        + extra + ")";
+            }
+        return result;
     }
 
     QVector <PkgInfo> downList;
@@ -132,8 +141,9 @@ private:
     };
 
     const QMap <Type, QString> typeNames {
-        { Type::LANGPAIRS, tr("Langpairs") },
-        { Type::TOOLS, tr("Tools") }
+        { Type::LANGPAIRS, tr("Language pairs") },
+        { Type::TOOLS, tr("Tools") },
+        { Type::OCR, tr("OCR") },
     };
 };
 

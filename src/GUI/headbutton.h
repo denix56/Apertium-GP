@@ -17,8 +17,7 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef HEADBUTTON_H
-#define HEADBUTTON_H
+#pragma once
 #include <QPushButton>
 
 class HeadButton : public QPushButton
@@ -46,4 +45,3 @@ private:
     int lastFontWidth;
 };
 
-#endif // HEADBUTTON_H

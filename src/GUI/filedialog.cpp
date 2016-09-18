@@ -18,10 +18,10 @@
 */
 
 /*!
- * \class DocsHandler
+ * \class FileDialog
  * \ingroup gui
  * \inmodule Apertium-GP
- * \brief The DocsHandler class is a class to handle document translation.
+ * \brief The FileDialog class is a class to handle document translation.
  *
  * It allows user to select file for translation, sends the translation request
  * and creates the post translation dialog window.
@@ -35,27 +35,29 @@
 #include <QDebug>
 
 #include "translator.h"
+#include "dragndropwidget.h"
+#include "ui_filedialog.h"
 
-#include "docshandler.h"
-#include "ui_docshandler.h"
+#include "filedialog.h"
 
 /*!
-  * \variable DocsHandler::fileTypes
+  * \variable FileDialog::fileTypes
   * \brief Document types, that doc translator should handle.
   * \todo Implement translation for all of these document types on windows.
  */
-const QStringList DocsHandler::fileTypes {"txt", "docx", "pptx", "html",
-                                           "rtf", "odt", "xlsx", "xtg"};
+
 
 /*!
  * \brief Constructs the dialog window with \a parent that allows user to select
  * document on the disk or drag`n`drop it.
  */
-DocsHandler::DocsHandler(GpMainWindow *parent)
-    : ui(new Ui::DocsHandler),
-      parent(parent)
+FileDialog::FileDialog(GpMainWindow *parent)
+    : QDialog(parent, Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint
+              | Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint),
+      ui(new Ui::FileDialog)
 {
     ui->setupUi(this);
+    setFixedSize(size());
     QPalette Pal(palette());
     // устанавливаем цвет фона
     Pal.setColor(QPalette::Background, Qt::white);
@@ -63,27 +65,23 @@ DocsHandler::DocsHandler(GpMainWindow *parent)
     setAttribute(Qt::WA_DeleteOnClose);
 
 
-    connect(this, &DocsHandler::docForTransChoosed, [&]()
+    connect(this, &FileDialog::fileForTransChoosed, [&]()
     {
-        docTransWaitDlg = new QProgressDialog(tr("Translating document..."),"",0,0,this);
-    docTransWaitDlg->setCancelButton(nullptr);
-    docTransWaitDlg->setWindowFlags(docTransWaitDlg->windowFlags() & ~Qt::WindowCloseButtonHint);
-    docTransWaitDlg->setModal(true);
-    docTransWaitDlg->show();
+        fileTransWaitDlg = new QProgressDialog(tr("Translating..."),"",0,0,this);
+        fileTransWaitDlg->setCancelButton(nullptr);
+        fileTransWaitDlg->setWindowFlags(fileTransWaitDlg->windowFlags() & ~Qt::WindowCloseButtonHint);
+        fileTransWaitDlg->setModal(true);
+        fileTransWaitDlg->show();
     });
-    connect(this, &DocsHandler::docForTransChoosed, parent->getTranslator(), &Translator::docTranslate);
-    connect(ui->DropWidget, &DragnDropWidget::documentDropped, this, &DocsHandler::docForTransChoosed);
-    connect(parent->getTranslator(),&Translator::docTranslated,this,&DocsHandler::showPostDocTransDlg);
-    connect(parent->getTranslator(), &Translator::docTranslateRejected,this,&DocsHandler::docTranslateFailed);
 }
 
-DocsHandler::~DocsHandler()
-{
-    delete ui;
-}
+FileDialog::~FileDialog()
+{}
+
+
 
 /*!
-  \fn DocsHandler::docForTransChoosed(QString filePath)
+  \fn FileDialog::fileForTransChoosed(QString filePath)
   \brief This signal is emitted when the user choosed document for translation and the program
   received the path \a filePath to the document.
  */
@@ -92,20 +90,21 @@ DocsHandler::~DocsHandler()
  * \brief This slot is executed when the browseBtn is clicked.
  * Provides selection of the document when browseBtn clicked.
  * Path to document is received from \l QFileDialog::getOpenFileName().
- * If the user selected file, \l DocsHandler::docForTransChoosed(QString filePath) is emitted.
+ * If the user selected file, \l FileDialog::fileForTransChoosed(QString filePath) is emitted.
  */
-void DocsHandler::on_browseBtn_clicked()
+void FileDialog::on_browseBtn_clicked()
 {
     //FIXME: format names
     QString filePath = QFileDialog::getOpenFileName(this,tr("Choose document to translate"),
-                                                     QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
-                                                  tr(QString("Documents (*."+fileTypes.join(" *.")+")").toStdString().c_str()));
+                       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
+                       tr(QString("Documents (*."+getFileTypes().join(" *.")+")").toUtf8().data()));
+
     if(filePath.isEmpty())
         return;
 
     //TODO: implement cancel button
 
-    emit docForTransChoosed(filePath);
+    emit fileForTransChoosed(filePath);
 }
 
 /*!
@@ -115,9 +114,9 @@ void DocsHandler::on_browseBtn_clicked()
  *
  * \bug openFileButton has to have \l QMessageBox::RejectRole unless close button is disabled.
  */
-void DocsHandler::showPostDocTransDlg(QString trFilePath)
+void FileDialog::showPostFileTransDlg(QString trFilePath)
 {
-    docTransWaitDlg->accept();
+    fileTransWaitDlg->accept();
     auto btnDlg = new QMessageBox(this);
     btnDlg->setWindowTitle(tr("Translation finished"));
     btnDlg->setText(tr("Document has been successfully translated."));
@@ -149,9 +148,9 @@ void DocsHandler::showPostDocTransDlg(QString trFilePath)
  * \brief This slot is executed the document translation failed.
  * It shows error message.
  */
-void DocsHandler::docTranslateFailed()
+void FileDialog::fileTranslateFailed()
 {
-    docTransWaitDlg->reject();
+    fileTransWaitDlg->reject();
     QMessageBox::critical(this,tr("Document has not been translated"),
                           tr("An error occured during the translation of this file."));
 }

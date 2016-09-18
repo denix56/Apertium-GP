@@ -53,7 +53,8 @@
 #include <QDebug>
 
 #include "translator.h"
-#include "docshandler.h"
+#include "docdialog.h"
+#include "ocrdialog.h"
 #include "tablecombobox.h"
 #include "downloadwindow.h"
 #include "settingsdialog.h"
@@ -107,7 +108,7 @@ bool GpMainWindow::initialize()
     setAttribute(Qt::WA_AlwaysShowToolTips);
     setContextMenuPolicy(Qt::NoContextMenu);
 #ifdef Q_OS_LINUX
-    auto dlg = new QProgressDialog(tr("Starting server..."),tr("Cancel"),0,0,this);
+    auto dlg = new QProgressDialog(tr("Starting server..."), tr("Cancel"), 0, 0, this);
     dlg->setValue(0);
     dlg->show();
 #endif
@@ -136,7 +137,7 @@ bool GpMainWindow::initialize()
 
     trayWidget = new TrayWidget(this);
 
-    trayIcon = new QSystemTrayIcon(QIcon(":/images/Apertium_box_white_small.png"),this);
+    trayIcon = new QSystemTrayIcon(QIcon(":/images/Apertium_box_white_small.png"), this);
     trayIcon->setToolTip(tr("Apertium-GP"));
     auto trayMenu = new QMenu(this);
 
@@ -179,7 +180,7 @@ bool GpMainWindow::initialize()
     apy = new QProcess(this);
     if(!QFile("/usr/share/apertium-apy/servlet.py").exists()
             && !QFile("/usr/share/apertium-gp/apertium-apy/apertium-apy/servlet.py").exists()) {
-         QMessageBox::critical(this,tr("Path error"),tr("Incorrect server directory"));
+        QMessageBox::critical(this,tr("Path error"),tr("Incorrect server directory"));
         close();
         return false;
     }
@@ -205,11 +206,24 @@ bool GpMainWindow::initialize()
         reply->deleteLater();
     }
 
-    auto dlAction =  new QAction(style()->standardIcon(QStyle::SP_ArrowDown),
-                                     tr("Install packages"),ui->toolBar);
+    dlAction =  new QAction(QIcon(":/images/Download.png"),
+                            tr("Install packages"), ui->toolBar);
+    connect(dlAction, &QAction::triggered, this, &GpMainWindow::dlAction_triggered);
+    connect(this, &GpMainWindow::ocrFailed, this, &GpMainWindow::dlAction_triggered);
+
+    documentTranslateAction = new QAction(QIcon(":/images/document_text.png"),
+                                          tr("Translate document"), ui->toolBar);
+    connect(documentTranslateAction, &QAction::triggered, this, &GpMainWindow::fileTranslateAction_triggered);
+
+    ocrTranslateAction = new QAction(QIcon(":/images/ocr.png"),
+                                     tr("Recognize and translate image"), ui->toolBar);
+    connect(ocrTranslateAction, &QAction::triggered, this, &GpMainWindow::ocrTranslateAction_triggered);
+
+    ui->toolBar->addAction(documentTranslateAction);
     ui->toolBar->addAction(dlAction);
+    ui->toolBar->addAction(ocrTranslateAction);
     //Installing new packages
-    connect(dlAction, &QAction::triggered,this,&GpMainWindow::dlAction_triggered);
+
 
     request.setUrl(URL+"/listPairs");
     QEventLoop loop;
@@ -224,18 +238,20 @@ bool GpMainWindow::initialize()
     }
 
     connect(requestSender,&QNetworkAccessManager::finished,this,&GpMainWindow::getReplyFromAPY);
-    connect(ui->boxInput,&InputTextEdit::printEnded,[&](){this->createRequests();});
+    connect(ui->boxInput,&InputTextEdit::printEnded,[&]() {
+        this->createRequests();
+    });
     connect (trayWidget,&TrayWidget::prindEnded,this,&GpMainWindow::createRequests);
     dlg->accept();
     dlg->deleteLater();
-    reply->deleteLater();  
+    reply->deleteLater();
 
 #else
     checked = true;
     auto dlAction= new QAction(style()->standardIcon(QStyle::SP_ArrowDown),tr("Install packages"),ui->toolBar);
     ui->toolBar->addAction(dlAction);
     connect(dlAction, &QAction::triggered,this, &GpMainWindow::dlAction_triggered);
-    connect(ui->boxInput,&InputTextEdit::printEnded,translator,&Translator::boxTranslate);   
+    connect(ui->boxInput,&InputTextEdit::printEnded,translator,&Translator::boxTranslate);
     connect(ui->boxInput,&InputTextEdit::printEnded,this,&GpMainWindow::saveMru);
     connect(translator,&Translator::resultReady,this,&GpMainWindow::translateReceived);
 
@@ -243,8 +259,8 @@ bool GpMainWindow::initialize()
     connect(translator, &Translator::trayResultReady, trayWidget, &TrayWidget::translationReceived);
     if (!QDir(DATALOCATION+"/usr/share/apertium/modes").exists() || !QDir(DATALOCATION+"/apertium-all-dev").exists()) {
         if(QMessageBox::critical(this, "Required packages are not installed.",
-                        "The program cannot find required core tools and/or even one language pair installed. "
-                        "Please, install them.",QMessageBox::Ok, QMessageBox::Cancel)==QMessageBox::Ok)
+                                 "The program cannot find required core tools and/or even one language pair installed. "
+                                 "Please, install them.",QMessageBox::Ok, QMessageBox::Cancel)==QMessageBox::Ok)
             dlAction->trigger();
         else
             return false;
@@ -252,7 +268,7 @@ bool GpMainWindow::initialize()
         initRes = true;
         createListOfLangs();
     }
-#endif  
+#endif
     thread.start();
 
     connect(ui->SourceLangComboBox->view(), &QTableView::activated, this, &GpMainWindow::updateComboBox);
@@ -270,7 +286,7 @@ bool GpMainWindow::initialize()
             if (trayWidget->inputComboBox()->findText(IDLANGTEXT)==-1) {
                 trayWidget->inputComboBox()->blockSignals(true);
                 trayWidget->inputComboBox()->removeItem(trayWidget->inputComboBox()->findText(
-                                                            IDLANGTEXT, Qt::MatchStartsWith | Qt::MatchCaseSensitive));
+                        IDLANGTEXT, Qt::MatchStartsWith | Qt::MatchCaseSensitive));
                 trayWidget->inputComboBox()->addItem(IDLANGTEXT);
                 trayWidget->inputComboBox()->setCurrentText(text);
                 trayWidget->inputComboBox()->blockSignals(false);
@@ -294,6 +310,7 @@ bool GpMainWindow::initialize()
     connect(this, &GpMainWindow::trayTitleBarEnableChecked, trayWidget, &TrayWidget::setTitleBarEnabled);
     connect(trayWidget, &TrayWidget::maximized, showFullAction, &QAction::trigger);
     connect(this, &GpMainWindow::transparentChecked, trayWidget, &TrayWidget::setTransparentEnabled);
+
 
     //read settings
     loadConf();
@@ -358,13 +375,11 @@ GpMainWindow::~GpMainWindow()
     QProcess cmd;
     if (!serverStartedExitCode)
         cmd.execute("pkexec", QStringList() << scriptPath << "--stop");
-    else
-        if (serverStartedExitCode==2)
-            apy->kill();
+    else if (serverStartedExitCode==2)
+        apy->kill();
 #endif
     thread.quit();
     thread.wait();
-    delete Initializer::conf;
     delete ui;
 }
 
@@ -428,8 +443,8 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
         QJsonArray array = doc.object().value("responseData").toArray();
         if (array.isEmpty()) {
             QMessageBox::critical(this,tr("No langpairs found."),
-                         tr("It seems, that no language pairs have been found."),
-                         QMessageBox::Ok);
+                                  tr("It seems, that no language pairs have been found."),
+                                  QMessageBox::Ok);
             initRes = false;
             return;
         }
@@ -453,11 +468,11 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
                 langs.insert(langpairUsed(Initializer::langNamesMap[sourceLang]+
                                           " - " + Initializer::langNamesMap[targetLang],
                                           Initializer::conf->value("mru/" + sourceLang +
-                                                                   "-" + targetLang).toULongLong()));
+                                                  "-" + targetLang).toULongLong()));
             }
             //unique languages
-            for(int j=0;j< ui->SourceLangComboBox->model()->columnCount();++j)
-                for(int i=0; i < ui->SourceLangComboBox->model()->rowCount();++i)
+            for(int j=0; j< ui->SourceLangComboBox->model()->columnCount(); ++j)
+                for(int i=0; i < ui->SourceLangComboBox->model()->rowCount(); ++i)
                     if(ui->SourceLangComboBox->model()->
                             data(ui->SourceLangComboBox->model()->index(i,j))
                             .toString()==Initializer::langNamesMap[sourceLang])
@@ -509,8 +524,8 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
                                       Initializer::conf->value("mru/" + sourceLanguage + "-" + targetLanguage).toULongLong()));
         }
 
-        for(int j=0;j< ui->SourceLangComboBox->model()->columnCount();++j)
-            for(int i=0; i < ui->SourceLangComboBox->model()->rowCount();++i)
+        for(int j=0; j< ui->SourceLangComboBox->model()->columnCount(); ++j)
+            for(int i=0; i < ui->SourceLangComboBox->model()->rowCount(); ++i)
                 if(ui->SourceLangComboBox->model()->data(ui->SourceLangComboBox->model()->index(i,j)).toString()
                         ==Initializer::langNamesMap[sourceLanguage])
                     unique=false;
@@ -521,7 +536,7 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
     }
 
     int i=0;
-    for(auto it = langs.begin(); i < 3 && it != langs.end();++it, ++i) {
+    for(auto it = langs.begin(); i < 3 && it != langs.end(); ++it, ++i) {
         auto item = new QListWidgetItem(it->name);
         item->setTextAlignment(Qt::AlignCenter);
         ui->mru->addItem(item);
@@ -529,14 +544,14 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
 #endif
 
     //fill buttons with start languages
-    for(int i=0;i<SourceLangBtns.size();++i) {
+    for(int i=0; i<SourceLangBtns.size(); ++i) {
         SourceLangBtns[i]->setText(ui->SourceLangComboBox->model()->
                                    data(ui->SourceLangComboBox->model()->index(i,0)).toString());
         SourceLangBtns[i]->setEnabled(!SourceLangBtns[i]->text().isEmpty());
     }
 
     //remove items, that are showed in buttons
-    for(int i=0;i<SourceLangBtns.size();++i)
+    for(int i=0; i<SourceLangBtns.size(); ++i)
         ui->SourceLangComboBox->model()->removeItem(0,0);
 
 #ifdef Q_OS_LINUX
@@ -567,11 +582,11 @@ void GpMainWindow::createListOfLangs(QNetworkReply *reply)
     QDir path(DATALOCATION+"/usr/share/apertium/modes");
     for (auto key : Initializer::langNamesMap.keys(SourceLangBtns[0]->text()))
         for (auto tKey : Initializer::langNamesMap.keys(TargetLangBtns[0]->text()))
-        if (!path.entryList(QStringList() << key+"-"+tKey+".mode").isEmpty()) {
-            currentSourceLang = key;
-            currentTargetLang = tKey;
-            break;
-        }
+            if (!path.entryList(QStringList() << key+"-"+tKey+".mode").isEmpty()) {
+                currentSourceLang = key;
+                currentTargetLang = tKey;
+                break;
+            }
 #endif
     emit listOfLangsSet();
     initRes = true;
@@ -604,38 +619,38 @@ void GpMainWindow::updateComboBox(QModelIndex index)
 
 #ifdef Q_OS_LINUX
     if (curr != IDLANGTEXT) {
-    QNetworkRequest request(URL+"/listPairs");
-    QEventLoop loop;
-    QNetworkAccessManager tmpN(this);
-    if (tmpN.networkAccessible() != QNetworkAccessManager::Accessible) {
-        QMessageBox::critical(this, tr("Network Inaccessible"),
-                              tr("Can't check for updates as you appear to be offline."));
-        return;
-    }
-    connect(&tmpN,&QNetworkAccessManager::finished,&loop, &QEventLoop::quit);
-    auto reply = tmpN.get(request);
-    loop.exec();
-    auto doc = QJsonDocument::fromJson(reply->readAll());
-    auto array = doc.object().value("responseData").toArray();
-    for(auto it = array.begin(); it != array.end();) {
-        QString sourceLanguage = (*it).toObject().value("sourceLanguage").toString();
-        if (sourceLanguage.length() > 3)
-            it = array.erase(it);
-        else
-            ++it;
-    }
-    trayWidget->outputComboBox()->blockSignals(true);
-    //TODO: make function for parsing
-    for (auto it : array)
-        if(Initializer::langNamesMap[it.toObject().value("sourceLanguage").toString()]
-                ==SourceLangBtns[0]->text()) {
-            ui->TargetLangComboBox->model()->addItem(
-                        Initializer::langNamesMap[it.toObject().value("targetLanguage").toString()]);
-            trayWidget->outputComboBox()->addItem(
-                        Initializer::langNamesMap[it.toObject().value("targetLanguage").toString()]);
+        QNetworkRequest request(URL+"/listPairs");
+        QEventLoop loop;
+        QNetworkAccessManager tmpN(this);
+        if (tmpN.networkAccessible() != QNetworkAccessManager::Accessible) {
+            QMessageBox::critical(this, tr("Network Inaccessible"),
+                                  tr("Can't check for updates as you appear to be offline."));
+            return;
         }
-    trayWidget->outputComboBox()->blockSignals(false);
-    reply->deleteLater();
+        connect(&tmpN,&QNetworkAccessManager::finished,&loop, &QEventLoop::quit);
+        auto reply = tmpN.get(request);
+        loop.exec();
+        auto doc = QJsonDocument::fromJson(reply->readAll());
+        auto array = doc.object().value("responseData").toArray();
+        for(auto it = array.begin(); it != array.end();) {
+            QString sourceLanguage = (*it).toObject().value("sourceLanguage").toString();
+            if (sourceLanguage.length() > 3)
+                it = array.erase(it);
+            else
+                ++it;
+        }
+        trayWidget->outputComboBox()->blockSignals(true);
+        //TODO: make function for parsing
+        for (auto it : array)
+            if(Initializer::langNamesMap[it.toObject().value("sourceLanguage").toString()]
+                    ==SourceLangBtns[0]->text()) {
+                ui->TargetLangComboBox->model()->addItem(
+                    Initializer::langNamesMap[it.toObject().value("targetLanguage").toString()]);
+                trayWidget->outputComboBox()->addItem(
+                    Initializer::langNamesMap[it.toObject().value("targetLanguage").toString()]);
+            }
+        trayWidget->outputComboBox()->blockSignals(false);
+        reply->deleteLater();
     }
 #else
     QDir moded(appdata->absoluteFilePath("usr/share/apertium/modes"));
@@ -697,7 +712,7 @@ void GpMainWindow::clearOtherSButtons()
                 trayWidget->inputComboBox()->blockSignals(true);
                 trayWidget->inputComboBox()->setCurrentText(btn->text());
                 trayWidget->inputComboBox()->blockSignals(false);
-                #ifdef Q_OS_LINUX
+#ifdef Q_OS_LINUX
                 btn->setChecked(true);
                 if (btn->text()==IDLANGTEXT) {
                     currentSourceLang = IDLANGTEXT;
@@ -713,7 +728,7 @@ void GpMainWindow::clearOtherSButtons()
                             name = tmp;
                     currentSourceLang = name;
                 }
-                #endif
+#endif
             }
         }
     }
@@ -732,21 +747,21 @@ void GpMainWindow::clearOtherSButtons()
     for (auto mode : modes) {
         if (QRegExp("^[a-z]+-[a-z]+$").exactMatch(mode.baseName())
                 && Initializer::langNamesMap[mode.baseName().
-                left(mode.baseName().indexOf("-"))]==currentSButton->text()) {
+                                             left(mode.baseName().indexOf("-"))]==currentSButton->text()) {
             ui->TargetLangComboBox->model()->
-                    addItem(Initializer::langNamesMap[mode.baseName()
-                    .mid(mode.baseName().indexOf("-")+1)]);
+            addItem(Initializer::langNamesMap[mode.baseName()
+                                              .mid(mode.baseName().indexOf("-")+1)]);
             trayWidget->outputComboBox()->addItem(Initializer::langNamesMap[mode.baseName()
-                    .mid(mode.baseName().indexOf("-")+1)]);
+                                                  .mid(mode.baseName().indexOf("-")+1)]);
         }
     }
     trayWidget->outputComboBox()->blockSignals(false);
-    for(int i=0;i<TargetLangBtns.size();++i) {
+    for(int i=0; i<TargetLangBtns.size(); ++i) {
         TargetLangBtns[i]->setText(ui->TargetLangComboBox->model()->
                                    data(ui->TargetLangComboBox->model()->index(i,0)).toString());
 
     }
-    for(int i=0;i<TargetLangBtns.size();++i)
+    for(int i=0; i<TargetLangBtns.size(); ++i)
         ui->TargetLangComboBox->model()->removeItem(0,0);
     TargetLangBtns[0]->setEnabled(true);
     TargetLangBtns[0]->click();
@@ -781,18 +796,18 @@ void GpMainWindow::clearOtherEButtons()
                         name = tmp;
                 currentTargetLang = name;
 #else
-            QDir path(DATALOCATION+"/usr/share/apertium/modes");
-            HeadButton *currentSourceButton = nullptr;
-            for (HeadButton *btn : SourceLangBtns)
-                if (btn->isChecked())
-                    currentSourceButton = btn;
-            for (auto key : Initializer::langNamesMap.keys(currentSourceButton->text()))
-                for (auto tKey : Initializer::langNamesMap.keys(TargetLangBtns[0]->text()))
-                if (!path.entryList(QStringList() << key+"-"+tKey+".mode").isEmpty()) {
-                    currentSourceLang = key;
-                    currentTargetLang = tKey;
-                    break;
-                }
+                QDir path(DATALOCATION+"/usr/share/apertium/modes");
+                HeadButton *currentSourceButton = nullptr;
+                for (HeadButton *btn : SourceLangBtns)
+                    if (btn->isChecked())
+                        currentSourceButton = btn;
+                for (auto key : Initializer::langNamesMap.keys(currentSourceButton->text()))
+                    for (auto tKey : Initializer::langNamesMap.keys(TargetLangBtns[0]->text()))
+                        if (!path.entryList(QStringList() << key+"-"+tKey+".mode").isEmpty()) {
+                            currentSourceLang = key;
+                            currentTargetLang = tKey;
+                            break;
+                        }
 #endif
             }
         }
@@ -823,19 +838,19 @@ void GpMainWindow::getResponseOfAvailLang(QNetworkReply *reply)
     trayWidget->outputComboBox()->blockSignals(true);
     for (auto it : array)
         if(Initializer::langNamesMap[it.toObject().
-                value("sourceLanguage").toString()]==Initializer::langNamesMap[currentSourceLang]) {
+                                     value("sourceLanguage").toString()]==Initializer::langNamesMap[currentSourceLang]) {
             ui->TargetLangComboBox->model()->addItem(
-                        Initializer::langNamesMap[it.toObject().value("targetLanguage").toString()]);
+                Initializer::langNamesMap[it.toObject().value("targetLanguage").toString()]);
             trayWidget->outputComboBox()->addItem(
-                        Initializer::langNamesMap[it.toObject().value("targetLanguage").toString()]);
+                Initializer::langNamesMap[it.toObject().value("targetLanguage").toString()]);
         }
     trayWidget->outputComboBox()->blockSignals(false);
 
     //fill buttons with new target languages
-    for(int i=0;i<TargetLangBtns.size();++i)
+    for(int i=0; i<TargetLangBtns.size(); ++i)
         TargetLangBtns[i]->setText(ui->TargetLangComboBox->model()
                                    ->data(ui->TargetLangComboBox->model()->index(i,0)).toString());
-    for(int i=0;i<TargetLangBtns.size();++i)
+    for(int i=0; i<TargetLangBtns.size(); ++i)
         ui->TargetLangComboBox->model()->removeItem(0,0);
     emit TargetLangBtns[0]->clicked(true);
     emit listOfLangsSet();
@@ -934,7 +949,7 @@ void GpMainWindow::getReplyFromAPY(QNetworkReply *reply)
                     btn->setText(IDLANGTEXT+" ("+Initializer::langNamesMap[currentSourceLang]+")");
                     trayWidget->inputComboBox()->blockSignals(true);
                     trayWidget->inputComboBox()->removeItem(trayWidget->inputComboBox()->findText(
-                                                                IDLANGTEXT,Qt::MatchStartsWith | Qt::MatchCaseSensitive));
+                            IDLANGTEXT,Qt::MatchStartsWith | Qt::MatchCaseSensitive));
                     trayWidget->inputComboBox()->addItem(IDLANGTEXT+" ("+Initializer::langNamesMap[currentSourceLang]+")");
                     trayWidget->inputComboBox()->setCurrentText(IDLANGTEXT+" ("+Initializer::langNamesMap[currentSourceLang]+")");
                     trayWidget->inputComboBox()->blockSignals(false);
@@ -974,7 +989,7 @@ void GpMainWindow::getReplyFromAPY(QNetworkReply *reply)
                 while(cursor.blockNumber()==blockNumber && !cursor.atBlockEnd()) {
 
                     auto cursor1 = cursor.document()->
-                            find(QRegExp ("\\*\\w+\\W?"),cursor);
+                                   find(QRegExp ("\\*\\w+\\W?"),cursor);
                     if (cursor1.isNull())
                         break;
                     cursor = cursor1;
@@ -995,7 +1010,7 @@ void GpMainWindow::getReplyFromAPY(QNetworkReply *reply)
             cursor.movePosition(QTextCursor::StartOfBlock);
             while(!cursor.atBlockEnd()) {
                 auto cursor1 = cursor.document()->
-                        find(QRegExp("\\*\\w+\\W?"),cursor);
+                               find(QRegExp("\\*\\w+\\W?"),cursor);
                 if (cursor1.isNull())
                     break;
                 cursor = cursor1;
@@ -1056,7 +1071,7 @@ void GpMainWindow::saveMru()
         return;
     auto langpair = currentSourceLang+"-"+currentTargetLang;
     Initializer::conf->setValue("mru/" + langpair, QVariant(Initializer::conf->value
-                                                   (langpair, QVariant(0ULL)).toULongLong() + 1ULL));
+                                (langpair, QVariant(0ULL)).toULongLong() + 1ULL));
 }
 
 /*!
@@ -1075,7 +1090,7 @@ void GpMainWindow::translateReceived(const QString &result)
     cursor.movePosition(QTextCursor::Start);
     while(!cursor.atEnd()) {
         auto cursor1 = cursor.document()->
-                find(QRegExp("[\\*#]\\w+\\W?"), cursor);
+                       find(QRegExp("[\\*#]\\w+\\W?"), cursor);
         if (cursor1.isNull())
             break;
         cursor = cursor1;
@@ -1166,19 +1181,40 @@ void GpMainWindow::on_swapBtn_clicked()
 }
 
 /*!
- * \fn GpMainWindow::on_docTranslateBtn_clicked()
- * \brief This slot is executed when docTranslateBtn is clicked.
+ * \brief This slot is executed when fileTranslateAction is triggered.
  *
- * Creates \l DocsHandler window.
+ * Creates \l FileDialog window.
  */
-void GpMainWindow::on_docTranslateBtn_clicked()
+void GpMainWindow::fileTranslateAction_triggered()
 {
-    auto DocTranslateWidget = new DocsHandler(this);
+    auto fileTranslateWidget = new DocDialog(this);
     ui->boxInput->setEnabled(false);
     ui->boxOutput->setEnabled(false);
-    DocTranslateWidget->show();
-    connect(DocTranslateWidget, &DocsHandler::destroyed, [&]() { ui->boxInput->setEnabled(true);});
-    connect(DocTranslateWidget, &DocsHandler::destroyed, [&]() { ui->boxOutput->setEnabled(true);});
+    fileTranslateWidget->show();
+    connect(fileTranslateWidget, &FileDialog::destroyed, [&]() {
+        ui->boxInput->setEnabled(true);
+    });
+    connect(fileTranslateWidget, &FileDialog::destroyed, [&]() {
+        ui->boxOutput->setEnabled(true);
+    });
+}
+
+void GpMainWindow::ocrTranslateAction_triggered()
+{
+    auto ocrDlg = new OcrDialog(this);
+    ui->boxInput->setEnabled(false);
+    ui->boxOutput->setEnabled(false);
+    connect(ocrDlg, &OcrDialog::destroyed, [&]() {
+        ui->boxInput->setEnabled(true);
+    });
+    connect(ocrDlg, &OcrDialog::destroyed, [&]() {
+        ui->boxOutput->setEnabled(true);
+    });
+    connect(ocrDlg, &OcrDialog::ocrFinished, this, &GpMainWindow::ocrReceived);
+
+    ocrDlg->show();
+
+
 }
 
 /*!
@@ -1192,28 +1228,28 @@ void GpMainWindow::setLangpair(QString source, QString target) {
     int sBtnIndex = -1;
     int tBtnIndex = -1;
     if (!source.isEmpty()) {
-    for (int i = 0; i<SourceLangBtns.size();++i)
-        if (SourceLangBtns[i]->text()==source) {
-            sBtnIndex = i;
-            break;
+        for (int i = 0; i<SourceLangBtns.size(); ++i)
+            if (SourceLangBtns[i]->text()==source) {
+                sBtnIndex = i;
+                break;
+            }
+        QEventLoop loop;
+        connect(this, &GpMainWindow::listOfLangsSet,&loop, &QEventLoop::quit);
+        if (sBtnIndex!=-1)
+            emit SourceLangBtns[sBtnIndex]->click();
+        else {
+            QModelIndex index = ui->SourceLangComboBox->model()->
+                                findText(source);
+            if (index.isValid())
+                emit ui->SourceLangComboBox->view()->activated(index);
         }
-    QEventLoop loop;
-    connect(this, &GpMainWindow::listOfLangsSet,&loop, &QEventLoop::quit);
-    if (sBtnIndex!=-1)
-        emit SourceLangBtns[sBtnIndex]->click();
-    else {
-        QModelIndex index = ui->SourceLangComboBox->model()->
-                findText(source);
-        if (index.isValid())
-            emit ui->SourceLangComboBox->view()->activated(index);
-    }
-    loop.exec();
+        loop.exec();
     }
     if (target.isEmpty()) {
         TargetLangBtns[0]->click();
         return;
     }
-    for (int i = 0; i<TargetLangBtns.size();++i) {
+    for (int i = 0; i<TargetLangBtns.size(); ++i) {
         if (TargetLangBtns[i]->text()==target) {
             tBtnIndex = i;
             break;
@@ -1223,7 +1259,7 @@ void GpMainWindow::setLangpair(QString source, QString target) {
         TargetLangBtns[tBtnIndex]->click();
     else {
         QModelIndex index = ui->TargetLangComboBox->model()->
-                findText(target);
+                            findText(target);
         if (index.isValid())
             emit ui->TargetLangComboBox->view()->activated(index);
     }
@@ -1233,49 +1269,58 @@ void GpMainWindow::setLangpair(QString source, QString target) {
   * \brief Sets tray widget position on the screen.
   * The coordinates are calculated using \l QApplication::desktop()
   */
- void GpMainWindow::setTrayWidgetPosition(Position position)
- {
-     QRect desktop = qApp->desktop()->availableGeometry();
-     QMap <Position, QRect> pos_coords {
-         { TopLeft, QRect(desktop.left(), desktop.top(),trayWidget->width(), trayWidget->height()) },
-         { TopRight, QRect(desktop.right()-trayWidget->width(),desktop.top(),
-                                     trayWidget->width(), trayWidget->height()) },
-         { BottomLeft, QRect(desktop.left(), desktop.bottom()-trayWidget->height(),
-                                       trayWidget->width(), trayWidget->height()) },
-         { BottomRight, QRect(desktop.right()-trayWidget->width(), desktop.bottom()-trayWidget->height(),
-                                        trayWidget->width(), trayWidget->height()) },
-     };
-     trayWidget->setGeometry(pos_coords[position]);
- }
+void GpMainWindow::setTrayWidgetPosition(Position position)
+{
+    QRect desktop = qApp->desktop()->availableGeometry();
+    QMap <Position, QRect> pos_coords {
+        { TopLeft, QRect(desktop.left(), desktop.top(),trayWidget->width(), trayWidget->height()) },
+        {   TopRight, QRect(desktop.right()-trayWidget->width(),desktop.top(),
+            trayWidget->width(), trayWidget->height())
+        },
+        {   BottomLeft, QRect(desktop.left(), desktop.bottom()-trayWidget->height(),
+            trayWidget->width(), trayWidget->height())
+        },
+        {   BottomRight, QRect(desktop.right()-trayWidget->width(), desktop.bottom()-trayWidget->height(),
+            trayWidget->width(), trayWidget->height())
+        },
+    };
+    trayWidget->setGeometry(pos_coords[position]);
+}
 
- /*!
+/*!
   * \brief get pointer to translator
   */
- Translator* GpMainWindow::getTranslator() const
- {
-     return translator;
- }
+Translator* GpMainWindow::getTranslator() const
+{
+    return translator;
+}
 
- /*!
+/*!
   * \brief get pointer to Network Manager
   */
- QNetworkAccessManager* GpMainWindow::getManager() const
- {
-     return requestSender;
- }
+QNetworkAccessManager* GpMainWindow::getManager() const
+{
+    return requestSender;
+}
 
- /*!
+/*!
   * \brief get current source lang
   */
- QString GpMainWindow::getCurrentSourceLang() const
- {
-     return currentSourceLang;
- }
+QString GpMainWindow::getCurrentSourceLang() const
+{
+    return currentSourceLang;
+}
 
- /*!
+/*!
   * \brief get current target lang
   */
- QString GpMainWindow::getCurrentTargetLang() const
- {
-     return currentTargetLang;
- }
+QString GpMainWindow::getCurrentTargetLang() const
+{
+    return currentTargetLang;
+}
+
+void GpMainWindow::ocrReceived(QString text)
+{
+    ui->boxInput->clear();
+    ui->boxInput->setText(text);
+}

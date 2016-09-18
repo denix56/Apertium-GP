@@ -17,8 +17,7 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef INPUTTEXTEDIT_H
-#define INPUTTEXTEDIT_H
+#pragma once
 #include <QTextEdit>
 #include <QTimer>
 
@@ -35,4 +34,4 @@ private:
     QTimer timer;
 };
 
-#endif // INPUTTEXTEDIT_H
+

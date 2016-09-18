@@ -437,18 +437,6 @@ combobox-popup: 0;
         </property>
        </spacer>
       </item>
-      <item>
-       <widget class="QPushButton" name="docTranslateBtn">
-        <property name="font">
-         <font>
-          <pointsize>11</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Translate document</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </item>
     <item row="1" column="2">

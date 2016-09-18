@@ -38,11 +38,11 @@ sub _upstart_restart{ system("restart apertium-apy"); };
 my ($start, $stop, $restart);
 
 sub set_server_cmds {
-	if (system("which systemctl &>/dev/null") == 0) {
+	if (system("which systemctl >/dev/null") == 0) {
 		$start = \&_systemctl_start;
 		$stop = \&_systemctl_stop;
 		$restart = \&_systemctl_restart;
-   	} elsif (system("which upstart &>/dev/null") == 0) { 
+   	} elsif (system("which upstart >/dev/null") == 0) { 
    		$start = \&_upstart_start;
 		$stop = \&_upstart_stop;
 		$restart = \&_upstart_restart;
@@ -59,7 +59,7 @@ sub _apt_remove{ return system("$Manager -y remove @_") };
 sub _apt_update{ return system("$Manager update") };
 sub _apt_install_server{ return system("$Manager -y install apertium-apy") };
 sub _apt_remove_server{ return system("$Manager -y remove apertium-apy") };
-sub _apt_search_package{ return `apt-cache search @_` };
+sub _apt_search_package{ return `apt-cache search \"@_\"` };
 sub _apt_get_info{ return `apt-cache show @_` };
 sub _aptitude_get_info{ return `$Manager show @_` };
 
@@ -77,7 +77,7 @@ sub _zypper_install_server{ return system("cd /usr/share/apertium-gp && $Manager
 sub _zypper_remove_server{ return remove_tree('/usr/share/apertium-gp/apertium-apy') };
 sub _zypper_get_info{ return `$Manager info @_` };
 
-sub _other_search_package{ return `$Manager search @_` };
+sub _other_search_package{ return `$Manager search \"@_\"` };
 
 my ($install, $remove, $update, $install_server, $remove_server, $get_info, $search_package);
 
@@ -162,7 +162,7 @@ sub get_size {
 					next;
 				}
 				my ($name, $size);
-				if ($_ =~ /(apertium-[a-z]{2,3}-[a-z]{2,3})\n/){
+				if ($_ =~ /((apertium-(?!all-dev)[a-z]{2,3}-[a-z]{2,3})|(tesseract-ocr-(?!(all|dev))[a-z]{3}-?[a-z]*))\n/){
 					$name = $1;
 				} else {
 					next;
@@ -191,7 +191,7 @@ sub get_size {
 					next;
 				}
 				my ($name, $size);
-				if ($_ =~ /(apertium-[a-z]{2,3}-[a-z]{2,3})\n/){
+				if ($_ =~ /((apertium-(?!all-dev)[a-z]{2,3}-[a-z]{2,3})|(tesseract-ocr-(?!(all|dev))[a-z]{3}-?[a-z]*))\n/){
 					$name = $1;
 				} else {
 					next;
@@ -223,7 +223,7 @@ sub get_size {
 sub set_manager {
 	my @manager_array = qw/zypper dnf yum apt-get aptitude/;
 	foreach my $temp_manager (@manager_array) {
-		if(system("which $temp_manager &>/dev/null") == 0){
+		if(system("which $temp_manager >/dev/null") == 0){
 			$Manager = $temp_manager;
 			set_manager_commands();
 			return;
@@ -261,8 +261,8 @@ sub remove_handler {
 
 sub search_handler {
 my @args = @_;
-	my @output = $search_package->($args[1]) =~ /(apertium-(?!all-dev)[a-z]{2,3}-[a-z]{2,3})[\s\n]/g;
-	print join(' ', uniq @output);
+my @output = $search_package->($args[1]) =~ /((apertium-(?!all-dev)[a-z]{2,3}-[a-z]{2,3})|(tesseract-ocr-(?!(all|dev|equ|osd))[a-z]{3}-?[a-z]*))[\s\n]/g;
+print join(' ', grep {$_} uniq @output);
 }
 
 set_manager();

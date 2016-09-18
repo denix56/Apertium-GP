@@ -18,6 +18,8 @@ unix:OBJECTS_DIR = ../build/o/unix
 win32:OBJECTS_DIR = ../build/o/win32
 macx:OBJECTS_DIR = ../build/o/macx
 
+LIBS += -ltesseract -llept
+
 INCLUDEPATH += \
     GUI \
     Installer \
@@ -41,8 +43,11 @@ SOURCES += \
     GUI/traywidget.cpp \
     GUI/trayinputtextedit.cpp \
     GUI/gpmainwindow.cpp \
-    GUI/docshandler.cpp \
-    singleapplication.cpp
+    singleapplication.cpp \
+    GUI/ocrdialog.cpp \
+    GUI/ocrhandler.cpp \
+    GUI/filedialog.cpp \
+    GUI/docdialog.cpp
 
 HEADERS  += \
     GUI/headbutton.h \
@@ -61,8 +66,11 @@ HEADERS  += \
     GUI/traywidget.h \
     GUI/trayinputtextedit.h \
     GUI/gpmainwindow.h \
-    GUI/docshandler.h \
-    singleapplication.h
+    singleapplication.h \
+    GUI/ocrdialog.h \
+    GUI/ocrhandler.h \
+    GUI/filedialog.h \
+    GUI/docdialog.h
 
 
 FORMS    += \
@@ -70,10 +78,10 @@ FORMS    += \
     GUI/settingsdialog.ui \
     GUI/traywidget.ui \
     GUI/gpmainwindow.ui \
-    GUI/docshandler.ui
+    GUI/filedialog.ui
 
 
-QMAKE_CXXFLAGS += -std=c++11
+CONFIG += c++11
 
 QT_LOGGING_RULES = qt.network.ssl.warning = false
 

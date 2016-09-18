@@ -32,7 +32,7 @@ public:
 
     int update() const;
 
-    QString search(const QString &name) const;
+    QString search(const QStringList &names) const;
 
     QString getInfo(const QString &packages) const;
 

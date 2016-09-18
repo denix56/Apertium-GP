@@ -43,7 +43,8 @@
 #include "ui_downloadwindow.h"
 
 DownloadWindow::DownloadWindow(QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent, Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint
+            | Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint),
     ui(new Ui::DownloadWindow)
 {
     ui->setupUi(this);
@@ -183,26 +184,34 @@ bool DownloadWindow::getData(bool checked)
         connect(&wait, &QProgressDialog::canceled, mngr, &ManagerHelper::canceled);
         mngr->update();
     }
-    for(QString pair : mngr->getInfo(mngr->search("apertium")).split('\n')) {
+    for(QString pair : mngr->getInfo(mngr->search(QStringList() << "apertium" << "tesseract")).split('\n')) {
         if (pair.isEmpty())
             continue;
         auto state = State::INSTALL;
         int i = pair.indexOf(' ');
-        QString name = pair.left(i).remove("apertium-");
         int size = pair.mid(i + 1).toInt();
-        i = name.indexOf('-');
-        QString lang1 = name.left(i);
-        QString lang2 = name.mid(i + 1);
-        if (QDir("/usr/share/apertium/apertium-" + lang1 + "-" + lang2).exists() ||
-                QDir("/usr/share/apertium/apertium-" + lang2 + "-" + lang1).exists())
-            state = State::UNINSTALL;
-        model->addItem(PkgInfo("apertium-" + name, Type::LANGPAIRS, size, QUrl(), state, ""));
+        if (pair.contains("apertium")) {
+            QString name = pair.left(i).remove("apertium-");
+            i = name.indexOf('-');
+            QString lang1 = name.left(i);
+            QString lang2 = name.mid(i + 1);
+            if (QDir("/usr/share/apertium/apertium-" + lang1 + "-" + lang2).exists() ||
+                    QDir("/usr/share/apertium/apertium-" + lang2 + "-" + lang1).exists())
+                state = State::UNINSTALL;
+            model->addItem(PkgInfo("apertium-" + name, Type::LANGPAIRS, size, QUrl(), state, ""));
+        } else
+            if (pair.contains("tesseract")) {
+                QString name = pair.left(i).remove("tesseract-ocr-").replace('-','_');
+                if (QFile("/usr/share/tesseract-ocr/tessdata/" + name + ".traineddata").exists())
+                    state = State::UNINSTALL;
+                model->addItem(PkgInfo(pair.left(i), Type::OCR, size, QUrl(), state, ""));
+            }
     }
     auto state = State::INSTALL;
     if(QDir("/usr/share/apertium-apy").exists() || QDir("/usr/share/apertium-gp/apertium-apy").exists())
         state = State::UNINSTALL;
-    model->addItem(PkgInfo("apertium-apy", Type::TOOLS, mngr->getInfo("apertium-apy").remove(QRegularExpression(".* ")).toInt(),
-                        QUrl(), state, QString(), true));
+    model->addItem(PkgInfo("apertium-apy", Type::TOOLS, mngr->getInfo("apertium-apy")
+                           .remove(QRegularExpression(".* ")).toInt(), QUrl(), state, QString(), true));
     ui->view->resizeColumnsToContents();
     ui->view->setSortingEnabled(true);
     ui->view->sortByColumn(static_cast<int>(Column::TYPE), Qt::DescendingOrder);

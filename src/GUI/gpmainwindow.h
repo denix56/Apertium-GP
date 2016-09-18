@@ -17,8 +17,8 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef GPMAINWINDOW_H
-#define GPMAINWINDOW_H
+#pragma once
+
 #include <QMainWindow>
 #include <QTextEdit>
 #include <QNetworkAccessManager>
@@ -40,8 +40,6 @@
 #include "initializer.h"
 
 namespace Ui {
-
-class DocsHandler;
 class GpMainWindow;
 }
 
@@ -83,6 +81,7 @@ signals:
 
     void transparentChecked(bool b);
 
+    void ocrFailed();
 public slots:
     void setFontSize(int size);
 
@@ -121,11 +120,15 @@ private slots:
 
     void dlAction_triggered();
 
+    void fileTranslateAction_triggered();
+
+    void ocrTranslateAction_triggered();
+
+    void ocrReceived(QString text);
+
     void on_mru_itemClicked(QListWidgetItem *item);
 
     void on_swapBtn_clicked();
-
-    void on_docTranslateBtn_clicked();
 
 private:
 
@@ -144,7 +147,11 @@ private:
     TrayWidget *trayWidget;
     QSystemTrayIcon *trayIcon;
     QAction *showFullAction;
-    QAction * exitAction;
+    QAction *exitAction;
+
+    QAction *dlAction;
+    QAction *documentTranslateAction;
+    QAction *ocrTranslateAction;
 
     QThread thread;
     //not for Linux
@@ -173,4 +180,3 @@ private:
     void setTrayWidgetEnabled(bool b);
 };
 
-#endif

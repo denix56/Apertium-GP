@@ -17,8 +17,7 @@
 * along with apertium-gp.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DELEGATE_H
-#define DELEGATE_H
+#pragma once
 #include <QItemDelegate>
 class LangDelegate : public QItemDelegate
 {
@@ -30,4 +29,3 @@ public:
     void drawFocus(QPainter *, const QStyleOptionViewItem &, const QRect &) const;
 };
 
-#endif // DELEGATE_H

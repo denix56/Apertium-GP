@@ -3,5 +3,8 @@
         <file>images/Apertium_box_white_small.png</file>
         <file>images/arrows-maximize-enlarge-128.png</file>
         <file>images/ic_close_48px-128.png</file>
+        <file>images/document_text.png</file>
+        <file>images/Download.png</file>
+        <file>images/ocr.png</file>
     </qresource>
 </RCC>

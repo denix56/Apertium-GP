@@ -33,7 +33,7 @@ public:
 
 //    inline QProgressDialog *const getWaitDlg() const
 //    {
-//        return docTransWaitDlg;
+//        return fileTransWaitDlg;
 //    }
 
 signals:
@@ -41,9 +41,9 @@ signals:
 
     void trayResultReady(const QString &result);
 
-    void docTranslated(QString trFilePath);
+    void fileTranslated(QString trFilePath);
 
-    void docTranslateRejected();
+    void fileTranslateRejected();
 public slots:
 
     //translate on other OS
@@ -51,7 +51,7 @@ public slots:
 
     void winTrayTranslate(QString text);
 
-    void docTranslate(QString filePath);
+    void fileTranslate(QString filePath);
 
     //sent synchronous translation requests to APY on Linux
     void linuxTranslate(QNetworkRequest &request);

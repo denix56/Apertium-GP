@@ -29,11 +29,11 @@
 
 #include "initializer.h"
 
-QMap<QString, QString> Initializer::langNamesMap;
-QSettings *Initializer::conf;
+QHash<QString, QString> Initializer::langNamesMap;
+std::unique_ptr<QSettings> Initializer::conf;
 bool Initializer::initialize()
 {
-    conf = new QSettings(QSettings::NativeFormat,QSettings::UserScope,"Apertium","Apertium-GP");
+    conf.reset(new QSettings(QSettings::NativeFormat,QSettings::UserScope,"Apertium","Apertium-GP"));
 #ifdef Q_OS_LINUX
     QDir path("/usr/share/apertium-gp");
 #else
