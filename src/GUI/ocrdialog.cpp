@@ -11,7 +11,8 @@ OcrDialog::OcrDialog(GpMainWindow *parent) :
 {  
 //TODO: automatic restart
     handler = new OcrHandler(this);
-    if (handler->init(parent->getCurrentSourceLang())) {
+    if (handler->init(parent->getCurrentSourceLang3())) {
+#ifdef Q_OS_LINUX
             if(QMessageBox::critical(
                         this, tr("Tesseract OCR error"),
                         tr("This Tesseract language package is not installed. Install ")
@@ -20,6 +21,7 @@ OcrDialog::OcrDialog(GpMainWindow *parent) :
                             "Do you want to proceed to package installation?"),QMessageBox::Ok, QMessageBox::Cancel)
                     == QMessageBox::Ok)
                 emit parent->ocrFailed();
+#endif
             close();
     }
 

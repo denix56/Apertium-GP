@@ -14,14 +14,17 @@ OcrHandler::OcrHandler(QObject *parent) :
  */
 int OcrHandler::init(QString lang)
 {
-    char *path = Initializer::conf->value("extra/ocr/tessdata_path", DATALOCATION + "/tessdata")
-            .toString().toUtf8().data();
+    QString path = Initializer::conf->value("extra/ocr/tessdata_path", DATALOCATION + "/tessdata").toString();
+
+    //make Unix path format
 #ifdef Q_OS_WIN
-    QDir().mkpath(path);
-#else
-    path = NULL;
+    path.replace('\\', '/');
 #endif
-    return api->Init(path, lang.toUtf8().data());
+    int res = api->Init(path.left(path.lastIndexOf('/')).toUtf8().data(), lang.toUtf8().data());
+    if(!res)
+        return res;
+    return api->Init(NULL, lang.toUtf8().data());
+
 }
 
 void OcrHandler::recognize(const QString &path)

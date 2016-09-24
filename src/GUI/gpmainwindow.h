@@ -68,8 +68,11 @@ public:
 
     QString getCurrentSourceLang() const;
 
-
     QString getCurrentTargetLang() const;
+
+    QString getCurrentSourceLang3() const;
+
+    QString getCurrentTargetLang3() const;
 
 protected:
     void closeEvent(QCloseEvent *event);

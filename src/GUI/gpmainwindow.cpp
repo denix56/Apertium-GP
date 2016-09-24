@@ -1324,6 +1324,16 @@ QString GpMainWindow::getCurrentTargetLang() const
     return currentTargetLang;
 }
 
+QString GpMainWindow::getCurrentSourceLang3() const
+{
+    auto value = Initializer::langNamesMap[currentSourceLang];
+    for (auto key : Initializer::langNamesMap.keys())
+        if (Initializer::langNamesMap[key] == value
+                && key.length() == 3)
+            return key;
+    return currentSourceLang;
+}
+
 void GpMainWindow::ocrReceived(QString text)
 {
     ui->boxInput->clear();
