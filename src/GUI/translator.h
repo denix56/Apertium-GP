@@ -29,7 +29,7 @@ class Translator : public QObject
 {
     Q_OBJECT
 public:
-    Translator(GpMainWindow* parent = 0);
+    Translator(GpMainWindow *parent = 0);
 
 //    inline QProgressDialog *const getWaitDlg() const
 //    {

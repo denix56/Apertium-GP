@@ -65,9 +65,8 @@ FileDialog::FileDialog(GpMainWindow *parent)
     setAttribute(Qt::WA_DeleteOnClose);
 
 
-    connect(this, &FileDialog::fileForTransChoosed, [&]()
-    {
-        fileTransWaitDlg = new QProgressDialog(tr("Translating..."),"",0,0,this);
+    connect(this, &FileDialog::fileForTransChoosed, [&]() {
+        fileTransWaitDlg = new QProgressDialog(tr("Translating..."), "", 0, 0, this);
         fileTransWaitDlg->setCancelButton(nullptr);
         fileTransWaitDlg->setWindowFlags(fileTransWaitDlg->windowFlags() & ~Qt::WindowCloseButtonHint);
         fileTransWaitDlg->setModal(true);
@@ -95,11 +94,11 @@ FileDialog::~FileDialog()
 void FileDialog::on_browseBtn_clicked()
 {
     //FIXME: format names
-    QString filePath = QFileDialog::getOpenFileName(this,tr("Choose document to translate"),
-                       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
-                       tr(QString("Documents (*."+getFileTypes().join(" *.")+")").toUtf8().data()));
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Choose document to translate"),
+                                                    QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
+                                                    tr(QString("Documents (*." + getFileTypes().join(" *.") + ")").toUtf8().data()));
 
-    if(filePath.isEmpty())
+    if (filePath.isEmpty())
         return;
 
     //TODO: implement cancel button
@@ -120,26 +119,24 @@ void FileDialog::showPostFileTransDlg(QString trFilePath)
     auto btnDlg = new QMessageBox(this);
     btnDlg->setWindowTitle(tr("Translation finished"));
     btnDlg->setText(tr("Document has been successfully translated."));
-    auto openFileButton = new QPushButton(tr("Open translated file"),btnDlg);
-    connect(openFileButton, &QPushButton::clicked, [&]()
-    {
+    auto openFileButton = new QPushButton(tr("Open translated file"), btnDlg);
+    connect(openFileButton, &QPushButton::clicked, [&]() {
         QDesktopServices::openUrl(QUrl("file:///" + trFilePath, QUrl::TolerantMode));
         btnDlg->accept();
         qApp->processEvents();
         btnDlg->deleteLater();
     });
-    auto openFolderButton = new QPushButton(tr("Open folder with translated file"),btnDlg);
-    connect(openFolderButton, &QPushButton::clicked, [&]()
-    {
+    auto openFolderButton = new QPushButton(tr("Open folder with translated file"), btnDlg);
+    connect(openFolderButton, &QPushButton::clicked, [&]() {
         QFileInfo f(trFilePath);
-        QDesktopServices::openUrl(QUrl("file:///"+f.absolutePath(),QUrl::TolerantMode));
+        QDesktopServices::openUrl(QUrl("file:///" + f.absolutePath(), QUrl::TolerantMode));
         btnDlg->accept();
         qApp->processEvents();
         btnDlg->deleteLater();
     });
     //QMessageBox::RejectRole - fix to enable close button
-    btnDlg->addButton(openFileButton,QMessageBox::RejectRole);
-    btnDlg->addButton(openFolderButton,QMessageBox::ActionRole);
+    btnDlg->addButton(openFileButton, QMessageBox::RejectRole);
+    btnDlg->addButton(openFolderButton, QMessageBox::ActionRole);
     btnDlg->setModal(true);
     btnDlg->exec();
 }
@@ -151,6 +148,6 @@ void FileDialog::showPostFileTransDlg(QString trFilePath)
 void FileDialog::fileTranslateFailed()
 {
     fileTransWaitDlg->reject();
-    QMessageBox::critical(this,tr("Document has not been translated"),
+    QMessageBox::critical(this, tr("Document has not been translated"),
                           tr("An error occured during the translation of this file."));
 }

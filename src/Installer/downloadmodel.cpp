@@ -28,8 +28,8 @@ DownloadModel::DownloadModel(QObject *parent)
 
 QVariant DownloadModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (orientation==Qt::Horizontal && role == Qt::DisplayRole)
-        switch(static_cast<Column>(section)) {
+    if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
+        switch (static_cast<Column>(section)) {
         case Column::NAME:
             return tr("Name");
         case Column::TYPE:
@@ -62,7 +62,7 @@ QVariant DownloadModel::data(const QModelIndex &index, int role) const
         return QVariant();
     if (role == Qt::DisplayRole) {
         int i = index.row();
-        switch(static_cast<Column>(index.column())) {
+        switch (static_cast<Column>(index.column())) {
 
         case Column::NAME:
             if (downList[i].type != Type::TOOLS)
@@ -94,7 +94,7 @@ bool DownloadModel::setData(const QModelIndex &index, const QVariant &value, int
 {
     if (data(index, role) != value) {
         int i = index.row();
-        switch(static_cast<Column>(index.column())) {
+        switch (static_cast<Column>(index.column())) {
         case Column::NAME:
             downList[i].name = value.toString();
             break;
@@ -119,17 +119,17 @@ bool DownloadModel::setData(const QModelIndex &index, const QVariant &value, int
 
 bool DownloadModel::addItem(const PkgInfo &f)
 {
-    beginInsertRows(QModelIndex(),rowCount(),rowCount());
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
     downList.push_back(f);
     endInsertRows();
-    emit dataChanged(createIndex(rowCount()-1,0),createIndex(rowCount()-1,columnCount()-1),
+    emit dataChanged(createIndex(rowCount() - 1, 0), createIndex(rowCount() - 1, columnCount() - 1),
                      QVector<int>() << Qt::EditRole);
     return true;
 }
 
 const PkgInfo *DownloadModel::item(const int &row) const
 {
-    if (row<downList.size())
+    if (row < downList.size())
         return &downList[row];
     else
         return nullptr;
@@ -145,36 +145,37 @@ Qt::ItemFlags DownloadModel::flags(const QModelIndex &index) const
 
 void DownloadModel::sort(int column, Qt::SortOrder order)
 {
-    switch (static_cast<Column>(column))
-    {
+    switch (static_cast<Column>(column)) {
     //sort by names
     case Column::NAME:
-        qSort(downList.begin(),downList.end(),[&](const PkgInfo &a,const PkgInfo &b)
-        {
+        qSort(downList.begin(), downList.end(), [&](const PkgInfo & a, const PkgInfo & b) {
             auto an = nameToFull(a.name);
             auto bn = nameToFull(b.name);
             return order == Qt::AscendingOrder ? an.localeAwareCompare(bn) < 0
-                                            : an.localeAwareCompare(bn) > 0;;});
+                   : an.localeAwareCompare(bn) > 0;;
+        });
         break;
 
-        //sort by types
+    //sort by types
     case Column::TYPE:
-        qSort(downList.begin(),downList.end(),[&](const PkgInfo &a,const PkgInfo &b)
-        { return order == Qt::AscendingOrder ? a.type < b.type
-                                            : a.type > b.type; });
+        qSort(downList.begin(), downList.end(), [&](const PkgInfo & a, const PkgInfo & b) {
+            return order == Qt::AscendingOrder ? a.type < b.type
+                   : a.type > b.type;
+        });
         Type lastType;
         //TODO: maybe replace lasttype
-        for(int i = 0,first=0;i < downList.size();i++)
-        {
+        for (int i = 0, first = 0; i < downList.size(); i++) {
             if (!i)
                 lastType = downList[0].type;
             else {
-                if(lastType != downList[i].type || i == downList.size()-1){
-                    qSort(downList.begin()+first,downList.begin()+i-1,[&](const PkgInfo &a,const PkgInfo &b) {
+                if (lastType != downList[i].type || i == downList.size() - 1) {
+                    qSort(downList.begin() + first, downList.begin() + i - 1, [&](const PkgInfo & a,
+                    const PkgInfo & b) {
                         auto an = nameToFull(a.name);
                         auto bn = nameToFull(b.name);
-                        return an.localeAwareCompare(bn) < 0;});
-                    first=i;
+                        return an.localeAwareCompare(bn) < 0;
+                    });
+                    first = i;
                 }
                 lastType = downList[i].type;
             }
@@ -182,29 +183,31 @@ void DownloadModel::sort(int column, Qt::SortOrder order)
 
         break;
 
-        //sort by size
+    //sort by size
     case Column::SIZE:
-        qSort(downList.begin(),downList.end(),[&](const PkgInfo &a,const PkgInfo &b)
-        {return order == Qt::AscendingOrder ? a.size < b.size
-                                            : a.size > b.size;});
+        qSort(downList.begin(), downList.end(), [&](const PkgInfo & a, const PkgInfo & b) {
+            return order == Qt::AscendingOrder ? a.size < b.size
+                   : a.size > b.size;
+        });
         break;
 
-        //sort by state
+    //sort by state
     case Column::STATE:
-        qSort(downList.begin(),downList.end(),[&](const PkgInfo &a, const PkgInfo &b)
-        {return order == Qt::AscendingOrder ? a.state < b.state
-                                            :a.state > b.state;});
+        qSort(downList.begin(), downList.end(), [&](const PkgInfo & a, const PkgInfo & b) {
+            return order == Qt::AscendingOrder ? a.state < b.state
+                   : a.state > b.state;
+        });
         break;
     }
-    emit dataChanged(createIndex(0,0),createIndex(rowCount()-1,columnCount()-1),
+    emit dataChanged(createIndex(0, 0), createIndex(rowCount() - 1, columnCount() - 1),
                      QVector<int>() << Qt::EditRole);
     emit sorted();
 }
 
 int DownloadModel::find(const QString &name) const
 {
-    for(int i=0;i<downList.size();i++)
-        if(downList[i].name==name)
+    for (int i = 0; i < downList.size(); i++)
+        if (downList[i].name == name)
             return i;
     return -1;
 }
@@ -217,8 +220,8 @@ int DownloadModel::count() const
 int DownloadModel::countLangPairsInstalled() const
 {
     int cnt = 0;
-    for(int i=0;i<downList.size();++i)
-        if(downList[i].type == Type::LANGPAIRS && downList[i].state == State::UNINSTALL)
+    for (int i = 0; i < downList.size(); ++i)
+        if (downList[i].type == Type::LANGPAIRS && downList[i].state == State::UNINSTALL)
             cnt++;
     return cnt;
 }

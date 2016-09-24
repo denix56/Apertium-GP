@@ -32,7 +32,7 @@ protected:
 
     void dropEvent(QDropEvent *event);
 
-    void dragLeaveEvent(QDragLeaveEvent*);
+    void dragLeaveEvent(QDragLeaveEvent *);
 
     void paintEvent(QPaintEvent *event);
 

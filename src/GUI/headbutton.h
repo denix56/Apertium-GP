@@ -24,7 +24,7 @@ class HeadButton : public QPushButton
 {
     Q_OBJECT
 public:
-    HeadButton(QWidget* parent=0);
+    HeadButton(QWidget *parent = 0);
 
     void setText(const QString &text);
 

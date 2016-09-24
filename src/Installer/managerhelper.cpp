@@ -25,17 +25,18 @@
 
 #include "managerhelper.h"
 
-ManagerHelper::ManagerHelper(QObject* parent)
+ManagerHelper::ManagerHelper(QObject *parent)
     : QObject(parent)
 {
     cmd = new QProcess(this);
     connect(this, &ManagerHelper::canceled, cmd, &QProcess::kill);
 }
 
-int ManagerHelper::installRemove(const QStringList &packagesInstall, const QStringList &packagesRemove) const
+int ManagerHelper::installRemove(const QStringList &packagesInstall,
+                                 const QStringList &packagesRemove) const
 {
     QStringList args;
-    args <<"pkexec" << scriptPath;
+    args << "pkexec" << scriptPath;
     if (!packagesInstall.isEmpty())
         args << "--install" << "\"" + packagesInstall.join(' ') + "\"";
 
@@ -43,17 +44,17 @@ int ManagerHelper::installRemove(const QStringList &packagesInstall, const QStri
         args << "--remove" << "\"" + packagesRemove.join(' ') + "\"";
     cmd->start(args.join(' '));
     cmd->waitForStarted();
-    while(cmd->state()==QProcess::Running)
+    while (cmd->state() == QProcess::Running)
         qApp->processEvents();
     cmd->waitForFinished();
     return cmd->exitCode();
 }
 
 int ManagerHelper::update() const
-{  
+{
     cmd->start("pkexec", QStringList() << scriptPath << "--update");
     cmd->waitForStarted();
-    while(cmd->state()==QProcess::Running)
+    while (cmd->state() == QProcess::Running)
         qApp->processEvents();
     cmd->waitForFinished();
     return cmd->exitCode();
@@ -63,7 +64,7 @@ QString ManagerHelper::search(const QStringList &names) const
 {
     cmd->start("pkexec", QStringList() << scriptPath << "--search" << names.join('|'));
     cmd->waitForStarted();
-    while(cmd->state()==QProcess::Running)
+    while (cmd->state() == QProcess::Running)
         qApp->processEvents();
     cmd->waitForFinished();
     return cmd->readAllStandardOutput();
@@ -71,12 +72,12 @@ QString ManagerHelper::search(const QStringList &names) const
 
 QString ManagerHelper::getInfo(const QString &packages) const
 {
-    cmd->start("pkexec "+ scriptPath + " --info \"" + packages + "\"");
+    cmd->start("pkexec " + scriptPath + " --info \"" + packages + "\"");
     cmd->waitForStarted();
-    while(cmd->state()==QProcess::Running)
+    while (cmd->state() == QProcess::Running)
         qApp->processEvents();
 
-    if(cmd->exitCode())
+    if (cmd->exitCode())
         return 0;
     return cmd->readAllStandardOutput();
 }

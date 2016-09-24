@@ -1,6 +1,7 @@
 #include "docdialog.h"
 #include "ui_filedialog.h"
-const QStringList DocDialog::fileTypes {
+const QStringList DocDialog::fileTypes
+{
     "txt", "docx", "pptx", "html",
     "rtf", "odt", "xlsx", "xtg"
 };

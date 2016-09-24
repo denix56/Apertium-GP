@@ -34,12 +34,13 @@ LangDelegate::LangDelegate(QObject *parent)
 /*!
  * \brief A reimplemented \l  {QItemDelegate::paint() const}, that paints focus rectangle for not empty vlaues.
  */
-void LangDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+void LangDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
+                         const QModelIndex &index) const
 {
     if (option.state & QStyle::State_HasFocus && !index.data().toString().isEmpty())
-        painter->fillRect(option.rect, QColor(220,220,220));
+        painter->fillRect(option.rect, QColor(220, 220, 220));
 
-    QItemDelegate::paint(painter,option,index);
+    QItemDelegate::paint(painter, option, index);
 }
 
 /*!

@@ -45,7 +45,7 @@ void TrayWidget::translationReceived(const QString &result)
     format.setForeground(Qt::black);
     cursor.insertText(result, format);
     cursor.movePosition(QTextCursor::Start);
-    while(!cursor.atEnd()) {
+    while (!cursor.atEnd()) {
         auto cursor1 = cursor.document()->
                        find(QRegExp("[\\*#]\\w+\\W?"), cursor);
         if (cursor1.isNull())
@@ -53,17 +53,17 @@ void TrayWidget::translationReceived(const QString &result)
         cursor = cursor1;
         auto format = cursor.charFormat();
         format.setForeground(Qt::red);
-        cursor.insertText(cursor.selectedText().mid(1),format);
+        cursor.insertText(cursor.selectedText().mid(1), format);
     }
     ui->textEdit_2->setTextCursor(cursor);
 }
 
-QComboBox* TrayWidget::inputComboBox() const
+QComboBox *TrayWidget::inputComboBox() const
 {
     return ui->comboBox;
 }
 
-QComboBox* TrayWidget::outputComboBox() const
+QComboBox *TrayWidget::outputComboBox() const
 {
     return ui->comboBox_2;
 }
@@ -78,8 +78,7 @@ void TrayWidget::setTitleBarEnabled(bool b)
         ui->closeBtn_3->show();
         ui->maxBtn_3->show();
         setFixedHeight(151);
-    }
-    else {
+    } else {
         ui->closeBtn_3->hide();
         ui->maxBtn_3->hide();
         setFixedHeight(131);
@@ -94,14 +93,14 @@ void TrayWidget::setTransparentEnabled(bool b)
 
 void TrayWidget::enterEvent(QEvent *e)
 {
-    if(transparentEnabled)
+    if (transparentEnabled)
         setWindowOpacity(SHOW);
     QWidget::enterEvent(e);
 }
 
 void TrayWidget::leaveEvent(QEvent *e)
 {
-    if(transparentEnabled)
+    if (transparentEnabled)
         setWindowOpacity(HIDE);
     QWidget::leaveEvent(e);
 }

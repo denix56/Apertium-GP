@@ -37,8 +37,7 @@ Q_DECLARE_METATYPE(State)
 Q_DECLARE_METATYPE(Type)
 Q_DECLARE_METATYPE(Column)
 
-struct PkgInfo
-{
+struct PkgInfo {
     QString name;
     Type type;
     uint size;
@@ -49,7 +48,8 @@ struct PkgInfo
     bool highlight;
 
     PkgInfo (const QString name = QString(), Type type = Type::TOOLS, uint size = 0, QUrl link = QUrl(),
-          State state = State::INSTALL, QString lastModified = QString(), bool highlight = false, int progress = 0)
+             State state = State::INSTALL, QString lastModified = QString(), bool highlight = false,
+             int progress = 0)
         : name(name), type(type), size(size), link(link), state(state),
           lastModified(lastModified),  progress(progress), highlight(highlight)
     {
@@ -87,7 +87,8 @@ public:
     int countLangPairsInstalled() const;
 
     // Header:
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+    QVariant headerData(int section, Qt::Orientation orientation,
+                        int role = Qt::DisplayRole) const override;
 
     // Basic functionality:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -100,7 +101,7 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value,
                  int role = Qt::EditRole) override;
 
-    Qt::ItemFlags flags(const QModelIndex& index) const override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
 
     bool addItem(const PkgInfo &f);
 
@@ -116,28 +117,27 @@ private:
             name.remove("apertium-");
             int i = name.indexOf('-');
             QString sourceLang = name.left(i);
-            QString targetLang = name.mid(i+1);
+            QString targetLang = name.mid(i + 1);
             sourceLang = Initializer::langNamesMap.value(sourceLang, sourceLang);
             targetLang = Initializer::langNamesMap.value(targetLang, targetLang);
             result = sourceLang + " - " + targetLang;
-        } else
-            if (name.contains("tesseract")) {
-                name.remove("tesseract-ocr-");
-                int i = name.indexOf('-');
-                QString extra = i > 0 ? " - " + name.mid(i+1) : "";
-                name = name.left(i);
-                result = "Tesseract (" + Initializer::langNamesMap.value(name, name)
-                        + extra + ")";
-            }
+        } else if (name.contains("tesseract")) {
+            name.remove("tesseract-ocr-");
+            int i = name.indexOf('-');
+            QString extra = i > 0 ? " - " + name.mid(i + 1) : "";
+            name = name.left(i);
+            result = "Tesseract (" + Initializer::langNamesMap.value(name, name)
+                     + extra + ")";
+        }
         return result;
     }
 
     QVector <PkgInfo> downList;
 
     const QMap <State, QString> stateNames {
-        { State::INSTALL, tr("Install") }, { State::UPDATE,tr("Update") },
-        { State::UNINSTALL,tr("Uninstall") }, { State::DOWNLOADING,tr("Cancel") },
-        { State::UNPACKING,tr("Unpacking") }
+        { State::INSTALL, tr("Install") }, { State::UPDATE, tr("Update") },
+        { State::UNINSTALL, tr("Uninstall") }, { State::DOWNLOADING, tr("Cancel") },
+        { State::UNPACKING, tr("Unpacking") }
     };
 
     const QMap <Type, QString> typeNames {

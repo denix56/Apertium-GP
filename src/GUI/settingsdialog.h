@@ -46,7 +46,7 @@ private slots:
 private:
     Ui::SettingsDialog *ui;
 
-    QMap <TrayWidget::Position, QCheckBox*> *pos_checkbox;
+    QMap <TrayWidget::Position, QCheckBox *> *pos_checkbox;
 };
 
 #endif // SETTINGSDIALOG_H

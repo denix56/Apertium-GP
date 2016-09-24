@@ -23,18 +23,17 @@
 
 #include "trayinputtextedit.h"
 
-TrayInputTextEdit::TrayInputTextEdit(QWidget* parent)
-    :InputTextEdit(parent)
+TrayInputTextEdit::TrayInputTextEdit(QWidget *parent)
+    : InputTextEdit(parent)
 {
-    connect(qobject_cast<InputTextEdit *>(this),&InputTextEdit::printEnded,[&]()
-    {
+    connect(qobject_cast<InputTextEdit *>(this), &InputTextEdit::printEnded, [&]() {
         emit printEnded(this->toPlainText());
     });
 }
 
 void TrayInputTextEdit::keyPressEvent(QKeyEvent *e)
 {
-    if(e->key()==Qt::Key_Return || e->key()==Qt::Key_Enter)
+    if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter)
         return;
     if (e->matches(QKeySequence::Paste)) {
         QString text = QApplication::clipboard()->text();

@@ -47,7 +47,7 @@
 DragnDropWidget::DragnDropWidget(QWidget *parent)
     : QWidget(parent)
 {
-    this->parent = qobject_cast<FileDialog*>(parent);
+    this->parent = qobject_cast<FileDialog *>(parent);
     setAcceptDrops(true);
 }
 
@@ -59,16 +59,16 @@ void DragnDropWidget::dragEnterEvent(QDragEnterEvent *event)
 {
     QPalette Pal(palette());
     // set background color
-    Pal.setColor(QPalette::Background,QColor(20,187,229,20));
+    Pal.setColor(QPalette::Background, QColor(20, 187, 229, 20));
     setPalette(Pal);
 #ifdef Q_OS_WIN
-    QFileInfo fileInfo(QString::fromUtf16((ushort*)event->mimeData()->
+    QFileInfo fileInfo(QString::fromUtf16((ushort *)event->mimeData()->
                                           data("application/x-qt-windows-mime;value=\"FileNameW\"").data()));
 #elif defined(Q_OS_LINUX)
     QFileInfo fileInfo(QUrl::fromPercentEncoding(
                            event->mimeData()->data("text/uri-list").trimmed()).remove("file:"));
 #endif
-    if (fileInfo.fileName().contains(QRegExp("("+parent->getFileTypes().join('|')+")")))
+    if (fileInfo.fileName().contains(QRegExp("(" + parent->getFileTypes().join('|') + ")")))
         event->acceptProposedAction();
 }
 
@@ -87,12 +87,12 @@ void DragnDropWidget::dropEvent(QDropEvent *event)
 {
     QPalette Pal(palette());
     // set background color
-    Pal.setColor(QPalette::Background,Qt::white);
+    Pal.setColor(QPalette::Background, Qt::white);
     setPalette(Pal);
     event->acceptProposedAction();
     QString path;
 #ifdef Q_OS_WIN
-    path = QString::fromUtf16((ushort*)event->mimeData()->
+    path = QString::fromUtf16((ushort *)event->mimeData()->
                               data("application/x-qt-windows-mime;value=\"FileNameW\"").data());
 #elif defined(Q_OS_LINUX)
     path = QUrl::fromPercentEncoding(
@@ -121,7 +121,7 @@ void DragnDropWidget::paintEvent(QPaintEvent *event)
     painter.setPen(Qt::DashLine);
     QRect rectangle(rect());
     const int offset = 1;
-    painter.drawRect(rectangle.x()+offset,rectangle.y()+offset,
-                     rectangle.width()-2*offset,rectangle.height()-2*offset);
+    painter.drawRect(rectangle.x() + offset, rectangle.y() + offset,
+                     rectangle.width() - 2 * offset, rectangle.height() - 2 * offset);
     QWidget::paintEvent(event);
 }

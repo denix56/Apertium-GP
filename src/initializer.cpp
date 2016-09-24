@@ -33,7 +33,7 @@ QHash<QString, QString> Initializer::langNamesMap;
 std::unique_ptr<QSettings> Initializer::conf;
 bool Initializer::initialize()
 {
-    conf.reset(new QSettings(QSettings::NativeFormat,QSettings::UserScope,"Apertium","Apertium-GP"));
+    conf.reset(new QSettings(QSettings::NativeFormat, QSettings::UserScope, "Apertium", "Apertium-GP"));
 #ifdef Q_OS_LINUX
     QDir path("/usr/share/apertium-gp");
 #else
@@ -42,20 +42,20 @@ bool Initializer::initialize()
     auto db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(path.absoluteFilePath("langNames.db"));
     if (!db.open()) {
-        QMessageBox::critical(0,"Database Error", "Database is not open.");
+        QMessageBox::critical(0, "Database Error", "Database is not open.");
         return false;
     }
     QSqlQuery query;
     query.exec("SELECT * FROM languageNames WHERE lg = '"
-               +QLocale::system().name().left(QLocale::system().name().indexOf('_'))+"'");
-   if (!query.next()) {
+               + QLocale::system().name().left(QLocale::system().name().indexOf('_')) + "'");
+    if (!query.next()) {
         query.exec("SELECT * FROM languageNames WHERE lg = 'en'");
         query.next();
-   }
+    }
     do {
-       langNamesMap[query.value("inLg").toString()] = query.value("name").toString();
-       langNamesMap[query.value("iso3").toString()] = query.value("name").toString();
-   } while(query.next());
-   db.close();
-   return true;
+        langNamesMap[query.value("inLg").toString()] = query.value("name").toString();
+        langNamesMap[query.value("iso3").toString()] = query.value("name").toString();
+    } while (query.next());
+    db.close();
+    return true;
 }

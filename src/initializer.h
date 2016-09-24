@@ -28,9 +28,9 @@
 #include <memory>
 
 #if QT_VERSION >= 0x050400
-    #define DATALOCATION QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
+#define DATALOCATION QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
 #else
-    #define DATALOCATION QStandardPaths::writableLocation(QStandardPaths::DataLocation)
+#define DATALOCATION QStandardPaths::writableLocation(QStandardPaths::DataLocation)
 #endif
 const QString scriptPath = "/usr/share/apertium-gp/apertium-gp-helper.pl";
 

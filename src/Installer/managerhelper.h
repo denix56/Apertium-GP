@@ -26,7 +26,7 @@ class ManagerHelper : public QObject
 {
     Q_OBJECT
 public:
-    ManagerHelper(QObject* parent=0);
+    ManagerHelper(QObject *parent = 0);
 
     int installRemove(const QStringList &packagesInstall, const QStringList &packagesRemove) const;
 

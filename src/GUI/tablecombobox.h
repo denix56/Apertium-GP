@@ -28,7 +28,7 @@ class TableComboBox : public QComboBox
 {
     Q_OBJECT
 public:
-    TableComboBox(QWidget *parent=nullptr);
+    TableComboBox(QWidget *parent = nullptr);
 
     LanguageTableModel *model() const;
 

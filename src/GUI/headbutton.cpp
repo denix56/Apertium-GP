@@ -36,18 +36,18 @@
 /*!
  * \brief HeadButton::HeadButton
  */
-HeadButton::HeadButton(QWidget* parent)
+HeadButton::HeadButton(QWidget *parent)
     : QPushButton(parent)
 {
     setFocusPolicy(Qt::NoFocus);
     setCheckable(true);
-    setMinimumSize(112,27);
+    setMinimumSize(112, 27);
     wasClicked = false;
     once = true;
     //FIXME: is it needed?
-    connect(this,&HeadButton::pressed,this,&HeadButton::denySameButtonClick2);
-    connect(this,&HeadButton::toggled,this,&HeadButton::denySameButtonClick);
-    connect(this,&HeadButton::toggled,this,&HeadButton::changeButtonColor);
+    connect(this, &HeadButton::pressed, this, &HeadButton::denySameButtonClick2);
+    connect(this, &HeadButton::toggled, this, &HeadButton::denySameButtonClick);
+    connect(this, &HeadButton::toggled, this, &HeadButton::changeButtonColor);
 }
 
 /*!
@@ -55,20 +55,20 @@ HeadButton::HeadButton(QWidget* parent)
  */
 void HeadButton::denySameButtonClick()
 {
-    if(once) {
-        if(wasClicked && !this->isChecked())
-            wasClicked=false;
-        else if(!wasClicked && this->isChecked())
-            wasClicked=true;
+    if (once) {
+        if (wasClicked && !this->isChecked())
+            wasClicked = false;
+        else if (!wasClicked && this->isChecked())
+            wasClicked = true;
     }
-    once=!once;
+    once = !once;
 }
 /*!
  * \brief HeadButton::denySameButtonClick2
  */
 void HeadButton::denySameButtonClick2()
 {
-    if(wasClicked)
+    if (wasClicked)
         setChecked(false);
 }
 /*!
@@ -88,15 +88,15 @@ void HeadButton::paintEvent(QPaintEvent *)
     initStyleOption(&option);;
     QRect textRect;
 
-    QStyle* pStyle = style();
-    if (pStyle != NULL)
-    {
+    QStyle *pStyle = style();
+    if (pStyle != NULL) {
         QRect elementRect = pStyle->subElementRect(QStyle::SE_PushButtonContents, &option, this);
         int menuButtonSize = pStyle->pixelMetric(QStyle::PM_MenuButtonIndicator, &option, this);
         textRect = elementRect.adjusted(0, 0, -menuButtonSize, 0);
     }
 
-    QString mElidedText = fontMetrics().elidedText(text(), Qt::ElideRight, textRect.width(), Qt::TextShowMnemonic);
+    QString mElidedText = fontMetrics().elidedText(text(), Qt::ElideRight, textRect.width(),
+                                                   Qt::TextShowMnemonic);
 
     option.text = mElidedText;
 

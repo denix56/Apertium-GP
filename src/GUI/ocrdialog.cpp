@@ -1,28 +1,29 @@
 #include <QMessageBox>
 #include "ocrdialog.h"
 #include "ui_filedialog.h"
-const QStringList OcrDialog::fileTypes {
+const QStringList OcrDialog::fileTypes
+{
     "jpg", "png", "tiff", "bmp",
     "pnm", "gif", "ps", "pdf", "webp"
 };
 
 OcrDialog::OcrDialog(GpMainWindow *parent) :
     FileDialog(parent)
-{  
+{
 //TODO: automatic restart
     handler = new OcrHandler(this);
     if (handler->init(parent->getCurrentSourceLang3())) {
 #ifdef Q_OS_LINUX
-            if(QMessageBox::critical(
-                        this, tr("Tesseract OCR error"),
-                        tr("This Tesseract language package is not installed. Install ")
-                        + "tesseract-" + parent->getCurrentSourceLang()
-                        +tr(" via package installer and retry. "
-                            "Do you want to proceed to package installation?"),QMessageBox::Ok, QMessageBox::Cancel)
-                    == QMessageBox::Ok)
-                emit parent->ocrFailed();
+        if (QMessageBox::critical(
+                    this, tr("Tesseract OCR error"),
+                    tr("This Tesseract language package is not installed. Install ")
+                    + "tesseract-" + parent->getCurrentSourceLang()
+                    + tr(" via package installer and retry. "
+                         "Do you want to proceed to package installation?"), QMessageBox::Ok, QMessageBox::Cancel)
+                == QMessageBox::Ok)
+            emit parent->ocrFailed();
 #endif
-            close();
+        close();
     }
 
     setWindowTitle(tr("OCR Image Translation"));
@@ -34,9 +35,10 @@ OcrDialog::OcrDialog(GpMainWindow *parent) :
 
     connect(handler, &OcrHandler::recognized, this, &OcrDialog::ocrFinished);
 
-    connect(this, &OcrDialog::ocrFinished, [&](){
+    connect(this, &OcrDialog::ocrFinished, [&]() {
         if (fileTransWaitDlg != nullptr) fileTransWaitDlg->accept();
-        this->close();});
+        this->close();
+    });
 }
 
 OcrDialog::~OcrDialog()

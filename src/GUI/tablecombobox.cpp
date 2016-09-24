@@ -45,18 +45,18 @@ TableComboBox::TableComboBox(QWidget *parent)
     QFont font(this->font());
     font.setPointSize(11);
     setFont(font);
-    connect(model(),&LanguageTableModel::dataChanged,
-            this,&TableComboBox::resizeTable);
+    connect(model(), &LanguageTableModel::dataChanged,
+            this, &TableComboBox::resizeTable);
 }
 
 QTableView *TableComboBox::view() const
 {
-    return qobject_cast<QTableView*> (QComboBox::view());
+    return qobject_cast<QTableView *> (QComboBox::view());
 }
 
 LanguageTableModel *TableComboBox::model() const
 {
-    return qobject_cast<LanguageTableModel*>(QComboBox::model());
+    return qobject_cast<LanguageTableModel *>(QComboBox::model());
 }
 
 void TableComboBox::setView(QTableView *view)
@@ -64,19 +64,19 @@ void TableComboBox::setView(QTableView *view)
     QComboBox::setView(view);
 }
 
-void TableComboBox::setModel(LanguageTableModel* model)
+void TableComboBox::setModel(LanguageTableModel *model)
 {
     QComboBox::setModel(model);
 }
 
 void TableComboBox::resizeTable()
 {
-    if(model()->itemCount()==0)
+    if (model()->itemCount() == 0)
         return;
     int colc = model()->columnCount();
-    for (int i=0; i < colc; i++)
+    for (int i = 0; i < colc; i++)
         view()->setColumnWidth(i, COLWIDTH);
-    view()->setMinimumWidth(COLWIDTH*(colc));
+    view()->setMinimumWidth(COLWIDTH * (colc));
     view()->setMinimumHeight((model()->rowCount())*view()->rowHeight(0));
 }
 

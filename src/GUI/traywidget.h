@@ -30,18 +30,20 @@ class TrayWidget;
 class TrayWidget : public QWidget
 {
     Q_OBJECT
-public:
-    explicit TrayWidget(QWidget *parent = 0);
-
-    QComboBox* inputComboBox() const;
-
-    QComboBox* outputComboBox() const;
-
-    ~TrayWidget();
 #if QT_VERSION <= 0x050500
     Q_ENUMS(Position)
 #endif
+public:
+    explicit TrayWidget(QWidget *parent = 0);
+
+    QComboBox *inputComboBox() const;
+
+    QComboBox *outputComboBox() const;
+
+    ~TrayWidget();
+
     enum Position { TopLeft, TopRight, BottomLeft, BottomRight };
+
 #if QT_VERSION >= 0x050500
     Q_ENUM(Position)
 #endif
@@ -70,4 +72,7 @@ private:
     bool transparentEnabled;
 };
 
+#if QT_VERSION < 0x050500
+    Q_DECLARE_METATYPE(TrayWidget::Position)
+#endif
 #endif // TRAYWIDGET_H

@@ -17,7 +17,7 @@ public:
     static const QStringList fileTypes;
 
 signals:
-void ocrFinished(QString text);
+    void ocrFinished(QString text);
 private:
     OcrHandler *handler;
 

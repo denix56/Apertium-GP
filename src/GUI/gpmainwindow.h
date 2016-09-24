@@ -62,9 +62,9 @@ public:
     QString getText() const;
 
 
-    Translator* getTranslator() const;
+    Translator *getTranslator() const;
 
-    QNetworkAccessManager* getManager() const;
+    QNetworkAccessManager *getManager() const;
 
     QString getCurrentSourceLang() const;
 
@@ -105,13 +105,13 @@ private slots:
     void clearOtherEButtons();
 
     //update available Target languages
-    void getResponseOfAvailLang(QNetworkReply*);
+    void getResponseOfAvailLang(QNetworkReply *);
 
     //send translation request for each paragraph
-   void createRequests(QString text = QString());
+    void createRequests(QString text = QString());
 
     //parse json response
-    void getReplyFromAPY(QNetworkReply*);
+    void getReplyFromAPY(QNetworkReply *);
 
     //add new langpairs to mru
     void saveMru();
@@ -136,12 +136,12 @@ private slots:
 private:
 
     Ui::GpMainWindow *ui;
-    QVector <HeadButton*> SourceLangBtns;
-    QVector <HeadButton*> TargetLangBtns;
+    QVector <HeadButton *> SourceLangBtns;
+    QVector <HeadButton *> TargetLangBtns;
     QString currentSourceLang, currentTargetLang;
     QNetworkAccessManager *requestSender;
     HeadButton *currentSButton;
-    QDialog* selectPathes;
+    QDialog *selectPathes;
     QProcess *apy;
     QDialog *fSizeBox;
     QTextDocument outputDoc;
