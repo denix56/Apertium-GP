@@ -2,7 +2,7 @@ project = Apertium-GP
 
 description = Apertium-GP is a cross-platform GUI program for Apertium Project
 
-outputdir = docs
+outputdir = doc
 
 headerdirs = src
 
@@ -49,11 +49,11 @@ headers  += \
     src/GUI/FileDialog.h \
     src/singleapplication.h
     
-qhp.projects = ApertiumGP
+qhp.projects = Apertium-GP
 
-qhp.ApertiumGP.file                = apertiumgp.qhp
-qhp.ApertiumGP.namespace           = org.apertium.apertiumgp.1.0.0
-qhp.ApertiumGP.virtualFolder       = apertiumgp
-qhp.ApertiumGP.indexTitle          = ApertiumGP
-qhp.ApertiumGP.indexRoot           =
+qhp.Apertium-GP.file                = apertium-gp.qhp
+qhp.Apertium-GP.namespace           = org.apertium.apertium-gp.1.0.0
+qhp.Apertium-GP.virtualFolder       = apertium-gp
+qhp.Apertium-GP.indexTitle          = Apertium-GP
+qhp.Apertium-GP.indexRoot           =
 

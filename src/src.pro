@@ -18,8 +18,6 @@ unix:OBJECTS_DIR = ../build/o/unix
 win32:OBJECTS_DIR = ../build/o/win32
 macx:OBJECTS_DIR = ../build/o/macx
 
-LIBS += -ltesseract -llept
-
 INCLUDEPATH += \
     GUI \
     Installer \
@@ -44,10 +42,10 @@ SOURCES += \
     GUI/trayinputtextedit.cpp \
     GUI/gpmainwindow.cpp \
     singleapplication.cpp \
-    GUI/ocrdialog.cpp \
-    GUI/ocrhandler.cpp \
     GUI/filedialog.cpp \
     GUI/docdialog.cpp
+
+PRECOMPILED_HEADER = pch.h
 
 HEADERS  += \
     GUI/headbutton.h \
@@ -67,11 +65,9 @@ HEADERS  += \
     GUI/trayinputtextedit.h \
     GUI/gpmainwindow.h \
     singleapplication.h \
-    GUI/ocrdialog.h \
-    GUI/ocrhandler.h \
     GUI/filedialog.h \
-    GUI/docdialog.h
-
+    GUI/docdialog.h \
+    pch.h
 
 FORMS    += \
     Installer/downloadwindow.ui \
@@ -80,8 +76,6 @@ FORMS    += \
     GUI/gpmainwindow.ui \
     GUI/filedialog.ui
 
-
-CONFIG += c++11
 
 QT_LOGGING_RULES = qt.network.ssl.warning = false
 
@@ -92,7 +86,7 @@ RC_FILE = GUI/apertium.rc
 
 unix:!macx {
 dep.files = \
-    langNames.db \
+    ../langNames.db \
     scripts/apertium-gp-helper.pl
 dep.path = /usr/share/apertium-gp
 policy.files = policy/org.apertium.apertium-gp.policy
@@ -110,5 +104,17 @@ DISTFILES += \
     ../apertium.ico \
     scripts/apertium-gp-helper.pl \
     GUI/apertium.rc \
-    ../config.qdocconf
+    ../config.qdocconf \
+    features/ocr.prf \
+    ../.qmake.cache
 
+#Not in the .prf file due to invisibility of included files after that.
+CONFIG(ocr) {
+HEADERS += \
+    GUI/ocrdialog.h \
+    GUI/ocrhandler.h
+
+SOURCES += \
+    GUI/ocrdialog.cpp \
+    GUI/ocrhandler.cpp
+}

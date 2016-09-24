@@ -175,7 +175,7 @@ private:
 
     void setLangpair(QString source, QString target = QString());
 
-    void setTrayWidgetPosition(Position position);
+    void setTrayWidgetPosition(TrayWidget::Position position);
 
     void setTrayWidgetEnabled(bool b);
 };

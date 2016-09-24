@@ -123,7 +123,7 @@ void FileDialog::showPostFileTransDlg(QString trFilePath)
     auto openFileButton = new QPushButton(tr("Open translated file"),btnDlg);
     connect(openFileButton, &QPushButton::clicked, [&]()
     {
-        QDesktopServices::openUrl(QUrl("file:///"+trFilePath,QUrl::TolerantMode));
+        QDesktopServices::openUrl(QUrl("file:///" + trFilePath, QUrl::TolerantMode));
         btnDlg->accept();
         qApp->processEvents();
         btnDlg->deleteLater();

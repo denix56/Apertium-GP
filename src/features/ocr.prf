@@ -1,0 +1,17 @@
+message(Building with Tesseract OCR support)
+
+DEFINES += OCR_ENABLED
+
+win32:isEmpty(LIB_DIR): \
+    warning(Variable LIB_DIR is not specified. \
+    The program may not found required libraries.)
+
+LIBS += -L$$LIB_DIR -ltesseract -llept
+win32:LIBS += -lcurl
+
+win32:isEmpty(INCLUDE_DIR): \
+    warning(Variable INCLUDE_DIR is not specified. \
+    The program may not found required headers.)
+
+INCLUDEPATH += $$INCLUDE_DIR
+

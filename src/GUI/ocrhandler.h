@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QObject>
 #include <memory>
+#include <QObject>
 #include <tesseract/baseapi.h>
 #include <leptonica/allheaders.h>
 
@@ -17,7 +17,6 @@ public:
 
 signals:
     void recognized(QString path);
-    //void failedToStart();
 
 public slots:
     void recognize(const QString &path);

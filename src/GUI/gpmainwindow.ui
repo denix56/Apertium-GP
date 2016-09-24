@@ -587,7 +587,7 @@ combobox-popup: 0;
      <x>0</x>
      <y>0</y>
      <width>1010</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="locale">
@@ -649,7 +649,7 @@ combobox-popup: 0;
   </action>
   <action name="actionOptions">
    <property name="text">
-    <string>Options</string>
+    <string>Settings</string>
    </property>
   </action>
  </widget>

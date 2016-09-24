@@ -76,6 +76,7 @@ DownloadWindow::~DownloadWindow()
     delete ui;
 }
 
+
 /*!
  * \brief Get the list of all availible language pairs and tools.
  *
@@ -147,7 +148,7 @@ bool DownloadWindow::getData(bool checked)
     reply = manager->get(QNetworkRequest(QUrl("http://apertium.projectjj.com/" OS_PATH "/nightly/data.php")));
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     connect(reply, &QNetworkReply::downloadProgress,[&wait](qint64 bytesReceived,qint64 bytesTotal)
-    {wait.setValue(int(wait.maximum()/2*(1+1.*bytesReceived/bytesTotal)));});
+    {wait.setValue(int(wait.maximum() / 2 * (1 + 1.0*bytesReceived / bytesTotal)));});
     loop.exec();
     if (reply->error()!=QNetworkReply::NoError) {
         qDebug() << "An error occured: " << reply->errorString();
@@ -169,7 +170,7 @@ bool DownloadWindow::getData(bool checked)
         model->addItem(PkgInfo(name, Type::LANGPAIRS, m.captured(2).toUInt(),
                             QUrl(QString("http://apertium.projectjj.com/" OS_PATH "/nightly/data.php?deb=")+name),
                             state, m.captured(3)));
-    }
+    }    
     ui->view->resizeColumnsToContents();
     ui->view->setSortingEnabled(true);
     ui->view->sortByColumn(static_cast<int>(Column::TYPE), Qt::DescendingOrder);
@@ -184,7 +185,11 @@ bool DownloadWindow::getData(bool checked)
         connect(&wait, &QProgressDialog::canceled, mngr, &ManagerHelper::canceled);
         mngr->update();
     }
-    for(QString pair : mngr->getInfo(mngr->search(QStringList() << "apertium" << "tesseract")).split('\n')) {
+    QStringList args << "apertium";
+#ifdef OCR_ENABLED
+    args << "tesseract";
+#endif
+    for(QString pair : mngr->getInfo(mngr->search(args)).split('\n')) {
         if (pair.isEmpty())
             continue;
         auto state = State::INSTALL;

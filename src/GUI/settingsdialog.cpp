@@ -23,6 +23,7 @@
   \inmodule Apertium-GP
  */
 #include <QListWidget>
+#include <QFileDialog>
 
 #include "initializer.h"
 
@@ -38,6 +39,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui(new Ui::SettingsDialog)
 {
     ui->setupUi(this);
+    connect(ui->listWidget,&QListWidget::currentRowChanged,ui->stackedWidget,
+            &QStackedWidget::setCurrentIndex);
+
+    //Font settings
     auto fontPref = new QListWidgetItem(tr("Font"), ui->listWidget);
     QFont listFont(fontPref->font());
     listFont.setPointSize(14);
@@ -46,10 +51,9 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
             this, &SettingsDialog::changeFont);
     ui->spinBox->setValue(Initializer::conf->value("interface/fontsize").toInt());
 
+    //Tray widget settings
     auto quickTr = new QListWidgetItem(tr("Quick translation"),ui->listWidget);
     quickTr->setFont(listFont);
-    connect(ui->listWidget,&QListWidget::currentRowChanged,ui->stackedWidget,
-            &QStackedWidget::setCurrentIndex);
     connect(ui->enableTrayWidget, &QCheckBox::toggled, ui->screenWidget, &QWidget::setEnabled);
     connect(ui->enableTrayWidget, &QCheckBox::toggled, ui->titleBarEnabled, &QCheckBox::setEnabled);
     connect(ui->enableTrayWidget, &QCheckBox::toggled, ui->transparentEnabled, &QCheckBox::setEnabled);
@@ -60,33 +64,49 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->titleBarEnabled->setEnabled(ui->enableTrayWidget->isChecked());
     ui->transparentEnabled->setEnabled(ui->enableTrayWidget->isChecked());
 
-    pos_checkbox = new QMap <Position, QCheckBox*> {
-        { TopLeft, ui->Topleft },
-        { TopRight, ui->TopRight },
-        { BottomLeft, ui->BottomLeft },
-        { BottomRight, ui->BottomRight }
+    pos_checkbox = new QMap <TrayWidget::Position, QCheckBox*> {
+        { TrayWidget::TopLeft, ui->Topleft },
+        { TrayWidget::TopRight, ui->TopRight },
+        { TrayWidget::BottomLeft, ui->BottomLeft },
+        { TrayWidget::BottomRight, ui->BottomRight }
     };
 
-    Position pos = static_cast<Position>(Initializer::conf->value("extra/traywidget/position").toUInt());
+    TrayWidget::Position pos = static_cast<TrayWidget::Position>
+            (Initializer::conf->value("extra/traywidget/position").toUInt());
     recheck_checkboxes(pos);
 
     //TODO: optimize
     connect(ui->Topleft, &QCheckBox::toggled, [&](bool b) {
-        if(b) recheck_checkboxes(TopLeft);
+        if(b) recheck_checkboxes(TrayWidget::TopLeft);
     });
     connect(ui->TopRight, &QCheckBox::toggled, [&](bool b) {
-        if(b) recheck_checkboxes(TopRight);
+        if(b) recheck_checkboxes(TrayWidget::TopRight);
     });
     connect(ui->BottomLeft, &QCheckBox::toggled, [&](bool b) {
-        if(b) recheck_checkboxes(BottomLeft);
+        if(b) recheck_checkboxes(TrayWidget::BottomLeft);
     });
     connect(ui->BottomRight, &QCheckBox::toggled, [&](bool b) {
-        if(b) recheck_checkboxes(BottomRight);
+        if(b) recheck_checkboxes(TrayWidget::BottomRight);
     });
 
-    ui->titleBarEnabled->setChecked(Initializer::conf->value("extra/traywidget/titlebar", false).toBool());
+    ui->titleBarEnabled->setChecked(Initializer::conf->
+                                    value("extra/traywidget/titlebar", false).toBool());
 
-    ui->transparentEnabled->setChecked(Initializer::conf->value("extra/traywidget/transparent", false).toBool());
+    ui->transparentEnabled->setChecked(Initializer::conf->
+                                       value("extra/traywidget/transparent", false).toBool());
+
+    //OCR settings
+    auto ocr = new QListWidgetItem(tr("OCR"), ui->listWidget);
+    ocr->setFont(listFont);
+    ui->pathEdit->setText(Initializer::conf->value("extra/ocr/tessdata_path", DATALOCATION +
+                                      "/tessdata").toString());
+    connect(ui->pathBtn, &QToolButton::clicked, [&]() {
+        QString path = QFileDialog::getExistingDirectory(this, QString(), DATALOCATION,
+                                                         QFileDialog::ShowDirsOnly);
+        if (!path.isEmpty())
+            ui->pathEdit->setText(path);
+    });
+
     ui->listWidget->setCurrentRow(0);
 
 }
@@ -95,7 +115,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
  * This slot is executed when the user choosed the new position
  * for the tray widget.
  */
-void SettingsDialog::recheck_checkboxes(Position pos)
+void SettingsDialog::recheck_checkboxes(TrayWidget::Position pos)
 {
     for(auto key : pos_checkbox->keys())
         if (key == pos)
@@ -130,8 +150,10 @@ void SettingsDialog::on_buttonBox_clicked(QAbstractButton *button)
         for(auto key : pos_checkbox->keys())
             if(pos_checkbox->value(key)->isChecked())
                 Initializer::conf->setValue("extra/traywidget/position", static_cast<unsigned>(key));
+
         Initializer::conf->setValue("extra/traywidget/titlebar", ui->titleBarEnabled->isChecked());
         Initializer::conf->setValue("extra/traywidget/transparent", ui->transparentEnabled->isChecked());
+        Initializer::conf->setValue("extra/ocr/tessdata_path", ui->pathEdit->text());
     }
     if (stdBtn==QDialogButtonBox::Ok)
         this->accept();

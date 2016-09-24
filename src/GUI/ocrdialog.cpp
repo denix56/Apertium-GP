@@ -16,7 +16,7 @@ OcrDialog::OcrDialog(GpMainWindow *parent) :
                         this, tr("Tesseract OCR error"),
                         tr("This Tesseract language package is not installed. Install ")
                         + "tesseract-" + parent->getCurrentSourceLang()
-                        +tr("via package installer and retry. "
+                        +tr(" via package installer and retry. "
                             "Do you want to proceed to package installation?"),QMessageBox::Ok, QMessageBox::Cancel)
                     == QMessageBox::Ok)
                 emit parent->ocrFailed();

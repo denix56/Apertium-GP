@@ -1,15 +1,27 @@
 #include <QApplication>
 #include <QDebug>
 #include "ocrhandler.h"
+#include "initializer.h"
 
 OcrHandler::OcrHandler(QObject *parent) :
     QObject(parent),
     api(new tesseract::TessBaseAPI())
 {}
-
+/*!
+ * To install tessdata on Windows, download and install it manually
+ * in the Program specified tessdata path (AppData_dir/apertium-gp/tessdata
+ * for default)
+ */
 int OcrHandler::init(QString lang)
 {
-    return api->Init(NULL, lang.toUtf8().data());
+    char *path = Initializer::conf->value("extra/ocr/tessdata_path", DATALOCATION + "/tessdata")
+            .toString().toUtf8().data();
+#ifdef Q_OS_WIN
+    QDir().mkpath(path);
+#else
+    path = NULL;
+#endif
+    return api->Init(path, lang.toUtf8().data());
 }
 
 void OcrHandler::recognize(const QString &path)

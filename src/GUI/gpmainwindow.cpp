@@ -54,7 +54,11 @@
 
 #include "translator.h"
 #include "docdialog.h"
+
+#ifdef OCR_ENABLED
 #include "ocrdialog.h"
+#endif
+
 #include "tablecombobox.h"
 #include "downloadwindow.h"
 #include "settingsdialog.h"
@@ -72,7 +76,7 @@ GpMainWindow::GpMainWindow(QWidget *parent) :
 }
 
 /*!
-  \variable GpMainWindow::langpairUsed
+  \class GpMainWindow::langpairUsed
  * \brief The GpMainWindow::langpairUsed struct is used for creating mru list.
  *
  * The strcuture contains name of the langpair and how many times it was used.
@@ -81,8 +85,8 @@ struct GpMainWindow::langpairUsed
 {
     QString name;
     unsigned long long n;
-    langpairUsed(QString _name, unsigned long long _n)
-        : name(_name), n(_n)
+    langpairUsed(QString name, unsigned long long n)
+        : name(name), n(n)
     {}
 
     bool operator <(const langpairUsed &op) const
@@ -158,7 +162,7 @@ bool GpMainWindow::initialize()
     });
     trayMenu->addAction(showFullAction);
 
-    exitAction = new QAction(tr("Exit"),this);
+    exitAction = new QAction(tr("Exit"), this);
     connect(exitAction, &QAction::triggered, qApp, &QApplication::quit);
     trayMenu->addAction(exitAction);
     trayIcon->setContextMenu(trayMenu);
@@ -172,6 +176,24 @@ bool GpMainWindow::initialize()
     translator->moveToThread(&thread);
 
     ui->swapBtn->setFixedHeight(ui->SourceLang1->height());
+
+    dlAction =  new QAction(QIcon(":/images/Download.png"),
+                            tr("Install packages"), ui->toolBar);
+    connect(dlAction, &QAction::triggered, this, &GpMainWindow::dlAction_triggered);
+    connect(this, &GpMainWindow::ocrFailed, this, &GpMainWindow::dlAction_triggered);
+
+    documentTranslateAction = new QAction(QIcon(":/images/document_text.png"),
+                                          tr("Translate document"), ui->toolBar);
+    connect(documentTranslateAction, &QAction::triggered, this, &GpMainWindow::fileTranslateAction_triggered);
+
+#ifdef OCR_ENABLED
+    ocrTranslateAction = new QAction(QIcon(":/images/ocr.png"),
+                                     tr("Recognize and translate image"), ui->toolBar);
+    connect(ocrTranslateAction, &QAction::triggered, this, &GpMainWindow::ocrTranslateAction_triggered);
+    ui->toolBar->addAction(ocrTranslateAction);
+#endif
+    ui->toolBar->addAction(documentTranslateAction);
+    ui->toolBar->addAction(dlAction);
 
 #ifdef Q_OS_LINUX
     //start server and get available language pairs
@@ -206,22 +228,6 @@ bool GpMainWindow::initialize()
         reply->deleteLater();
     }
 
-    dlAction =  new QAction(QIcon(":/images/Download.png"),
-                            tr("Install packages"), ui->toolBar);
-    connect(dlAction, &QAction::triggered, this, &GpMainWindow::dlAction_triggered);
-    connect(this, &GpMainWindow::ocrFailed, this, &GpMainWindow::dlAction_triggered);
-
-    documentTranslateAction = new QAction(QIcon(":/images/document_text.png"),
-                                          tr("Translate document"), ui->toolBar);
-    connect(documentTranslateAction, &QAction::triggered, this, &GpMainWindow::fileTranslateAction_triggered);
-
-    ocrTranslateAction = new QAction(QIcon(":/images/ocr.png"),
-                                     tr("Recognize and translate image"), ui->toolBar);
-    connect(ocrTranslateAction, &QAction::triggered, this, &GpMainWindow::ocrTranslateAction_triggered);
-
-    ui->toolBar->addAction(documentTranslateAction);
-    ui->toolBar->addAction(dlAction);
-    ui->toolBar->addAction(ocrTranslateAction);
     //Installing new packages
 
 
@@ -248,9 +254,6 @@ bool GpMainWindow::initialize()
 
 #else
     checked = true;
-    auto dlAction= new QAction(style()->standardIcon(QStyle::SP_ArrowDown),tr("Install packages"),ui->toolBar);
-    ui->toolBar->addAction(dlAction);
-    connect(dlAction, &QAction::triggered,this, &GpMainWindow::dlAction_triggered);
     connect(ui->boxInput,&InputTextEdit::printEnded,translator,&Translator::boxTranslate);
     connect(ui->boxInput,&InputTextEdit::printEnded,this,&GpMainWindow::saveMru);
     connect(translator,&Translator::resultReady,this,&GpMainWindow::translateReceived);
@@ -1046,7 +1049,8 @@ void GpMainWindow::loadConf()
     ui->boxOutput->setFont(font);
 
     if (!Initializer::conf->contains("extra/traywidget/position"))
-        Initializer::conf->setValue("extra/traywidget/position", QVariant::fromValue(BottomRight).toUInt());
+        Initializer::conf->setValue("extra/traywidget/position",
+                                    QVariant::fromValue(TrayWidget::BottomRight).toUInt());
 
     if (!Initializer::conf->contains("extra/traywidget/enabled"))
         Initializer::conf->setValue("extra/traywidget/enabled", false);
@@ -1058,7 +1062,8 @@ void GpMainWindow::loadConf()
         Initializer::conf->setValue("extra/traywidget/transparent", false);
 
     setTrayWidgetEnabled(Initializer::conf->value("extra/traywidget/enabled").toBool());
-    setTrayWidgetPosition(static_cast<Position>(Initializer::conf->value("extra/traywidget/position").toUInt()));
+    setTrayWidgetPosition(static_cast<TrayWidget::Position>(Initializer::conf->
+                                                            value("extra/traywidget/position").toUInt()));
 }
 
 /*!
@@ -1201,6 +1206,7 @@ void GpMainWindow::fileTranslateAction_triggered()
 
 void GpMainWindow::ocrTranslateAction_triggered()
 {
+#ifdef OCR_ENABLED
     auto ocrDlg = new OcrDialog(this);
     ui->boxInput->setEnabled(false);
     ui->boxOutput->setEnabled(false);
@@ -1213,8 +1219,7 @@ void GpMainWindow::ocrTranslateAction_triggered()
     connect(ocrDlg, &OcrDialog::ocrFinished, this, &GpMainWindow::ocrReceived);
 
     ocrDlg->show();
-
-
+#endif
 }
 
 /*!
@@ -1269,18 +1274,18 @@ void GpMainWindow::setLangpair(QString source, QString target) {
   * \brief Sets tray widget position on the screen.
   * The coordinates are calculated using \l QApplication::desktop()
   */
-void GpMainWindow::setTrayWidgetPosition(Position position)
+void GpMainWindow::setTrayWidgetPosition(TrayWidget::Position position)
 {
     QRect desktop = qApp->desktop()->availableGeometry();
-    QMap <Position, QRect> pos_coords {
-        { TopLeft, QRect(desktop.left(), desktop.top(),trayWidget->width(), trayWidget->height()) },
-        {   TopRight, QRect(desktop.right()-trayWidget->width(),desktop.top(),
+    QMap <TrayWidget::Position, QRect> pos_coords {
+        { TrayWidget::TopLeft, QRect(desktop.left(), desktop.top(),trayWidget->width(), trayWidget->height()) },
+        {   TrayWidget::TopRight, QRect(desktop.right()-trayWidget->width(),desktop.top(),
             trayWidget->width(), trayWidget->height())
         },
-        {   BottomLeft, QRect(desktop.left(), desktop.bottom()-trayWidget->height(),
+        {   TrayWidget::BottomLeft, QRect(desktop.left(), desktop.bottom()-trayWidget->height(),
             trayWidget->width(), trayWidget->height())
         },
-        {   BottomRight, QRect(desktop.right()-trayWidget->width(), desktop.bottom()-trayWidget->height(),
+        {   TrayWidget::BottomRight, QRect(desktop.right()-trayWidget->width(), desktop.bottom()-trayWidget->height(),
             trayWidget->width(), trayWidget->height())
         },
     };

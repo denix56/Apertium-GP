@@ -38,6 +38,13 @@ public:
     QComboBox* outputComboBox() const;
 
     ~TrayWidget();
+#if QT_VERSION <= 0x050500
+    Q_ENUMS(Position)
+#endif
+    enum Position { TopLeft, TopRight, BottomLeft, BottomRight };
+#if QT_VERSION >= 0x050500
+    Q_ENUM(Position)
+#endif
 
 signals:
     void prindEnded(QString text);

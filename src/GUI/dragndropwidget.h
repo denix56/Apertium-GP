@@ -18,7 +18,6 @@
 */
 #pragma once
 
-#include <QObject>
 #include <QWidget>
 #include "filedialog.h"
 

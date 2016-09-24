@@ -41,12 +41,12 @@ private slots:
 
     void changeFont(int size);
 
-    void recheck_checkboxes(Position pos);
+    void recheck_checkboxes(TrayWidget::Position pos);
 
 private:
     Ui::SettingsDialog *ui;
 
-    QMap <Position, QCheckBox*> *pos_checkbox;
+    QMap <TrayWidget::Position, QCheckBox*> *pos_checkbox;
 };
 
 #endif // SETTINGSDIALOG_H
