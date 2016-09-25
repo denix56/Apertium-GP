@@ -7,7 +7,6 @@ win32:isEmpty(LIB_DIR): \
     The program may not found required libraries.)
 
 LIBS += -L$$LIB_DIR -ltesseract -llept
-win32:LIBS += -lcurl
 
 win32:isEmpty(INCLUDE_DIR): \
     warning(Variable INCLUDE_DIR is not specified. \
