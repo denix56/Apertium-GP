@@ -194,6 +194,7 @@ bool GpMainWindow::initialize()
     ui->toolBar->addAction(documentTranslateAction);
     ui->toolBar->addAction(dlAction);
 
+
 #ifdef Q_OS_LINUX
     //start server and get available language pairs
     requestSender = new QNetworkAccessManager(this);
@@ -282,7 +283,7 @@ bool GpMainWindow::initialize()
     connect(ui->TargetLangComboBox->view(), &QTableView::clicked, this,
             &GpMainWindow::updateEndComboBox);
 
-    connect(ui->actionExit, &QAction::triggered, this, &GpMainWindow::close);
+    connect(ui->actionExit, &QAction::triggered, qApp, &QApplication::quit);
 
     connect(trayWidget->inputComboBox(), &QComboBox::currentTextChanged, [&](QString text) {
         if (!text.isEmpty()) {
